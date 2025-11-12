@@ -53,7 +53,9 @@
                 </div>
 
                 <% 
-                    const fullMessage = `${siteConfig.whatsappMessage} ${product.name} (ID: ${product._id})`;
+                    // Nuevo mensaje con el link completo del producto
+                    const productUrl = `${baseUrl}/producto/${product._id}`;
+                    const fullMessage = `${siteConfig.whatsappMessage} ${product.name}. \n\nPuedes verlo aquí: ${productUrl}`;
                     const whatsappLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
                 %>
                 <a href="<%= whatsappLink %>" target="_blank" class="btn btn-primary btn-block btn-whatsapp">

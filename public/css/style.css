@@ -642,3 +642,50 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
         max-height: 1000px; /* Un valor alto, el JS lo ajustará */
     }
 }
+
+
+/* --- FIX: ESTILOS DEL CARRUSEL DE BANNERS --- */
+
+/* 1. Contenedor principal del carrusel */
+#heroCarousel {
+    border-radius: var(--border-radius);
+    overflow: hidden; /* Importante para que las slides no se salgan */
+    margin-bottom: 3rem;
+    background-color: var(--primary-color-light); /* Fondo mientras carga */
+}
+
+/* 2. Estilos para CADA slide (copiado de .hero-section) */
+.hero-slide {
+    position: relative;
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    background-size: cover;
+    background-position: center;
+}
+
+/* 3. Sombreado para CADA slide (copiado de .hero-section::after) */
+.hero-slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1;
+}
+
+/* 4. Contenido de la slide (ya existe .hero-content, solo aseguramos z-index) */
+.hero-slide .hero-content {
+    position: relative;
+    z-index: 2; /* Debe estar sobre el sombreado */
+}
+
+/* 5. Estilos para el banner de RELLENO (cuando no hay banners subidos) */
+.hero-section-fallback {
+     /* Re-aplicamos los estilos que el carrusel ahora maneja */
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 3rem;
+}

@@ -755,6 +755,57 @@ app.post('/admin/configuracion/logo', requireAdmin, upload.single('logo'), async
     }
 });
 
+
+
+// ... justo después de app.post('/admin/configuracion/logo'...)
+
+// --- Añadir un nuevo Banner ---
+app.post('/admin/configuracion/banner/add', requireAdmin, upload.single('bannerImage'), async (req, res, next) => {
+    try {
+        if (!req.file) throw new Error('No se seleccionó ningún archivo de imagen.');
+        
+        const config = await SiteConfig.findOne({ configKey: 'main_config' });
+        if (!config) throw new Error('Configuración no encontrada.');
+
+        // Añade la nueva URL de imagen al array de banners
+        config.bannerImages.push(req.file.path);
+        await config.save();
+        
+        req.session.success = 'Nuevo banner añadido con éxito.';
+        res.redirect('/admin/configuracion');
+    } catch (err) {
+        req.session.error = `Error al añadir banner: ${err.message}`;
+        res.redirect('/admin/configuracion');
+    }
+});
+
+// --- Eliminar un Banner ---
+app.post('/admin/configuracion/banner/delete', requireAdmin, async (req, res, next) => {
+    try {
+        const { bannerUrl } = req.body;
+        if (!bannerUrl) throw new Error('No se especificó la URL del banner a eliminar.');
+
+        // 1. Eliminar de Cloudinary
+        const publicId = getPublicId(bannerUrl);
+        if (publicId) {
+            await cloudinary.uploader.destroy(publicId);
+        }
+
+        // 2. Eliminar de la base de datos (del array)
+        await SiteConfig.updateOne(
+            { configKey: 'main_config' },
+            { $pull: { bannerImages: bannerUrl } }
+        );
+        
+        req.session.success = 'Banner eliminado con éxito.';
+        res.redirect('/admin/configuracion');
+    } catch (err) {
+        req.session.error = `Error al eliminar banner: ${err.message}`;
+        res.redirect('/admin/configuracion');
+    }
+});
+
+
 // =============================================
 // MANEJADORES DE ERROR Y ARRANQUE
 // =============================================
