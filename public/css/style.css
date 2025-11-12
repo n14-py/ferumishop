@@ -530,3 +530,12 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 .collapsible-panel li a {
     padding: 0.6rem 0;
 }
+
+
+/* --- FIX: Evitar zoom en buscador móvil --- */
+.mobile-nav-panel .header-search-input {
+    font-size: 1rem; /* 1rem = 16px (basado en el body) */
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    width: 100%;
+}

@@ -139,6 +139,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(require('cookie-parser')());
 
+app.set('trust proxy', 1);
+
 // Configuración de Sesión (tomado de donaparaguay)
 const sessionStore = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - Alethia Decora</title>
     <link href="/css/admin.css" rel="stylesheet">
-    <style>
+<style>
         /* Estilos específicos para centrar el login */
         body {
             display: flex;
@@ -13,6 +13,7 @@
             justify-content: center;
             min-height: 100vh;
             background-color: var(--admin-light);
+            padding: 1rem; /* Añadimos padding al body para que el "container" nunca toque los bordes */
         }
         .login-container {
             max-width: 400px;
@@ -42,6 +43,26 @@
             border: 1px solid transparent;
             border-radius: 0.25rem;
         }
+
+        /* ======== INICIO DE LA MEJORA MÓVIL ======== */
+        @media (max-width: 450px) {
+            body {
+                /* Quitamos el centrado vertical en móvil, se ve mejor arriba */
+                align-items: flex-start; 
+                /* Mantenemos el padding para que no pegue a los bordes */
+                padding: 1rem; 
+            }
+            .login-container {
+                /* Reducimos el padding interno para dar más espacio a los inputs */
+                padding: 1.5rem; 
+                /* Le damos un espacio desde arriba */
+                margin-top: 2rem; 
+            }
+            .login-header h1 {
+                font-size: 1.6rem; /* Achicamos un poco el título */
+            }
+        }
+        /* ======== FIN DE LA MEJORA MÓVIL ======== */
     </style>
 </head>
 <body>

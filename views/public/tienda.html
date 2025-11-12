@@ -21,7 +21,20 @@
         <aside class="store-sidebar">
             
             <div class="filter-group">
-                <h4 class="collapsible-trigger">
+                <h4 class="collapsible-trigger <%= query.q ? 'active' : '' %>">
+                    Buscar por Nombre <i class="fas fa-plus"></i>
+                </h4>
+                <ul class="collapsible-panel" style="padding: 0.5rem 0.5rem 1rem 0.5rem;">
+                    <li>
+                        <form action="/tienda" method="GET" class="sidebar-search-form">
+                            <input type="text" name="q" class="form-control" placeholder="Buscar productos..." value="<%= query.q || '' %>">
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Buscar</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <div class="filter-group">
+                <h4 class="collapsible-trigger <%= query.categoria ? 'active' : '' %>">
                     Categorías <i class="fas fa-plus"></i>
                 </h4>
                 <ul class="collapsible-panel">
@@ -43,7 +56,7 @@
             </div>
             
             <div class="filter-group">
-                <h4 class="collapsible-trigger">
+                 <h4 class="collapsible-trigger <%= query.tipo ? 'active' : '' %>">
                     Tipo de Producto <i class="fas fa-plus"></i>
                 </h4>
                 <ul class="collapsible-panel">
@@ -138,18 +151,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // IMPORTANTE: Abrir automáticamente el panel si un filtro está activo
-    const activeLink = document.querySelector('.collapsible-panel a.active');
+    // IMPORTANTE: Abrir automáticamente TODOS los paneles de filtros activos
+    const activeTriggers = document.querySelectorAll('.collapsible-trigger.active');
     
-    // Nos aseguramos de que el link activo no sea "Ver Todo"
-    if(activeLink && !activeLink.href.endsWith('/tienda')) { 
-        const panel = activeLink.closest('.collapsible-panel');
-        const trigger = panel.previousElementSibling; // El <h4>
-        
-        // Simula el clic para abrirlo
-        trigger.classList.add('active');
-        panel.style.maxHeight = panel.scrollHeight + "px";
-    }
+    activeTriggers.forEach(trigger => {
+        const panel = trigger.nextElementSibling; // El <ul>
+        if (panel && panel.classList.contains('collapsible-panel')) {
+            // Lo abrimos dándole su altura real
+            panel.style.maxHeight = panel.scrollHeight + "px";
+        }
+    });
 });
 </script>
 
