@@ -1,0 +1,137 @@
+<header class="main-header">
+    <div class="navbar-container">
+        <div class="navbar-brand">
+            <a href="/" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+                <% if (siteConfig.logoUrl) { %>
+                    <img src="<%= siteConfig.logoUrl.replace('/upload/', '/upload/h_60/') %>" alt="Logo Alethia Decora" style="height: 60px; margin-right: 10px;">
+                <% } else { %>
+                    Alethia Decora
+                <% } %>
+            </a>
+        </div>
+
+        <nav class="navbar-nav">
+             <a href="/" class="<%= path === '/' ? 'active' : '' %>">Inicio</a>
+             <a href="/tienda" class="<%= path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') ? 'active' : '' %>">Tienda</a>
+             <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">Sobre Nosotros</a>
+             <a href="/contacto" class="<%= path.includes('/contacto') ? 'active' : '' %>">Contacto</a>
+        </nav>
+
+        <div class="navbar-actions">
+            <div class="header-search">
+                <i class="fas fa-search"></i>
+                <form action="/tienda" method="GET">
+                    <input type="text" name="q" id="header-search-input" class="header-search-input" placeholder="Buscar productos..." autocomplete="off">
+                </form>
+                <div id="search-results-popup"></div>
+            </div>
+        </div>
+
+        <div class="mobile-menu-icon" id="mobile-menu-open">
+            <i class="fas fa-bars"></i>
+        </div>
+    </div>
+</header>
+
+<div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+<nav class="mobile-nav-panel" id="mobile-nav-panel"></nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- Lógica del Menú Móvil (Adaptada de donaparaguay) ---
+    const mobileMenuOpenBtn = document.getElementById('mobile-menu-open');
+    const mobileNavPanel = document.getElementById('mobile-nav-panel');
+    const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+
+    const setupMobileMenu = () => {
+        mobileNavPanel.innerHTML = '';
+        
+        // 1. Clonar links de navegación
+        const desktopNav = document.querySelector('.main-header .navbar-nav');
+        if (desktopNav) mobileNavPanel.appendChild(desktopNav.cloneNode(true));
+        
+        // 2. Añadir separador
+        const divider = document.createElement('div');
+        divider.className = 'dropdown-divider';
+        mobileNavPanel.appendChild(divider);
+
+        // 3. Clonar acciones (buscador)
+        const desktopActions = document.querySelector('.main-header .navbar-actions');
+        if (desktopActions) mobileNavPanel.appendChild(desktopActions.cloneNode(true));
+    };
+
+    const toggleMobileMenu = (e) => { 
+        e.stopPropagation(); 
+        mobileNavPanel.classList.toggle('active'); 
+        mobileNavOverlay.classList.toggle('active'); 
+    };
+
+    if (mobileMenuOpenBtn) {
+        mobileMenuOpenBtn.addEventListener('click', toggleMobileMenu);
+        mobileNavOverlay.addEventListener('click', toggleMobileMenu);
+        setupMobileMenu(); // Configurar el contenido del menú
+    }
+
+    // --- Lógica del Buscador Instantáneo (petición al API /api/search) ---
+    const searchInput = document.getElementById('header-search-input');
+    const searchPopup = document.getElementById('search-results-popup');
+
+    if (searchInput && searchPopup) {
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value;
+            if (query.length < 2) {
+                searchPopup.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Llama al API que creamos en server.js
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const products = await response.json();
+
+                if (products.length > 0) {
+                    searchPopup.innerHTML = ''; // Limpiar resultados
+                    products.forEach(product => {
+                        const item = document.createElement('a');
+                        item.href = `/producto/${product._id}`;
+                        item.className = 'search-result-item';
+                        
+                        // Usar la primera foto si existe
+                        const photoUrl = product.photos && product.photos.length > 0 
+                            ? product.photos[0].replace('/upload/', '/upload/w_80,h_80,c_fill/') 
+                            : 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png'; // Placeholder
+                        
+                        item.innerHTML = `
+                            <img src="${photoUrl}" alt="${product.name}">
+                            <span>${product.name}</span>
+                        `;
+                        searchPopup.appendChild(item);
+                    });
+                    
+                    // Añadir enlace "Ver todo"
+                    const viewAll = document.createElement('a');
+                    viewAll.href = `/tienda?q=${encodeURIComponent(query)}`;
+                    viewAll.className = 'view-all';
+                    viewAll.innerText = 'Ver todos los resultados';
+                    searchPopup.appendChild(viewAll);
+                    
+                    searchPopup.style.display = 'block';
+                } else {
+                    searchPopup.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Error en búsqueda instantánea:', err);
+                searchPopup.style.display = 'none';
+            }
+        });
+
+        // Ocultar popup si se hace clic fuera
+        document.addEventListener('click', (e) => {
+            if (e.target.id !== 'header-search-input') {
+                searchPopup.style.display = 'none';
+            }
+        });
+    }
+});
+</script>

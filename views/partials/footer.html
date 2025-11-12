@@ -1,0 +1,43 @@
+<footer class="main-footer">
+    <div class="footer-container">
+        <div class="footer-section about">
+            <h3 class="footer-title">
+                Alethia Decora
+            </h3>
+            <p>
+                <%= siteConfig.aboutUsText.substring(0, 150) %>...
+            </p>
+        </div>
+
+        <div class="footer-section links">
+            <h4 class="footer-title">Navegación</h4>
+            <ul>
+                <li><a href="/">Inicio</a></li>
+                <li><a href="/tienda">Tienda</a></li>
+                <li><a href="/sobre-nosotros">Sobre Nosotros</a></li>
+                <li><a href="/contacto">Contacto</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section contact">
+            <h4 class="footer-title">Contacto y Redes</h4>
+            <p>¡Síguenos para ver nuestras últimas decoraciones!</p>
+            <div class="social-links-footer" style="display: flex; gap: 1.5rem; margin-top: 1rem;">
+                <a href="https://wa.me/<%= siteConfig.whatsappNumber %>" target="_blank" title="WhatsApp" style="font-size: 2rem; color: #25D366;">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="https://instagram.com/alethiadecora" target="_blank" title="Instagram" style="font-size: 2rem; color: #E4405F;">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="mailto:contacto@alethiadecora.com" title="Correo Electrónico" style="font-size: 2rem; color: #c71610;">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        &copy; <%= new Date().getFullYear() %> Alethia Decora | 
+        Diseñado y desarrollado por <a href="https://www.lfaftech.com" target="_blank">LFAF Tech</a>.
+    </div>
+</footer>

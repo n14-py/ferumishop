@@ -1,0 +1,249 @@
+/* ============================================= */
+/* --- ESTILOS PARA EL PANEL DE ADMINISTRADOR --- */
+/* v1.0 - Alethia Decora (Adaptado de DonaPY)  */
+/* ============================================= */
+
+/* --- VARIABLES Y ESTILOS BASE --- */
+:root {
+    /* Paleta Alethia Admin */
+    --admin-primary: #8B4513; /* Marrón (SaddleBrown) */
+    --admin-primary-dark: #6B360F;
+    --admin-accent: #D4AF37; /* Dorado/Mostaza */
+    
+    --admin-secondary: #858796;
+    --admin-light: #f8f9fc;
+    --admin-dark: #5a5c69;
+    --admin-danger: #dc3545;
+    
+    --admin-sidebar-width: 240px;
+    --admin-header-height: 60px;
+    --font-family-sans-serif: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--admin-light);
+    color: var(--admin-dark);
+    margin: 0;
+}
+
+.admin-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- BARRA LATERAL (SIDEBAR) --- */
+.sidebar {
+    /* Fondo con la paleta de Alethia */
+    background: linear-gradient(180deg, var(--admin-primary) 10%, var(--admin-primary-dark) 100%);
+    color: white;
+    width: var(--admin-sidebar-width);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.sidebar.active {
+    transform: translateX(0);
+}
+
+.sidebar-header {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 1.2rem 1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar-content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.9rem 1.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-left: 3px solid transparent;
+}
+
+.sidebar .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: white;
+    font-weight: 700;
+    border-left-color: var(--admin-accent); /* Color dorado para el 'active' */
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+/* --- HEADER SUPERIOR (MÓVIL) --- */
+.admin-header {
+    height: var(--admin-header-height);
+    background-color: #fff;
+    border-bottom: 1px solid #e3e6f0;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+.menu-toggle {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--admin-dark);
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    padding: 1.5rem;
+}
+
+/* --- OVERLAY PARA EL MENÚ MÓVIL --- */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* --- ESTILOS RESPONSIVOS PARA TABLET Y ESCRITORIO --- */
+@media (min-width: 768px) {
+    .admin-wrapper {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        position: sticky;
+        transform: translateX(0);
+        height: 100vh;
+    }
+
+    .main-content-wrapper {
+        width: calc(100% - var(--admin-sidebar-width));
+    }
+
+    .admin-header {
+        display: none; /* Ocultamos el header con el toggle en escritorio */
+    }
+
+    .sidebar-overlay {
+        display: none !important; /* El overlay nunca es necesario en escritorio */
+    }
+    .main-content {
+        padding: 2.5rem;
+    }
+}
+
+/* --- ESTILOS GENERALES DE COMPONENTES --- */
+.text-gray-800 { color: #3a3b45 !important; }
+.card { border: none; border-radius: 0.5rem; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); }
+.card-header { background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0; padding: 1rem 1.25rem; }
+.font-weight-bold { font-weight: 700 !important; }
+.text-primary { color: var(--admin-primary) !important; }
+.text-danger { color: var(--admin-danger) !important; }
+.table-responsive { border: none; }
+.table th, .table td { vertical-align: middle; }
+
+/* Tarjetas del Dashboard */
+.card.border-left-primary { border-left: 4px solid var(--admin-primary); }
+.card.border-left-accent { border-left: 4px solid var(--admin-accent); }
+.card.border-left-success { border-left: 4px solid #1cc88a; }
+
+.btn-primary {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+.btn-primary:hover {
+    background-color: var(--admin-primary-dark);
+    border-color: var(--admin-primary-dark);
+}
+.btn-danger {
+    background-color: var(--admin-danger);
+    border-color: var(--admin-danger);
+}
+.alert-success { background-color: #d4edda; color: #155724; }
+.alert-danger { background-color: #f8d7da; color: #721c24; }
+
+/* Estilo para previsualización de imágenes en admin */
+.img-preview {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-right: 5px;
+}
+
+/* ============================================= */
+/* --- TABLAS RESPONSIVAS (MÓVIL) --- */
+/* (Copiado de donaparaguay/admin.css) */
+/* ============================================= */
+@media (max-width: 767px) {
+    .table-responsive thead { display: none; }
+    .table-responsive, .table-responsive tbody, .table-responsive tr, .table-responsive td {
+        display: block;
+        width: 100%;
+    }
+    .table-responsive tr {
+        margin-bottom: 1rem;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        background-color: #fff;
+    }
+    .table-responsive td {
+        padding-left: 50%;
+        position: relative;
+        text-align: right;
+        border: none;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+    .table-responsive td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 45%;
+        padding-left: 1rem;
+        font-weight: 700;
+        text-align: left;
+        color: var(--admin-primary);
+    }
+    .table-responsive td:last-child { border-bottom: 0; }
+}

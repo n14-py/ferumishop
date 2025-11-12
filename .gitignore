@@ -1,0 +1,8 @@
+# Ignorar la carpeta de dependencias
+node_modules/
+
+# Ignorar el archivo de variables de entorno (¡MUY IMPORTANTE!)
+.env
+
+# Ignorar archivos de sistema operativo
+.DS_Store

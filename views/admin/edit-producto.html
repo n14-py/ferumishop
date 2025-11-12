@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Producto - Admin Alethia Decora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .current-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+        .current-photo-item {
+            position: relative;
+        }
+        .current-photo-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .current-photo-item .form-check-input {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            transform: scale(1.5);
+            background-color: rgba(255,255,255,0.7);
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <aside class="sidebar" id="admin-sidebar">
+        <div class="sidebar-header">Alethia ADMIN</div>
+        <div class="sidebar-content">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/dashboard" class="nav-link <%= path.includes('/dashboard') ? 'active' : '' %>">
+                        <i class="fa-solid fa-tachometer-alt fa-fw"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/productos" class="nav-link <%= path.includes('/producto') ? 'active' : '' %>">
+                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/categorias" class="nav-link <%= path.includes('/categoria') ? 'active' : '' %>">
+                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/configuracion" class="nav-link <%= path.includes('/configuracion') ? 'active' : '' %>">
+                        <i class="fa-solid fa-cog fa-fw"></i> Configuración
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="/" target="_blank" class="nav-link">
+                <i class="fa-solid fa-arrow-left fa-fw"></i> Volver al Sitio
+            </a>
+            <a href="/admin/logout" class="nav-link text-danger">
+                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="main-content-wrapper">
+        <header class="admin-header">
+            <button class="menu-toggle" id="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <div class="container-fluid">
+                
+                <h1 class="h3 mb-4 text-gray-800">Editar Producto</h1>
+
+                <% if (locals.error) { %>
+                    <div class="alert alert-danger"><%= error %></div>
+                <% } %>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Editando: <%= product.name %></h6>
+                    </div>
+                    <div class="card-body">
+                        <form action="/admin/producto/edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nombre del Producto</label>
+                                <input type="text" id="name" name="name" class="form-control" value="<%= product.name %>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descripción</label>
+                                <textarea id="description" name="description" rows="5" class="form-control"><%= product.description %></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="price" class="form-label">Precio (Gs.)</label>
+                                    <input type="number" id="price" name="price" class="form-control" value="<%= product.price %>" required min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="category" class="form-label">Categoría</label>
+                                    <select id="category" name="category" class="form-control" required>
+                                        <% categories.forEach(cat => { %>
+                                            <option value="<%= cat._id %>" <%= product.category.equals(cat._id) ? 'selected' : '' %>>
+                                                <%= cat.name %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                            </div>
+                            <hr>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Fotos Actuales (Desmarca para eliminar)</label>
+                                <div class="current-photos-grid">
+                                    <% if (product.photos && product.photos.length > 0) { %>
+                                        <% product.photos.forEach(photoUrl => { %>
+                                            <div class="current-photo-item">
+                                                <img src="<%= photoUrl.replace('/upload/', '/upload/w_200,h_200,c_fill/') %>" alt="Foto actual">
+                                                <input class="form-check-input" type="checkbox" name="existing_photos" value="<%= photoUrl %>" checked>
+                                            </div>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <p class="text-muted">Este producto no tiene fotos.</p>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="new_photos" class="form-label">Añadir nuevas fotos (hasta 5)</label>
+                                <input type="file" id="new_photos" name="new_photos" class="form-control" multiple accept="image/*">
+                            </div>
+                            
+                            <hr>
+                            <div class="d-flex gap-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="isForSale" id="isForSale" <%= product.isForSale ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="isForSale">Disponible para Venta</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="isForRent" id="isForRent" <%= product.isForRent ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="isForRent">Disponible para Alquiler</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="isFeatured" id="isFeatured" <%= product.isFeatured ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="isFeatured">Marcar como Destacado</label>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="/admin/productos" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Script para el toggle del sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    });
+</script>
+</body>
+</html>

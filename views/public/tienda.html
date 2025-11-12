@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - Alethia Decora</title>
+    <meta name="description" content="Explora nuestro catálogo completo de productos para decoración, venta y alquiler.">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+<%- include('../partials/header.html') %>
+
+<main class="container">
+
+    <div class="store-layout">
+        
+        <aside class="store-sidebar">
+            
+            <div class="filter-group">
+                <h4 class="collapsible-trigger">
+                    Categorías <i class="fas fa-plus"></i>
+                </h4>
+                <ul class="collapsible-panel">
+                    <li>
+                        <a href="/tienda" class="<%= !query.categoria ? 'active' : '' %>">
+                            Ver Todo
+                        </a>
+                    </li>
+                    <% if (locals.categories) { %>
+                        <% categories.forEach(cat => { %>
+                            <li>
+                                <a href="/tienda?categoria=<%= cat.name %>" class="<%= query.categoria === cat.name ? 'active' : '' %>">
+                                    <%= cat.name %>
+                                </a>
+                            </li>
+                        <% }); %>
+                    <% } %>
+                </ul>
+            </div>
+            
+            <div class="filter-group">
+                <h4 class="collapsible-trigger">
+                    Tipo de Producto <i class="fas fa-plus"></i>
+                </h4>
+                <ul class="collapsible-panel">
+                    <li>
+                        <a href="/tienda?tipo=venta" class="<%= query.tipo === 'venta' ? 'active' : '' %>">
+                            Para Venta
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/tienda?tipo=alquiler" class="<%= query.tipo === 'alquiler' ? 'active' : '' %>">
+                            Para Alquiler
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <section class="store-main-content">
+            
+            <% if (query.q) { %>
+                <h1 class="section-title" style="text-align: left;">Resultados para: "<%= query.q %>"</h1>
+            <% } else if (query.categoria) { %>
+                <h1 class="section-title" style="text-align: left;">Categoría: <%= query.categoria %></h1>
+            <% } else { %>
+                <h1 class="section-title" style="text-align: left;">Nuestros Productos</h1>
+            <% } %>
+
+            <div class="product-grid">
+                <% if (products && products.length > 0) { %>
+                    <% products.forEach(product => { %>
+                        <%- include('../partials/product-card.html', { product: product }) %>
+                    <% }); %>
+                <% } else { %>
+                    <div class="no-results-card">
+                        <h3>No se encontraron productos</h3>
+                        <p>Prueba con otros filtros o categorías.</p>
+                        <a href="/tienda" class="btn btn-primary" style="margin-top: 1rem;">Ver todos los productos</a>
+                    </div>
+                <% } %>
+            </div>
+
+            <% if (totalPages > 1) { %>
+                <nav class="pagination-container">
+                    <ul class="pagination">
+                        <% const urlParams = new URLSearchParams(query); %>
+                        <% if (currentPage > 1) { %>
+                            <% urlParams.set('page', currentPage - 1); %>
+                            <li class="page-item"><a class="page-link" href="/tienda?<%= urlParams.toString() %>">Anterior</a></li>
+                        <% } %>
+                        
+                        <% for(let i = 1; i <= totalPages; i++) { %>
+                            <% urlParams.set('page', i); %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="/tienda?<%= urlParams.toString() %>"><%= i %></a>
+                            </li>
+                        <% } %>
+
+                        <% if (currentPage < totalPages) { %>
+                            <% urlParams.set('page', currentPage + 1); %>
+                            <li class="page-item"><a class="page-link" href="/tienda?<%= urlParams.toString() %>">Siguiente</a></li>
+                        <% } %>
+                    </ul>
+                </nav>
+            <% } %>
+
+        </section>
+    </div>
+</main>
+
+
+<%- include('../partials/footer.html') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const triggers = document.querySelectorAll('.collapsible-trigger');
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            // Alterna la clase 'active' para girar el ícono
+            this.classList.toggle('active'); 
+            
+            // Selecciona el panel (la lista <ul> que es su "hermano" siguiente)
+            const panel = this.nextElementSibling;
+            
+            if (panel.style.maxHeight) {
+                // Si está abierto (tiene max-height), ciérralo
+                panel.style.maxHeight = null;
+            } else {
+                // Si está cerrado, ábrelo (calculando su altura real)
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            } 
+        });
+    });
+
+    // IMPORTANTE: Abrir automáticamente el panel si un filtro está activo
+    const activeLink = document.querySelector('.collapsible-panel a.active');
+    
+    // Nos aseguramos de que el link activo no sea "Ver Todo"
+    if(activeLink && !activeLink.href.endsWith('/tienda')) { 
+        const panel = activeLink.closest('.collapsible-panel');
+        const trigger = panel.previousElementSibling; // El <h4>
+        
+        // Simula el clic para abrirlo
+        trigger.classList.add('active');
+        panel.style.maxHeight = panel.scrollHeight + "px";
+    }
+});
+</script>
+
+</body>
+</html>
+
+
+<%- include('../partials/footer.html') %>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title><%= product.name %> - Alethia Decora</title>
+    <meta name="description" content="<%= product.description.replace(/<[^>]*>?/gm, '').substring(0, 150) %>...">
+    
+    <meta property="og:title" content="<%= product.name %>">
+    <meta property="og:description" content="<%= product.description.replace(/<[^>]*>?/gm, '').substring(0, 150) %>...">
+    <meta property="og:image" content="<%= product.photos[0].replace('/upload/', '/upload/w_600,h_315,c_fill,g_auto/') %>">
+    <meta property="og:url" content="<%= baseUrl %>/producto/<%= product._id %>">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+<%- include('../partials/header.html') %>
+
+<main class="container">
+    <% if (locals.product) { %>
+        <div class="product-detail-layout">
+            
+            <div class="product-gallery">
+                <div class="main-image">
+                    <img src="<%= product.photos[0].replace('/upload/', '/upload/w_800,h_800,c_limit/') %>" id="mainProductImage" alt="Foto principal: <%= product.name %>">
+                </div>
+                
+                <% if (product.photos.length > 1) { %>
+                    <div class="product-thumbnails">
+                        <% product.photos.forEach((photoUrl, index) => { %>
+                            <img src="<%= photoUrl.replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" 
+                                 alt="Miniatura <%= index + 1 %>"
+                                 class="<%= index === 0 ? 'active' : '' %>"
+                                 onclick="changeMainImage('<%= photoUrl.replace('/upload/', '/upload/w_800,h_800,c_limit/') %>')">
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="product-info">
+                <span class="card-category" style="text-align: left; margin-bottom: 0.5rem;">
+                    <a href="/categoria/<%= product.category.name %>"><%= product.category.name %></a>
+                </span>
+
+                <h1><%= product.name %></h1>
+
+                <div class="price">
+                    <%= formatPrice(product.price) %>
+                </div>
+
+                <% 
+                    const fullMessage = `${siteConfig.whatsappMessage} ${product.name} (ID: ${product._id})`;
+                    const whatsappLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
+                %>
+                <a href="<%= whatsappLink %>" target="_blank" class="btn btn-primary btn-block btn-whatsapp">
+                    <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+                </a>
+
+                <div class="description" style="margin-top: 2rem;">
+                    <h3>Descripción</h3>
+                    <%- product.description %>
+                </div>
+
+                <div class="product-meta">
+                    <span><strong>Categoría:</strong> <%= product.category.name %></span>
+                    <span><strong>Disponibilidad:</strong>
+                        <% if(product.isForSale) { %> Venta <% } %>
+                        <% if(product.isForSale && product.isForRent) { %> / <% } %>
+                        <% if(product.isForRent) { %> Alquiler <% } %>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <% if (recommendedProducts && recommendedProducts.length > 0) { %>
+            <div class="recommended-section">
+                <hr>
+                <h2 class="section-title">Productos Recomendados</h2>
+                <div class="product-grid">
+                    <% recommendedProducts.forEach(recProduct => { %>
+                        <%- include('../partials/product-card.html', { product: recProduct }) %>
+                    <% }); %>
+                </div>
+            </div>
+        <% } %>
+
+    <% } else { %>
+        <div class_alias="no-results-card">
+            <h2>Producto no encontrado</h2>
+            <p>El producto que buscas no existe o ha sido eliminado.</p>
+            <a href="/tienda" class="btn btn-primary">Volver a la Tienda</a>
+        </div>
+    <% } %>
+</main>
+
+<%- include('../partials/footer.html') %>
+
+<script>
+    // Script simple para cambiar la imagen principal al hacer clic en una miniatura
+    function changeMainImage(newSrc) {
+        document.getElementById('mainProductImage').src = newSrc;
+        
+        // Actualizar la clase 'active' en las miniaturas
+        const thumbnails = document.querySelectorAll('.product-thumbnails img');
+        thumbnails.forEach(img => {
+            if (img.src.includes(newSrc.split('/upload/')[1].split('/')[1])) { // Compara la parte relevante de la URL
+                img.classList.add('active');
+            } else {
+                img.classList.remove('active');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

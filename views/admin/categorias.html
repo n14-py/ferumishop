@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Categorías - Admin Alethia Decora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <aside class="sidebar" id="admin-sidebar">
+        <div class="sidebar-header">Alethia ADMIN</div>
+        <div class="sidebar-content">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/dashboard" class="nav-link <%= path.includes('/dashboard') ? 'active' : '' %>">
+                        <i class="fa-solid fa-tachometer-alt fa-fw"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/productos" class="nav-link <%= path.includes('/producto') ? 'active' : '' %>">
+                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/categorias" class="nav-link <%= path.includes('/categoria') ? 'active' : '' %>">
+                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/configuracion" class="nav-link <%= path.includes('/configuracion') ? 'active' : '' %>">
+                        <i class="fa-solid fa-cog fa-fw"></i> Configuración
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="/" target="_blank" class="nav-link">
+                <i class="fa-solid fa-arrow-left fa-fw"></i> Volver al Sitio
+            </a>
+            <a href="/admin/logout" class="nav-link text-danger">
+                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="main-content-wrapper">
+        <header class="admin-header">
+            <button class="menu-toggle" id="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <div class="container-fluid">
+                
+                <h1 class="h3 mb-4 text-gray-800">Gestión de Categorías</h1>
+
+                <% if (locals.success) { %>
+                    <div class="alert alert-success"><%= success %></div>
+                <% } %>
+                <% if (locals.error) { %>
+                    <div class="alert alert-danger"><%= error %></div>
+                <% } %>
+
+                <div class="row">
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Añadir Nueva Categoría</h6>
+                            </div>
+                            <div class="card-body">
+                                <form action="/admin/categorias/add" method="POST">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Nombre de la Categoría</label>
+                                        <input type="text" id="name" name="name" class="form-control" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Guardar Categoría</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Categorías Existentes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table" width="100%" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (categories && categories.length > 0) { %>
+                                                <% categories.forEach(cat => { %>
+                                                    <tr>
+                                                        <td data-label="Nombre"><strong><%= cat.name %></strong></td>
+                                                        <td data-label="Acciones">
+                                                            <form action="/admin/categorias/delete/<%= cat._id %>" method="POST" onsubmit="return confirm('¿Seguro que quieres eliminar esta categoría?');" class="d-inline">
+                                                                <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                            </td>
+                                                    </tr>
+                                                <% }); %>
+                                            <% } else { %>
+                                                <tr><td colspan="2" class="text-center">No hay categorías creadas.</td></tr>
+                                            <% } %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Script para el toggle del sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<% if (locals.product && product.category) { %>
+    
+<div class="product-card">
+
+    <a href="/producto/<%= product._id %>" class="card-image-link">
+        <%
+            // Lógica para obtener la miniatura (thumbnail)
+            let thumbnailUrl = 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png'; // Placeholder
+            if (product.photos && product.photos.length > 0) {
+                thumbnailUrl = product.photos[0];
+            }
+            
+            // Transformación de Cloudinary para optimizar la carga
+            const thumbnailTransforms = 'w_400,h_300,c_fill,g_auto,q_auto,f_auto';
+            thumbnailUrl = thumbnailUrl.replace('/upload/', `/upload/${thumbnailTransforms}/`);
+        %>
+        
+        <img
+            src="<%= thumbnailUrl %>"
+            alt="Producto: <%= product.name %>"
+            class="product-card-image"
+            loading="lazy">
+        
+        <% if (product.isForRent && !product.isForSale) { %>
+            <span class="card-badge">Alquiler</span>
+        <% } else if (product.isForSale && !product.isForRent) { %>
+            <span class="card-badge">Venta</span>
+        <% } else if (product.isForSale && product.isForRent) { %>
+            <span class="card-badge">Venta/Alquiler</span>
+        <% } %>
+    </a>
+
+    <div class="card-content">
+        <div class="card-category">
+            <%= product.category.name %>
+        </div>
+
+        <h3 class="card-title">
+            <a href="/producto/<%= product._id %>"><%= product.name %></a>
+        </h3>
+
+        <div class="card-price">
+            <%= formatPrice(product.price) %>
+        </div>
+
+        <a href="/producto/<%= product._id %>" class="btn btn-primary" style="margin-top: 1rem;">
+            Ver Detalles
+        </a>
+    </div>
+</div>
+
+<% } else { %>
+    <div class="product-card">
+        <div class="card-content">
+            <h3 class="card-title">Error al cargar producto</h3>
+        </div>
+    </div>
+<% } %>

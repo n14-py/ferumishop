@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alethia Decora - Decoración para Eventos y Hogar</title>
+    <meta name="description" content="Especialistas en decoración para venta y alquiler. Encuentra los mejores artículos para tu evento u hogar.">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+<%- include('../partials/header.html') %>
+
+<main class="container">
+    
+    <section class="hero-section" style="background-image: url('https://res.cloudinary.com/dmedd6w1q/image/upload/v1799799688/alethia-decora/placeholder-banner.jpg');">
+        <div class="hero-content">
+            <h1>Decoración que inspira</h1>
+            <p>Encuentra piezas únicas para venta y alquiler que transformarán tu espacio.</p>
+            <a href="/tienda" class="btn btn-primary btn-accent">Ver Tienda</a>
+        </div>
+    </section>
+
+    <% if (locals.categories && categories.length > 0) { %>
+        <section class="category-highlight-section" style="margin-bottom: 3rem;">
+            <h2 class="section-title">Categorías</h2>
+            <p class="section-subtitle">Explora nuestras colecciones principales.</p>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+                <% categories.forEach(cat => { %>
+                    <a href="/categoria/<%= cat.name %>" class="btn btn-secondary">
+                        <%= cat.name %>
+                    </a>
+                <% }); %>
+            </div>
+        </section>
+    <% } %>
+
+
+    <section class="featured-products">
+        <h2 class="section-title">Productos Destacados</h2>
+        <p class="section-subtitle">Nuestra selección especial para ti.</p>
+
+        <div class="product-grid">
+            <% if (featuredProducts && featuredProducts.length > 0) { %>
+                <% featuredProducts.forEach(product => { %>
+                    <%- include('../partials/product-card.html', { product: product }) %>
+                <% }); %>
+            <% } else { %>
+                <div class="no-results-card">
+                    <h3>No hay productos destacados</h3>
+                    <p>El administrador aún no ha marcado ningún producto como destacado.</p>
+                </div>
+            <% } %>
+        </div>
+    </section>
+
+</main>
+
+<%- include('../partials/footer.html') %>
+
+</body>
+</html>

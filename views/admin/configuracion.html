@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - Admin Alethia Decora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <aside class="sidebar" id="admin-sidebar">
+        <div class="sidebar-header">Alethia ADMIN</div>
+        <div class="sidebar-content">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/dashboard" class="nav-link <%= path.includes('/dashboard') ? 'active' : '' %>">
+                        <i class="fa-solid fa-tachometer-alt fa-fw"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/productos" class="nav-link <%= path.includes('/producto') ? 'active' : '' %>">
+                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/categorias" class="nav-link <%= path.includes('/categoria') ? 'active' : '' %>">
+                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/configuracion" class="nav-link <%= path.includes('/configuracion') ? 'active' : '' %>">
+                        <i class="fa-solid fa-cog fa-fw"></i> Configuración
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="/" target="_blank" class="nav-link">
+                <i class="fa-solid fa-arrow-left fa-fw"></i> Volver al Sitio
+            </a>
+            <a href="/admin/logout" class="nav-link text-danger">
+                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="main-content-wrapper">
+        <header class="admin-header">
+            <button class="menu-toggle" id="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <div class="container-fluid">
+                
+                <h1 class="h3 mb-4 text-gray-800">Configuración del Sitio Web</h1>
+
+                <% if (locals.success) { %>
+                    <div class="alert alert-success"><%= success %></div>
+                <% } %>
+                <% if (locals.error) { %>
+                    <div class="alert alert-danger"><%= error %></div>
+                <% } %>
+
+                <div class="row">
+                    <div class="col-lg-7">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Ajustes Generales</h6>
+                            </div>
+                            <div class="card-body">
+                                <form action="/admin/configuracion/update" method="POST">
+                                    <div class="mb-3">
+                                        <label for="whatsappNumber" class="form-label">Número de WhatsApp</label>
+                                        <input type="text" id="whatsappNumber" name="whatsappNumber" class="form-control" value="<%= siteConfig.whatsappNumber %>" placeholder="Ej: 595981123456">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="whatsappMessage" class="form-label">Mensaje Predeterminado de WhatsApp</label>
+                                        <textarea id="whatsappMessage" name="whatsappMessage" rows="3" class="form-control"><%= siteConfig.whatsappMessage %></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="aboutUsText" class="form-label">Texto de "Sobre Nosotros"</label>
+                                        <textarea id="aboutUsText" name="aboutUsText" rows="6" class="form-control"><%= siteConfig.aboutUsText %></textarea>
+                                        <small class="form-text text-muted">Puedes usar etiquetas HTML básicas como &lt;p&gt;, &lt;strong&gt;, &lt;br&gt;.</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Logo del Sitio</h6>
+                            </div>
+                            <div class="card-body">
+                                <form action="/admin/configuracion/logo" method="POST" enctype="multipart/form-data">
+                                    <% if (siteConfig.logoUrl) { %>
+                                        <p>Logo actual:</p>
+                                        <img src="<%= siteConfig.logoUrl.replace('/upload/', '/upload/h_60/') %>" alt="Logo Actual" class="mb-3" style="max-height: 60px; background: #eee; padding: 5px;">
+                                    <% } %>
+                                    <div class="mb-3">
+                                        <label for="logo" class="form-label">Subir nuevo logo</label>
+                                        <input type="file" id="logo" name="logo" class="form-control" accept="image/png, image/jpeg, image/webp" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-secondary w-100">Actualizar Logo</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Banners de Inicio</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Próximamente: Aquí podrás gestionar las imágenes rotativas del banner principal.</p>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Script para el toggle del sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Admin Alethia Decora</title>
+    <link href="/css/admin.css" rel="stylesheet">
+    <style>
+        /* Estilos para centrar el error (similar al login) */
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--admin-light);
+        }
+        .error-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            text-align: center;
+            border-top: 4px solid var(--admin-danger);
+        }
+        .error-container h1 {
+            font-size: 2.5rem;
+            color: var(--admin-danger);
+            margin-bottom: 1rem;
+        }
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-container">
+        <h1><i class="fas fa-exclamation-triangle"></i></h1>
+        <h2 class="h4 text-gray-800 mb-3">Oops... Ha ocurrido un error</h2>
+
+        <% if (locals.message) { %>
+            <div class="alert alert-danger">
+                <strong>Error:</strong> <%= message %>
+            </div>
+        <% } else { %>
+            <div class="alert alert-danger">
+                Ha ocurrido un error inesperado.
+            </div>
+        <% } %>
+        
+        <a href="javascript:history.back()" class="btn btn-primary">
+            &larr; Volver a la página anterior
+        </a>
+    </div>
+
+</body>
+</html>
