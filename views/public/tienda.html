@@ -158,20 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.innerHTML = 'Ocultar Filtros <i class="fas fa-times"></i>';
             }
         });
-
-        // Auto-abrir el contenedor principal de filtros si está activo al cargar (móvil)
-        if (filtersContainer.classList.contains('active')) {
-            filterToggleButton.classList.add('active');
-            filterToggleButton.innerHTML = 'Ocultar Filtros <i class="fas fa-times"></i>';
-            
-            // Solo auto-abrimos en móvil (en desktop no tiene maxHeight)
-            if (window.innerWidth < 992) {
-                 // Damos un respiro para que JS calcule bien la altura
-                 setTimeout(() => {
-                    filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
-                 }, 10);
-            }
-        }
     }
 
     // --- LÓGICA PARA LOS GRUPOS ANIDADOS (Categoría, Tipo) ---
@@ -199,7 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Auto-abrir los sub-paneles activos (Categoría, Tipo) al cargar la página
+    // ==========================================================
+    // --- CORRECCIÓN DEL BUG DE CARGA (ORDEN INVERTIDO) ---
+    // ==========================================================
+
+    // PASO 1 (ANTES): Abrir los sub-paneles activos (Categoría, Tipo) PRIMERO.
+    // Esto asegura que tengan altura antes de que el padre calcule la suya.
     const activeNestedTriggers = document.querySelectorAll('.collapsible-trigger.active');
     activeNestedTriggers.forEach(trigger => {
         const panel = trigger.nextElementSibling;
@@ -207,6 +198,21 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.style.maxHeight = panel.scrollHeight + "px";
         }
     });
+
+    // PASO 2 (DESPUÉS): Auto-abrir el contenedor principal de filtros (móvil).
+    // Ahora que los hijos están abiertos, .scrollHeight tendrá el valor correcto.
+    if (filterToggleButton && filtersContainer && filtersContainer.classList.contains('active')) {
+        filterToggleButton.classList.add('active');
+        filterToggleButton.innerHTML = 'Ocultar Filtros <i class="fas fa-times"></i>';
+        
+        // Solo auto-abrimos en móvil (en desktop no tiene maxHeight)
+        if (window.innerWidth < 992) {
+            // Damos un respiro para que el DOM se actualice con los hijos abiertos
+            setTimeout(() => {
+                filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
+            }, 10); // 10ms es suficiente
+        }
+    }
 });
 </script>
 
