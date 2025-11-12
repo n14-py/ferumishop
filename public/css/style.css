@@ -1,6 +1,6 @@
 /* ============================================= */
 /* --- ESTILOS COMPLETOS PARA ALETHIA DECORA --- */
-/* v1.0 - Adaptado desde Dona Paraguay         */
+/* v1.2 - Fix DEFINITIVO conflicto Bootstrap     */
 /* ============================================= */
 
 /* --- FUENTE E ICONOS --- */
@@ -48,7 +48,14 @@ body {
 main.container {
     flex-grow: 1;
 }
-.container { width: 100%; max-width: 1280px; margin: 1.5rem auto; padding: 0 1rem; }
+
+/* FIX: Hacemos nuestro .container más específico que el de Bootstrap */
+body > .container { 
+    width: 100%; 
+    max-width: 1280px; 
+    margin: 1.5rem auto; 
+    padding: 0 1rem; 
+}
 
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-family-headings);
@@ -62,7 +69,7 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 .badge { padding: .3em .6em; font-size: .8rem; font-weight: 600; border-radius: 50px; }
 
 /* ============================================= */
-/* --- HEADER Y NAVEGACIÓN --- */
+/* --- HEADER Y NAVEGACIÓN (CORREGIDO v2) --- */
 /* ============================================= */
 .main-header {
     background-color: var(--surface-color);
@@ -73,11 +80,16 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 .navbar-container { max-width: 1300px; margin: 0 auto; padding: 0 1rem; height: 80px; display: flex; align-items: center; justify-content: space-between; }
 .navbar-brand a { font-family: var(--font-family-headings); font-size: 1.8rem; font-weight: 700; color: var(--primary-color-dark); padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
 .navbar-brand img { height: 40px; } /* Para el logo */
-.navbar-nav { display: none; gap: 0.5rem; }
-.navbar-nav a { font-weight: 600; text-transform: uppercase; font-size: 0.9rem; color: var(--text-muted-color); padding: 0.75rem 1rem; border-bottom: 2px solid transparent; }
-.navbar-nav a:hover, .navbar-nav a.active { color: var(--primary-color-dark); border-bottom-color: var(--accent-color); }
+
+/* FIX: Selectores extra-específicos para ganar a Bootstrap */
+header.main-header .navbar-container .navbar-nav { display: none; gap: 0.5rem; flex-direction: row; }
+header.main-header .navbar-container .navbar-nav a { font-weight: 600; text-transform: uppercase; font-size: 0.9rem; color: var(--text-muted-color); padding: 0.75rem 1rem; border-bottom: 2px solid transparent; }
+header.main-header .navbar-container .navbar-nav a:hover, 
+header.main-header .navbar-container .navbar-nav a.active { color: var(--primary-color-dark); border-bottom-color: var(--accent-color); }
 .navbar-actions { display: flex; align-items: center; gap: 1rem; }
-.mobile-menu-icon { display: none; font-size: 1.8rem; cursor: pointer; color: var(--text-color); }
+
+/* FIX: Selectores extra-específicos */
+header.main-header .navbar-container .mobile-menu-icon { display: none; font-size: 1.8rem; cursor: pointer; color: var(--text-color); }
 
 /* --- Barra de búsqueda del Header --- */
 .header-search { position: relative; }
@@ -177,9 +189,7 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     color: white;
     background-size: cover;
     background-position: center;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    margin-bottom: 3rem;
+    /* Quitado: border-radius y margin (ahora lo maneja el carrusel o el fallback) */
 }
 .hero-section::after {
     content: '';
@@ -276,7 +286,6 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     gap: 2rem;
 }
 .store-sidebar {
-    /* ¡YA NO ES STICKY EN MÓVIL! */
     height: fit-content;
 }
 .filter-group h4 {
@@ -378,20 +387,54 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     gap: 2rem;
     margin-top: 2rem;
 }
-.contact-info ul { list-style: none; }
+
+/* ============================================= */
+/* --- PÁGINA DE CONTACTO (Iconos) --- */
+/* ============================================= */
+.contact-info ul { 
+    list-style: none; 
+    padding: 0;
+    margin-top: 1.5rem;
+}
 .contact-info li {
     font-size: 1.1rem;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    /* Estilos de margen y flex se mueven al <a> */
 }
 .contact-info li i {
-    font-size: 1.5rem;
+    /* Estilos se mueven a la nueva clase */
+}
+
+/* Estilos para la nueva lista de iconos en Contacto */
+.contact-icon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Espacio entre items */
+}
+
+.contact-icon-list li a {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Espacio entre icono y texto */
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.contact-icon-list li a:hover {
+    background-color: var(--primary-color-light);
+    color: var(--primary-color-dark);
+}
+
+.contact-icon-list li a i {
+    font-size: 1.8rem;
     color: var(--primary-color);
-    width: 30px;
+    width: 35px; /* Ancho fijo para alinear iconos */
     text-align: center;
 }
+
 
 /* ============================================= */
 /* --- FOOTER --- */
@@ -405,14 +448,30 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 .footer-section.links ul { list-style: none; padding: 0; }
 .footer-section.links a { color: inherit; text-decoration: none; padding: 0.25rem 0; display: block; }
 .footer-section.links a:hover { color: white; text-decoration: underline; }
-.social-links-footer { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; }
-.social-links-footer a { color: white; font-size: 1.5rem; }
-.social-links-footer a:hover { color: var(--accent-color); }
+/* Reemplaza el primer bloque con esto: */
+.social-links-footer {
+    display: flex;
+    flex-wrap: wrap; /* Para que pasen abajo si no caben */
+    gap: 1.25rem; /* Más espacio entre iconos */
+    justify-content: center; /* Centrado en móvil */
+    margin-top: 1rem;
+}
+.social-links-footer a {
+    color: white;
+    font-size: 1.8rem; /* Un poco más grandes */
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+.social-links-footer a:hover {
+    color: var(--accent-color); /* Color dorado al pasar el mouse */
+    opacity: 1;
+    transform: scale(1.1); /* Efecto sutil */
+}
 .footer-bottom { padding: 1.5rem 0; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.9rem; }
 .footer-bottom a { color: var(--accent-color); font-weight: 600; }
 
 /* ============================================= */
-/* --- MENÚ MÓVIL (PANEL LATERAL) --- */
+/* --- MENÚ MÓVIL (PANEL LATERAL) (CORREGIDO v2) --- */
 /* ============================================= */
 .mobile-nav-panel {
     position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
@@ -429,8 +488,16 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
 }
 .mobile-nav-overlay.active { opacity: 1; visibility: visible; }
-.mobile-nav-panel .navbar-nav { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; width: 100%; }
-.mobile-nav-panel a {
+
+/* FIX: Selectores extra-específicos */
+nav.mobile-nav-panel .navbar-nav { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 0.5rem; 
+    width: 100%; 
+}
+nav.mobile-nav-panel a {
     font-size: 1.1rem;
     padding: 0.75rem;
     color: var(--text-color);
@@ -438,22 +505,27 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     border-radius: var(--border-radius);
     font-weight: 600;
 }
-.mobile-nav-panel a:hover { background-color: var(--primary-color-light); }
-.mobile-nav-panel .dropdown-divider { border-top: 1px solid var(--border-color); width: 100%; margin: 0.5rem 0; }
+nav.mobile-nav-panel a:hover { background-color: var(--primary-color-light); }
+nav.mobile-nav-panel .dropdown-divider { border-top: 1px solid var(--border-color); width: 100%; margin: 0.5rem 0; }
 
 /* ============================================= */
-/* --- MEDIA QUERIES --- */
+/* --- MEDIA QUERIES (CORREGIDO v2) --- */
 /* ============================================= */
 @media (max-width: 767px) {
-    .navbar-container .navbar-nav,
-    .navbar-container .navbar-actions .header-search { display: none; }
-    .mobile-menu-icon { display: block; }
+    /* FIX: Selectores extra-específicos */
+    header.main-header .navbar-container .navbar-nav,
+    header.main-header .navbar-container .navbar-actions .header-search { display: none; }
+    header.main-header .navbar-container .mobile-menu-icon { display: block; }
 }
 
 @media (min-width: 768px) {
-    .container { padding: 0 2rem; margin: 2.5rem auto; }
-    .navbar-nav { display: flex; }
-    .mobile-menu-icon { display: none; }
+    /* FIX: Hacemos nuestro .container más específico */
+    body > .container { padding: 0 2rem; margin: 2.5rem auto; }
+    
+    /* FIX: Selectores extra-específicos */
+    header.main-header .navbar-container .navbar-nav { display: flex; }
+    header.main-header .navbar-container .mobile-menu-icon { display: none; }
+    
     .product-grid { grid-template-columns: repeat(2, 1fr); }
     .footer-container { grid-template-columns: 2fr 1fr 1fr; text-align: left; }
     .social-links-footer { justify-content: flex-start; }
@@ -480,72 +552,9 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 }
 
 
-
-
 /* ============================================= */
-/* --- FILTROS COLAPSABLES (TIENDA) --- */
+/* --- FILTROS COLAPSABLES (TIENDA - v2) --- */
 /* ============================================= */
-.filter-group {
-    border-bottom: 1px solid var(--primary-color-light);
-}
-.filter-group:last-of-type {
-    border-bottom: none;
-}
-.store-sidebar hr { 
-    display: none; /* Ocultamos el <hr> viejo si aún existe */
-}
-
-.collapsible-trigger {
-    font-family: var(--font-family-headings);
-    font-size: 1.3rem;
-    margin-bottom: 0;
-    padding: 1rem 0.5rem 1rem 0;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: none;
-    position: relative;
-    user-select: none; /* Evita que se seleccione el texto al hacer clic */
-}
-.collapsible-trigger:hover {
-    color: var(--primary-color);
-}
-.collapsible-trigger i {
-    font-size: 1.1rem;
-    color: var(--text-muted-color);
-    transition: transform 0.3s ease;
-}
-.collapsible-trigger.active i {
-    transform: rotate(45deg); /* Gira el '+' para que parezca 'x' */
-}
-
-.collapsible-panel {
-    list-style: none;
-    max-height: 0; /* CERRADO POR DEFECTO */
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-    padding-left: 0.5rem;
-}
-.collapsible-panel li a {
-    padding: 0.6rem 0;
-}
-
-
-/* --- FIX: Evitar zoom en buscador móvil --- */
-.mobile-nav-panel .header-search-input {
-    font-size: 1rem; /* 1rem = 16px (basado en el body) */
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-    width: 100%;
-}
-
-
-
-/* ============================================= */
-/* --- NUEVOS FILTROS TIENDA (MÓVIL Y DESKTOP) --- */
-/* ============================================= */
-
 /* 1. Estilos del Buscador (Siempre visible) */
 .sidebar-search-container {
     padding-bottom: 1rem;
@@ -593,7 +602,6 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     transform: rotate(180deg);
 }
 
-
 /* 3. Contenedor de Filtros (Colapsable en Móvil) */
 .filters-container {
     /* En desktop, está visible por defecto */
@@ -601,19 +609,49 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     overflow: visible;
 }
 
-
 /* 4. Estilos Anidados (Trigger/Panel) */
-/* (Ya los teníamos, solo aseguramos que se vean bien) */
 .filter-group {
     border-bottom: 1px solid var(--primary-color-light);
 }
-.collapsible-trigger {
-    padding: 1rem 0;
-    margin: 0;
+.filter-group:last-of-type {
+    border-bottom: none;
 }
+
+.collapsible-trigger {
+    font-family: var(--font-family-headings);
+    font-size: 1.3rem;
+    margin-bottom: 0;
+    padding: 1rem 0.5rem 1rem 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    position: relative;
+    user-select: none; /* Evita que se seleccione el texto al hacer clic */
+}
+.collapsible-trigger:hover {
+    color: var(--primary-color);
+}
+.collapsible-trigger i {
+    font-size: 1.1rem;
+    color: var(--text-muted-color);
+    transition: transform 0.3s ease;
+}
+.collapsible-trigger.active i {
+    transform: rotate(45deg); /* Gira el '+' para que parezca 'x' */
+}
+
 .collapsible-panel {
+    list-style: none;
+    max-height: 0; /* CERRADO POR DEFECTO */
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
     padding-left: 0.5rem;
-    padding-bottom: 1rem;
+    padding-bottom: 1rem; /* Añadido para más espacio */
+}
+.collapsible-panel li a {
+    padding: 0.6rem 0;
 }
 
 
@@ -639,12 +677,13 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
 
     /* El JS añadirá 'active' para abrirlo */
     .filters-container.active {
-        max-height: 1000px; /* Un valor alto, el JS lo ajustará */
+        /* Se quita max-height, el JS lo controla */
     }
 }
 
-
-/* --- FIX: ESTILOS DEL CARRUSEL DE BANNERS --- */
+/* ============================================= */
+/* --- ESTILOS DEL CARRUSEL DE BANNERS --- */
+/* ============================================= */
 
 /* 1. Contenedor principal del carrusel */
 #heroCarousel {

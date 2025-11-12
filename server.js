@@ -711,15 +711,14 @@ app.get('/admin/configuracion', requireAdmin, async (req, res, next) => {
 // Actualizar textos y WhatsApp
 app.post('/admin/configuracion/update', requireAdmin, async (req, res, next) => {
     try {
-        const { whatsappNumber, whatsappMessage, aboutUsText } = req.body;
+        const { whatsappNumber, whatsappMessage } = req.body;
         
         await SiteConfig.findOneAndUpdate(
             { configKey: 'main_config' },
             {
-                whatsappNumber: purify.sanitize(whatsappNumber),
-                whatsappMessage: purify.sanitize(whatsappMessage),
-                aboutUsText: purify.sanitize(aboutUsText, { USE_PROFILES: { html: true } })
-            },
+            whatsappNumber: purify.sanitize(whatsappNumber),
+            whatsappMessage: purify.sanitize(whatsappMessage)
+        },
             { upsert: true, new: true } // Crea la config si no existe
         );
         

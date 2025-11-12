@@ -20,65 +20,66 @@
         <h1>Contáctanos</h1>
         <p style="text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
             ¿Tienes un proyecto en mente? ¿Viste un producto que te encantó?
-            ¡Estamos aquí para ayudarte a hacerlo realidad!
+            ¡Haz click en cualquiera de los iconos de abajo para contactarnos!
         </p>
 
-        <div class="contact-grid">
+        <div class="contact-info" style="max-width: 600px; margin: 2.5rem auto 0 auto;">
             
-            <div class="contact-info">
-                <h3>Información de Contacto</h3>
-                <p>Puedes contactarnos directamente a través de estos canales:</p>
-                <ul>
-                    <li>
+            <h3 style="text-align: center;">Nuestros Canales</h3>
+            <p style="text-align: center;">Puedes contactarnos directamente a través de estos canales:</p>
+            
+            <ul class="contact-icon-list">
+                <li>
+                    <a href="https://wa.me/<%= siteConfig.whatsappNumber %>" target="_blank" title="WhatsApp">
                         <i class="fab fa-whatsapp"></i>
-                        <div>
-                            <strong>WhatsApp</strong><br>
-                            <a href="https://wa.me/<%= siteConfig.whatsappNumber %>" target="_blank">
-                                +<%= siteConfig.whatsappNumber %>
-                            </a>
-                        </div>
-                    </li>
-                    <li>
+                        <span>WhatsApp</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.google.com/maps/place/Alethia+Decora/@-25.3777963,-57.4955249,15z/data=!4m6!3m5!1s0x945db3eb620e908f:0x1d3a0d0d60bd3e0a!8m2!3d-25.381065!4d-57.4935355!16s%2Fg%2F11rhh_vj8v?entry=ttu&g_ep=EgoyMDI1MTEwOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" title="Ubicación">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Ubicación</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.facebook.com/AlethiaDecora" target="_blank" title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                        <span>Facebook</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.instagram.com/alethia_decora/" target="_blank" title="Instagram">
                         <i class="fab fa-instagram"></i>
-                        <div>
-                            <strong>Instagram</strong><br>
-                            <a href="https://instagram.com/alethiadecora" target="_blank">
-                                @alethiadecora
-                            </a>
-                        </div>
-                    </li>
+                        <span>Instagram</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.tiktok.com/@alethiadecora" target="_blank" title="TikTok">
+                        <i class="fab fa-tiktok"></i>
+                        <span>TikTok</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://es.pinterest.com/alethiadecora/" target="_blank" title="Pinterest">
+                        <i class="fab fa-pinterest-p"></i>
+                        <span>Pinterest</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.youtube.com/channel/UC_NULweqw1keViTT6L_nh-7A" target="_blank" title="YouTube">
+                        <i class="fab fa-youtube"></i>
+                        <span>YouTube</span>
+                    </a>
+                </li>
                     <li>
+                    <a href="mailto:contacto@alethiadecora.com" title="Email">
                         <i class="fas fa-envelope"></i>
-                        <div>
-                            <strong>Email</strong><br>
-                            <a href="mailto:contacto@alethiadecora.com">
-                                contacto@alethiadecora.com
-                            </a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="contact-form">
-                <h3>Envíanos un Mensaje</h3>
-                <p>Completa el formulario y te responderemos a la brevedad.</p>
-                <form action="#" method="POST">
-                    <div class="form-group">
-                        <label for="name">Tu Nombre</label>
-                        <input type="text" id="name" name="name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Tu Email</label>
-                        <input type="email" id="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Mensaje</label>
-                        <textarea id="message" name="message" rows="5" class="form-control" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100" disabled>Enviar Mensaje (No funcional)</button>
-                </form>
-            </div>
+                        <span>Email</span>
+                    </a>
+                </li>
+            </ul>
         </div>
+
     </div>
 
 </main>

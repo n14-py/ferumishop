@@ -8,6 +8,33 @@
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        .team-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 576px) {
+            .team-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .team-list li {
+            background-color: var(--primary-color-light);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+        }
+        .team-list li strong {
+            color: var(--primary-color-dark);
+            display: block;
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,15 +44,31 @@
 <main class="container">
     
     <div class="static-page-container">
-        <h1>Sobre Nosotros</h1>
         
-        <div class="description">
-            <%- siteConfig.aboutUsText %>
+        <h1>Conócenos</h1>
+        
+        <div class="description" style="font-size: 1.1rem; line-height: 1.8;">
+            <p style="font-weight: 600; color: var(--primary-color-dark);">Danni:</p>
+            <p style="margin-top: -1rem;">
+                Empecé con las purpurinas, tijeras y elementos de escuela, desde muy pequeña ayudaba a los demás a mostrar su lado creativo. Al transcurrir los años ese interés me llevo a trabajar y ganar experiencia con organizadores de eventos e importantes decoradores.
+            </p>
+            <p>
+                Hoy somos un maravilloso equipo de trabajo. Nos dedicamos profesionalmente a proveer de elementos decorativos prácticos funcionales y accesibles a toda persona que se dedique al rubro, como también al que tiene interés de emprender o brindar a su familia un momento memorable.
+            </p>
+
+            <h3 style="font-family: var(--font-family-headings); margin-top: 2.5rem; margin-bottom: 1rem;">Nuestro Equipo</h3>
+            <ul class="team-list">
+                <li><strong>Nancy:</strong> Materializa todas las ideas</li>
+                <li><strong>Dominga:</strong> Experta en confección</li>
+                <li><strong>Lizzi:</strong> Un amor en atención al cliente</li>
+            </ul>
+
+            <p style="text-align: center; margin-top: 2.5rem; font-style: italic; font-size: 1.1rem; color: var(--text-muted-color);">
+                Trabajamos en San lorenzo, pero aceptamos encargos de todas partes del país.
+            </p>
         </div>
-
-        <img src="https://res.cloudinary.com/dmedd6w1q/image/upload/v1799799688/alethia-decora/placeholder-about.jpg" alt="Sobre Alethia Decora" style="width: 100%; border-radius: 8px; margin-top: 2rem;">
-
-    </div>
+        
+        </div>
 
 </main>
 

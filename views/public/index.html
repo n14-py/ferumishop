@@ -32,8 +32,9 @@
                 <% siteConfig.bannerImages.forEach((bannerUrl, index) => { %>
                     <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
                         
-<div class="hero-slide" style="background-image: url('<%= bannerUrl.replace(\`/upload/\`, \`/upload/w_1600,h_900,c_fill,g_auto/\`) %>');">                            <div class="hero-content">
-                                <h1>Decoración que inspira</h1>
+                        <div class="hero-slide" style="background-image: url('<%= bannerUrl.replace("/upload/", "/upload/w_1600,h_900,c_fill,g_auto/") %>');">
+                            <div class="hero-content">
+                                <h1>ALETHIA DECORA</h1>
                                 <p>Encuentra piezas únicas para venta y alquiler que transformarán tu espacio.</p>
                                 <a href="/tienda" class="btn btn-primary btn-accent">Ver Tienda</a>
                             </div>
