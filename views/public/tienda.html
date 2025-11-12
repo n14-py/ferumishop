@@ -20,59 +20,65 @@
         
         <aside class="store-sidebar">
             
-            <div class="filter-group">
-                <h4 class="collapsible-trigger <%= query.q ? 'active' : '' %>">
-                    Buscar por Nombre <i class="fas fa-plus"></i>
-                </h4>
-                <ul class="collapsible-panel" style="padding: 0.5rem 0.5rem 1rem 0.5rem;">
-                    <li>
-                        <form action="/tienda" method="GET" class="sidebar-search-form">
-                            <input type="text" name="q" class="form-control" placeholder="Buscar productos..." value="<%= query.q || '' %>">
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Buscar</button>
-                        </form>
-                    </li>
-                </ul>
+            <div class="sidebar-search-container">
+                <form action="/tienda" method="GET" class="sidebar-search-form">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar productos..." value="<%= query.q || '' %>">
+                    <button type="submit" class="btn btn-primary" title="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
-            <div class="filter-group">
-                <h4 class="collapsible-trigger <%= query.categoria ? 'active' : '' %>">
-                    Categorías <i class="fas fa-plus"></i>
-                </h4>
-                <ul class="collapsible-panel">
-                    <li>
-                        <a href="/tienda" class="<%= !query.categoria ? 'active' : '' %>">
-                            Ver Todo
-                        </a>
-                    </li>
-                    <% if (locals.categories) { %>
-                        <% categories.forEach(cat => { %>
-                            <li>
-                                <a href="/tienda?categoria=<%= cat.name %>" class="<%= query.categoria === cat.name ? 'active' : '' %>">
-                                    <%= cat.name %>
-                                </a>
-                            </li>
-                        <% }); %>
-                    <% } %>
-                </ul>
-            </div>
+
+            <button class="filter-toggle-button" id="filter-toggle-button">
+                Mostrar Filtros <i class="fas fa-sliders-h"></i>
+            </button>
+
+            <div class="filters-container <%= (query.categoria || query.tipo) ? 'active' : '' %>" id="filters-container">
             
-            <div class="filter-group">
-                 <h4 class="collapsible-trigger <%= query.tipo ? 'active' : '' %>">
-                    Tipo de Producto <i class="fas fa-plus"></i>
-                </h4>
-                <ul class="collapsible-panel">
-                    <li>
-                        <a href="/tienda?tipo=venta" class="<%= query.tipo === 'venta' ? 'active' : '' %>">
-                            Para Venta
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/tienda?tipo=alquiler" class="<%= query.tipo === 'alquiler' ? 'active' : '' %>">
-                            Para Alquiler
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </aside>
+                <div class="filter-group">
+                    <h4 class="collapsible-trigger <%= query.categoria ? 'active' : '' %>">
+                        Categorías <i class="fas fa-plus"></i>
+                    </h4>
+                    <ul class="collapsible-panel">
+                        <li>
+                            <a href="/tienda" class="<%= !query.categoria ? 'active' : '' %>">
+                                Ver Todo
+                            </a>
+                        </li>
+                        <% if (locals.categories) { %>
+                            <% categories.forEach(cat => { %>
+                                <li>
+                                    <a href="/tienda?categoria=<%= cat.name %>" class="<%= query.categoria === cat.name ? 'active' : '' %>">
+                                        <%= cat.name %>
+                                    </a>
+                                </li>
+                            <% }); %>
+                        <% } %>
+                    </ul>
+                </div>
+                
+                <div class="filter-group">
+                     <h4 class="collapsible-trigger <%= query.tipo ? 'active' : '' %>">
+                        Tipo de Producto <i class="fas fa-plus"></i>
+                    </h4>
+                    <ul class="collapsible-panel">
+                        <li>
+                            <a href="/tienda" class="<%= (!query.tipo && !query.categoria && !query.q) ? 'active' : '' %>">Ver Todo</a>
+                        </li>
+                        <li>
+                            <a href="/tienda?tipo=venta" class="<%= query.tipo === 'venta' ? 'active' : '' %>">
+                                Para Venta
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/tienda?tipo=alquiler" class="<%= query.tipo === 'alquiler' ? 'active' : '' %>">
+                                Para Alquiler
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div> </aside>
 
         <section class="store-main-content">
             
@@ -131,33 +137,73 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const triggers = document.querySelectorAll('.collapsible-trigger');
 
-    triggers.forEach(trigger => {
-        trigger.addEventListener('click', function() {
-            // Alterna la clase 'active' para girar el ícono
-            this.classList.toggle('active'); 
+    // --- LÓGICA PARA EL BOTÓN PRINCIPAL "FILTROS" (MÓVIL) ---
+    const filterToggleButton = document.getElementById('filter-toggle-button');
+    const filtersContainer = document.getElementById('filters-container');
+
+    if (filterToggleButton && filtersContainer) {
+        
+        filterToggleButton.addEventListener('click', function() {
+            this.classList.toggle('active');
+            filtersContainer.classList.toggle('active');
+
+            if (filtersContainer.style.maxHeight) {
+                // Si está abierto, ciérralo
+                filtersContainer.style.maxHeight = null;
+                this.innerHTML = 'Mostrar Filtros <i class="fas fa-sliders-h"></i>';
+            } else {
+                // Si está cerrado, ábrelo
+                filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
+                this.innerHTML = 'Ocultar Filtros <i class="fas fa-times"></i>';
+            }
+        });
+
+        // Auto-abrir el contenedor principal de filtros si está activo al cargar (móvil)
+        if (filtersContainer.classList.contains('active')) {
+            filterToggleButton.classList.add('active');
+            filterToggleButton.innerHTML = 'Ocultar Filtros <i class="fas fa-times"></i>';
             
-            // Selecciona el panel (la lista <ul> que es su "hermano" siguiente)
+            // Solo auto-abrimos en móvil (en desktop no tiene maxHeight)
+            if (window.innerWidth < 992) {
+                 // Damos un respiro para que JS calcule bien la altura
+                 setTimeout(() => {
+                    filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
+                 }, 10);
+            }
+        }
+    }
+
+    // --- LÓGICA PARA LOS GRUPOS ANIDADOS (Categoría, Tipo) ---
+    const nestedTriggers = document.querySelectorAll('.collapsible-trigger');
+
+    nestedTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            this.classList.toggle('active');
             const panel = this.nextElementSibling;
             
             if (panel.style.maxHeight) {
-                // Si está abierto (tiene max-height), ciérralo
                 panel.style.maxHeight = null;
             } else {
-                // Si está cerrado, ábrelo (calculando su altura real)
                 panel.style.maxHeight = panel.scrollHeight + "px";
             } 
+
+            // Importante: Ajustar la altura del contenedor padre si estamos en móvil
+            // (para que el contenedor principal crezca si un hijo se abre)
+            if (window.innerWidth < 992 && filtersContainer.classList.contains('active')) {
+                // Espera a que termine la animación del hijo (300ms) y recalcula
+                setTimeout(() => {
+                    filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
+                }, 310); 
+            }
         });
     });
 
-    // IMPORTANTE: Abrir automáticamente TODOS los paneles de filtros activos
-    const activeTriggers = document.querySelectorAll('.collapsible-trigger.active');
-    
-    activeTriggers.forEach(trigger => {
-        const panel = trigger.nextElementSibling; // El <ul>
+    // Auto-abrir los sub-paneles activos (Categoría, Tipo) al cargar la página
+    const activeNestedTriggers = document.querySelectorAll('.collapsible-trigger.active');
+    activeNestedTriggers.forEach(trigger => {
+        const panel = trigger.nextElementSibling;
         if (panel && panel.classList.contains('collapsible-panel')) {
-            // Lo abrimos dándole su altura real
             panel.style.maxHeight = panel.scrollHeight + "px";
         }
     });

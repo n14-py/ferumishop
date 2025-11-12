@@ -539,3 +539,106 @@ hr { border: none; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     padding-bottom: 0.75rem;
     width: 100%;
 }
+
+
+
+/* ============================================= */
+/* --- NUEVOS FILTROS TIENDA (MÓVIL Y DESKTOP) --- */
+/* ============================================= */
+
+/* 1. Estilos del Buscador (Siempre visible) */
+.sidebar-search-container {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+.sidebar-search-form {
+    display: flex;
+    gap: 0.5rem;
+}
+.sidebar-search-form .form-control {
+    flex-grow: 1; /* El input toma el espacio */
+    border-radius: 50px;
+}
+.sidebar-search-form .btn {
+    flex-shrink: 0; /* El botón no se achica */
+    padding: 12px 14px; /* Hacemos el botón más cuadrado */
+}
+
+/* 2. Botón de Filtros (Solo Móvil) */
+.filter-toggle-button {
+    display: none; /* Oculto por defecto */
+    width: 100%;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-color-dark);
+    background-color: var(--primary-color-light);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    text-align: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+}
+.filter-toggle-button:hover {
+    background-color: #e6e0da;
+}
+.filter-toggle-button i {
+    transition: transform 0.3s ease;
+}
+.filter-toggle-button.active i {
+    transform: rotate(180deg);
+}
+
+
+/* 3. Contenedor de Filtros (Colapsable en Móvil) */
+.filters-container {
+    /* En desktop, está visible por defecto */
+    max-height: none;
+    overflow: visible;
+}
+
+
+/* 4. Estilos Anidados (Trigger/Panel) */
+/* (Ya los teníamos, solo aseguramos que se vean bien) */
+.filter-group {
+    border-bottom: 1px solid var(--primary-color-light);
+}
+.collapsible-trigger {
+    padding: 1rem 0;
+    margin: 0;
+}
+.collapsible-panel {
+    padding-left: 0.5rem;
+    padding-bottom: 1rem;
+}
+
+
+/* 5. MEDIA QUERY: Comportamiento en MÓVIL (Menos de 992px) */
+@media (max-width: 991px) {
+    /* Hacemos que la sidebar deje de ser pegajosa */
+    .store-sidebar {
+        position: static;
+        top: auto;
+    }
+    
+    /* Mostramos el botón de "Mostrar Filtros" */
+    .filter-toggle-button {
+        display: inline-flex;
+    }
+
+    /* Ocultamos el contenedor de filtros por defecto */
+    .filters-container {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+
+    /* El JS añadirá 'active' para abrirlo */
+    .filters-container.active {
+        max-height: 1000px; /* Un valor alto, el JS lo ajustará */
+    }
+}
