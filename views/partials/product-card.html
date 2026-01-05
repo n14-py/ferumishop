@@ -21,14 +21,7 @@
             class="product-card-image"
             loading="lazy">
         
-        <% if (product.isForRent && !product.isForSale) { %>
-            <span class="card-badge">Alquiler</span>
-        <% } else if (product.isForSale && !product.isForRent) { %>
-            <span class="card-badge">Venta</span>
-        <% } else if (product.isForSale && product.isForRent) { %>
-            <span class="card-badge">Venta/Alquiler</span>
-        <% } %>
-    </a>
+        </a>
 
     <div class="card-content">
         <div class="card-category">

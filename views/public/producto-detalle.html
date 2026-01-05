@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title><%= product.name %> - Alethia Decora</title>
+    <title><%= product.name %> - FERUMI</title>
     <meta name="description" content="<%= product.description.replace(/<[^>]*>?/gm, '').substring(0, 150) %>...">
     
     <meta property="og:title" content="<%= product.name %>">
@@ -53,7 +53,7 @@
                 </div>
 
                 <% 
-                    // Nuevo mensaje con el link completo del producto
+                    // Link de WhatsApp
                     const productUrl = `${baseUrl}/producto/${product._id}`;
                     const fullMessage = `${siteConfig.whatsappMessage} ${product.name}. \n\nPuedes verlo aquí: ${productUrl}`;
                     const whatsappLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
@@ -69,19 +69,14 @@
 
                 <div class="product-meta">
                     <span><strong>Categoría:</strong> <%= product.category.name %></span>
-                    <span><strong>Disponibilidad:</strong>
-                        <% if(product.isForSale) { %> Venta <% } %>
-                        <% if(product.isForSale && product.isForRent) { %> / <% } %>
-                        <% if(product.isForRent) { %> Alquiler <% } %>
-                    </span>
-                </div>
+                    </div>
             </div>
         </div>
 
         <% if (recommendedProducts && recommendedProducts.length > 0) { %>
             <div class="recommended-section">
                 <hr>
-                <h2 class="section-title">Productos Recomendados</h2>
+                <h2 class="section-title">También te podría gustar</h2>
                 <div class="product-grid">
                     <% recommendedProducts.forEach(recProduct => { %>
                         <%- include('../partials/product-card.html', { product: recProduct }) %>
@@ -91,7 +86,7 @@
         <% } %>
 
     <% } else { %>
-        <div class_alias="no-results-card">
+        <div class="no-results-card">
             <h2>Producto no encontrado</h2>
             <p>El producto que buscas no existe o ha sido eliminado.</p>
             <a href="/tienda" class="btn btn-primary">Volver a la Tienda</a>
@@ -102,14 +97,12 @@
 <%- include('../partials/footer.html') %>
 
 <script>
-    // Script simple para cambiar la imagen principal al hacer clic en una miniatura
     function changeMainImage(newSrc) {
         document.getElementById('mainProductImage').src = newSrc;
         
-        // Actualizar la clase 'active' en las miniaturas
         const thumbnails = document.querySelectorAll('.product-thumbnails img');
         thumbnails.forEach(img => {
-            if (img.src.includes(newSrc.split('/upload/')[1].split('/')[1])) { // Compara la parte relevante de la URL
+            if (img.src.includes(newSrc.split('/upload/')[1].split('/')[1])) { 
                 img.classList.add('active');
             } else {
                 img.classList.remove('active');

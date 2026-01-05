@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= pageTitle %> - Alethia Decora</title>
-    <meta name="description" content="Explora nuestro catálogo completo de productos para decoración, venta y alquiler.">
+    <title><%= pageTitle %> - FERUMI</title>
+    <meta name="description" content="Explora nuestro catálogo completo de maquillaje, uñas y accesorios. Todo para tu belleza en FERUMI.">
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -33,7 +33,7 @@
                 Mostrar Filtros <i class="fas fa-sliders-h"></i>
             </button>
 
-            <div class="filters-container <%= (query.categoria || query.tipo) ? 'active' : '' %>" id="filters-container">
+            <div class="filters-container <%= (query.categoria) ? 'active' : '' %>" id="filters-container">
             
                 <div class="filter-group">
                     <h4 class="collapsible-trigger <%= query.categoria ? 'active' : '' %>">
@@ -57,28 +57,8 @@
                     </ul>
                 </div>
                 
-                <div class="filter-group">
-                     <h4 class="collapsible-trigger <%= query.tipo ? 'active' : '' %>">
-                        Tipo de Producto <i class="fas fa-plus"></i>
-                    </h4>
-                    <ul class="collapsible-panel">
-                        <li>
-                            <a href="/tienda" class="<%= (!query.tipo && !query.categoria && !query.q) ? 'active' : '' %>">Ver Todo</a>
-                        </li>
-                        <li>
-                            <a href="/tienda?tipo=venta" class="<%= query.tipo === 'venta' ? 'active' : '' %>">
-                                Para Venta
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/tienda?tipo=alquiler" class="<%= query.tipo === 'alquiler' ? 'active' : '' %>">
-                                Para Alquiler
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-            </div> </aside>
+                </div> 
+        </aside>
 
         <section class="store-main-content">
             
@@ -98,7 +78,7 @@
                 <% } else { %>
                     <div class="no-results-card">
                         <h3>No se encontraron productos</h3>
-                        <p>Prueba con otros filtros o categorías.</p>
+                        <p>Prueba con otros términos de búsqueda o categorías.</p>
                         <a href="/tienda" class="btn btn-primary" style="margin-top: 1rem;">Ver todos los productos</a>
                     </div>
                 <% } %>
@@ -132,9 +112,6 @@
     </div>
 </main>
 
-
-
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -160,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA PARA LOS GRUPOS ANIDADOS (Categoría, Tipo) ---
+    // --- LÓGICA PARA LOS GRUPOS ANIDADOS (Categoría) ---
     const nestedTriggers = document.querySelectorAll('.collapsible-trigger');
 
     nestedTriggers.forEach(trigger => {
@@ -175,9 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } 
 
             // Importante: Ajustar la altura del contenedor padre si estamos en móvil
-            // (para que el contenedor principal crezca si un hijo se abre)
             if (window.innerWidth < 992 && filtersContainer.classList.contains('active')) {
-                // Espera a que termine la animación del hijo (300ms) y recalcula
                 setTimeout(() => {
                     filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
                 }, 310); 
@@ -186,11 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================================
-    // --- CORRECCIÓN DEL BUG DE CARGA (ORDEN INVERTIDO) ---
+    // --- CORRECCIÓN DEL BUG DE CARGA ---
     // ==========================================================
 
-    // PASO 1 (ANTES): Abrir los sub-paneles activos (Categoría, Tipo) PRIMERO.
-    // Esto asegura que tengan altura antes de que el padre calcule la suya.
     const activeNestedTriggers = document.querySelectorAll('.collapsible-trigger.active');
     activeNestedTriggers.forEach(trigger => {
         const panel = trigger.nextElementSibling;
@@ -199,26 +172,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // PASO 2 (DESPUÉS): Auto-abrir el contenedor principal de filtros (móvil).
-    // Ahora que los hijos están abiertos, .scrollHeight tendrá el valor correcto.
     if (filterToggleButton && filtersContainer && filtersContainer.classList.contains('active')) {
         filterToggleButton.classList.add('active');
         filterToggleButton.innerHTML = 'Ocultar Filtros <i class="fas fa-times"></i>';
         
-        // Solo auto-abrimos en móvil (en desktop no tiene maxHeight)
         if (window.innerWidth < 992) {
-            // Damos un respiro para que el DOM se actualice con los hijos abiertos
             setTimeout(() => {
                 filtersContainer.style.maxHeight = filtersContainer.scrollHeight + "px";
-            }, 10); // 10ms es suficiente
+            }, 10); 
         }
     }
 });
 </script>
-
-</body>
-</html>
-
 
 <%- include('../partials/footer.html') %>
 

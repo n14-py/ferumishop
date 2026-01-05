@@ -1,6 +1,5 @@
 // =============================================
-//               SERVER.JS - ALETHIA DECORA
-//                  (PARTE 1 DE 3)
+//               SERVER.JS - FERUMI
 // =============================================
 
 // IMPORTACIONES Y CONFIGURACIÓN INICIAL
@@ -36,7 +35,7 @@ app.engine('html', ejs.renderFile);
 // CONEXIÓN A MONGODB
 // =============================================
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Conectado a MongoDB para Alethia Decora'))
+  .then(() => console.log('✅ Conectado a MongoDB para FERUMI'))
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
 // =============================================
@@ -52,7 +51,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'alethia-decora', // Carpeta en Cloudinary
+        folder: 'ferumi', // Carpeta en Cloudinary actualizada
         resource_type: 'auto',
         allowed_formats: ['jpeg', 'png', 'jpg', 'webp'],
         transformation: [
@@ -86,7 +85,7 @@ const adminUserSchema = new mongoose.Schema({
     username: { type: String, required: true, default: 'Admin' }
 });
 
-// Encriptar contraseña antes de guardar (tomado de donaparaguay)
+// Encriptar contraseña antes de guardar
 adminUserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password, 12);
@@ -141,7 +140,7 @@ app.use(require('cookie-parser')());
 
 app.set('trust proxy', 1);
 
-// Configuración de Sesión (tomado de donaparaguay)
+// Configuración de Sesión
 const sessionStore = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,
   collectionName: 'sessions',
@@ -225,7 +224,7 @@ const formatPrice = (value) => {
 // Middleware para pasar datos a todas las vistas (EJS)
 app.use(async (req, res, next) => {
     try {
-        // Carga la configuración del sitio (como en donaparaguay)
+        // Carga la configuración del sitio
         let config = await SiteConfig.findOne({ configKey: 'main_config' });
         if (!config) {
             config = new SiteConfig();
@@ -249,12 +248,6 @@ app.use(async (req, res, next) => {
         next(err);
     }
 });
-
-
-// =============================================
-//               SERVER.JS - ALETHIA DECORA
-//                  (PARTE 2 DE 3)
-// =============================================
 
 // =============================================
 // RUTAS PÚBLICAS (FRONTEND - VISTA DEL CLIENTE)
@@ -290,7 +283,7 @@ app.get('/tienda', async (req, res, next) => {
         let query = {};
         const { q, categoria, tipo } = req.query;
 
-        // Búsqueda por texto (como en donaparaguay)
+        // Búsqueda por texto
         if (q) {
             query.name = { $regex: q, $options: 'i' };
         }
@@ -345,7 +338,7 @@ app.get('/producto/:id', async (req, res, next) => {
             return res.status(404).render('public/error', { message: 'Producto no encontrado.' });
         }
         
-        // Sanear descripción (como en donaparaguay)
+        // Sanear descripción
         product.description = purify.sanitize(product.description, { USE_PROFILES: { html: true } });
 
         // Productos recomendados (de la misma categoría)
@@ -432,11 +425,6 @@ app.get('/api/search', async (req, res) => {
 
 
 // =============================================
-//               SERVER.JS - ALETHIA DECORA
-//                  (PARTE 3 DE 3)
-// =============================================
-
-// =============================================
 // RUTAS DEL PANEL ADMINISTRATIVO (BACKEND)
 // =============================================
 
@@ -445,7 +433,6 @@ app.get('/admin/login', (req, res) => {
     if (req.isAuthenticated()) {
         return res.redirect('/admin/dashboard');
     }
-    // Usamos 'flash' (simulado con sesión) para mostrar errores
     const error = req.session.error;
     delete req.session.error;
     res.render('admin/login', { error });
@@ -455,7 +442,7 @@ app.post('/admin/login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
         if (err) return next(err);
         if (!user) {
-            req.session.error = info.message; // Guarda el mensaje de error
+            req.session.error = info.message;
             return res.redirect('/admin/login');
         }
         req.logIn(user, (err) => {
@@ -477,7 +464,6 @@ app.get('/admin', requireAdmin, (req, res) => res.redirect('/admin/dashboard'));
 
 app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
     try {
-        // Obtenemos estadísticas como pide el PDF
         const totalProducts = await Product.countDocuments();
         const totalCategories = await Category.countDocuments();
         const mostViewedProducts = await Product.find()
@@ -485,8 +471,6 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
             .limit(5)
             .populate('category');
         
-        // ¡AQUÍ ESTÁ LA CORRECCIÓN!
-        // Creamos el objeto 'stats' que la plantilla espera
         const stats = {
             totalProducts: totalProducts,
             totalCategories: totalCategories
@@ -494,7 +478,7 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
 
         res.render('admin/dashboard', {
             pageTitle: 'Dashboard',
-            stats: stats, // Pasamos el objeto 'stats'
+            stats: stats,
             mostViewedProducts
         });
     } catch (err) {
@@ -510,13 +494,12 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
 app.get('/admin/productos', requireAdmin, async (req, res, next) => {
     try {
         const products = await Product.find().populate('category').sort({ createdAt: -1 });
-        const categories = await Category.find(); // Para el formulario de "Añadir"
+        const categories = await Category.find();
         
         res.render('admin/productos', {
             pageTitle: 'Gestionar Productos',
             products,
             categories,
-            // Para mostrar mensajes de éxito/error
             success: req.session.success,
             error: req.session.error
         });
@@ -541,7 +524,7 @@ app.post('/admin/productos/add', requireAdmin, upload.array('photos', 5), async 
             description: purify.sanitize(description, { USE_PROFILES: { html: true } }),
             price: parseFloat(price),
             category,
-            photos: req.files.map(f => f.path), // Guardamos las URLs de Cloudinary
+            photos: req.files.map(f => f.path),
             isForRent: isForRent === 'on',
             isForSale: isForSale === 'on',
             isFeatured: isFeatured === 'on'
@@ -754,10 +737,6 @@ app.post('/admin/configuracion/logo', requireAdmin, upload.single('logo'), async
     }
 });
 
-
-
-// ... justo después de app.post('/admin/configuracion/logo'...)
-
 // --- Añadir un nuevo Banner ---
 app.post('/admin/configuracion/banner/add', requireAdmin, upload.single('bannerImage'), async (req, res, next) => {
     try {
@@ -833,15 +812,14 @@ app.use((err, req, res, next) => {
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor Alethia Decora corriendo en ${process.env.BASE_URL}`);
+    console.log(`🚀 Servidor FERUMI corriendo en ${process.env.BASE_URL}`);
     
     // --- Script para crear el admin por primera vez ---
-    // (Inspirado en donaparaguay, pero simplificado)
     const createAdmin = async () => {
         try {
             const adminCount = await AdminUser.countDocuments();
             if (adminCount === 0) {
-                const email = 'admin@alethia.com';
+                const email = 'admin@ferumi.com'; // Correo actualizado
                 const password = 'admin123456'; // Contraseña temporal
                 
                 await new AdminUser({ email, password }).save();

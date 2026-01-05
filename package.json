@@ -1,7 +1,7 @@
 {
-  "name": "alethia-decora",
+  "name": "ferumi",
   "version": "1.0.0",
-  "description": "Sitio web moderno y administrable para Alethia Decora, diseñado por LFAF Tech.",
+  "description": "Sitio web moderno y administrable para FERUMI, diseñado por LFAF Tech.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

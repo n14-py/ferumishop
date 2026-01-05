@@ -1,18 +1,18 @@
 /* ============================================= */
 /* --- ESTILOS PARA EL PANEL DE ADMINISTRADOR --- */
-/* v1.0 - Alethia Decora (Adaptado de DonaPY)  */
+/* v1.0 - FERUMI Admin                           */
 /* ============================================= */
 
 /* --- VARIABLES Y ESTILOS BASE --- */
 :root {
-    /* Paleta Alethia Admin */
-    --admin-primary: #8B4513; /* Marrón (SaddleBrown) */
-    --admin-primary-dark: #6B360F;
-    --admin-accent: #D4AF37; /* Dorado/Mostaza */
+    /* Paleta FERUMI Admin (Rosas) */
+    --admin-primary: #f25aa4;      /* Rosa vibrante principal */
+    --admin-primary-dark: #dd518f; /* Rosa oscuro */
+    --admin-accent: #eb85b3;       /* Rosa medio para acentos */
     
-    --admin-secondary: #858796;
-    --admin-light: #f8f9fc;
-    --admin-dark: #5a5c69;
+    --admin-secondary: #dca4bc;    /* Rosa apagado / Grisáceo */
+    --admin-light: #fbf3fb;        /* Fondo rosado muy pálido */
+    --admin-dark: #333333;         /* Gris oscuro para textos */
     --admin-danger: #dc3545;
     
     --admin-sidebar-width: 240px;
@@ -35,7 +35,7 @@ body {
 
 /* --- BARRA LATERAL (SIDEBAR) --- */
 .sidebar {
-    /* Fondo con la paleta de Alethia */
+    /* Fondo Degradado Rosa */
     background: linear-gradient(180deg, var(--admin-primary) 10%, var(--admin-primary-dark) 100%);
     color: white;
     width: var(--admin-sidebar-width);
@@ -69,24 +69,25 @@ body {
 }
 
 .sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.8);
     padding: 0.9rem 1.5rem;
     font-weight: 500;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    border-left: 3px solid transparent;
+    border-left: 4px solid transparent;
 }
 
 .sidebar .nav-link:hover {
     color: white;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar .nav-link.active {
     color: white;
     font-weight: 700;
-    border-left-color: var(--admin-accent); /* Color dorado para el 'active' */
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left-color: #fff; 
 }
 
 .sidebar-footer {
@@ -99,7 +100,7 @@ body {
 .admin-header {
     height: var(--admin-header-height);
     background-color: #fff;
-    border-bottom: 1px solid #e3e6f0;
+    border-bottom: 1px solid #ece4ec;
     display: flex;
     align-items: center;
     padding: 0 1rem;
@@ -113,7 +114,7 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--admin-dark);
+    color: var(--admin-primary);
 }
 
 /* --- CONTENIDO PRINCIPAL --- */
@@ -172,19 +173,23 @@ body {
 }
 
 /* --- ESTILOS GENERALES DE COMPONENTES --- */
-.text-gray-800 { color: #3a3b45 !important; }
-.card { border: none; border-radius: 0.5rem; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); }
-.card-header { background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0; padding: 1rem 1.25rem; }
+.text-gray-800 { color: #333 !important; }
+.card { border: none; border-radius: 0.5rem; box-shadow: 0 0.15rem 1.75rem 0 rgba(0, 0, 0, 0.05); }
+.card-header { background-color: #fff; border-bottom: 1px solid #ece4ec; padding: 1rem 1.25rem; }
 .font-weight-bold { font-weight: 700 !important; }
+
+/* Reemplazamos clases de color */
 .text-primary { color: var(--admin-primary) !important; }
+.text-accent { color: var(--admin-primary-dark) !important; } /* Usamos el oscuro como acento de texto */
+
 .text-danger { color: var(--admin-danger) !important; }
 .table-responsive { border: none; }
 .table th, .table td { vertical-align: middle; }
 
 /* Tarjetas del Dashboard */
 .card.border-left-primary { border-left: 4px solid var(--admin-primary); }
-.card.border-left-accent { border-left: 4px solid var(--admin-accent); }
-.card.border-left-success { border-left: 4px solid #1cc88a; }
+.card.border-left-accent { border-left: 4px solid var(--admin-primary-dark); }
+.card.border-left-success { border-left: 4px solid #28a745; }
 
 .btn-primary {
     background-color: var(--admin-primary);
@@ -213,7 +218,6 @@ body {
 
 /* ============================================= */
 /* --- TABLAS RESPONSIVAS (MÓVIL) --- */
-/* (Copiado de donaparaguay/admin.css) */
 /* ============================================= */
 @media (max-width: 767px) {
     .table-responsive thead { display: none; }
@@ -223,7 +227,7 @@ body {
     }
     .table-responsive tr {
         margin-bottom: 1rem;
-        border: 1px solid #e3e6f0;
+        border: 1px solid #ece4ec;
         border-radius: 0.5rem;
         background-color: #fff;
     }
@@ -243,7 +247,7 @@ body {
         padding-left: 1rem;
         font-weight: 700;
         text-align: left;
-        color: var(--admin-primary);
+        color: var(--admin-primary-dark);
     }
     .table-responsive td:last-child { border-bottom: 0; }
 }

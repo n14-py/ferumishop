@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alethia Decora - Decoración para Eventos y Hogar</title>
-    <meta name="description" content="Especialistas en decoración para venta y alquiler. Encuentra los mejores artículos para tu evento u hogar.">
+    <title>FERUMI - Maquillaje, Uñas y Accesorios</title>
+    <meta name="description" content="Tu tienda favorita de maquillaje, insumos para uñas y accesorios de moda. Resalta tu belleza con FERUMI.">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -34,9 +34,9 @@
                         
                         <div class="hero-slide" style="background-image: url('<%= bannerUrl.replace("/upload/", "/upload/w_1600,h_900,c_fill,g_auto/") %>');">
                             <div class="hero-content">
-                                <h1>ALETHIA DECORA</h1>
-                                <p>Encuentra piezas únicas para venta y alquiler que transformarán tu espacio.</p>
-                                <a href="/tienda" class="btn btn-primary btn-accent">Ver Tienda</a>
+                                <h1>FERUMI</h1>
+                                <p>Descubre lo último en maquillaje, uñas y accesorios para resaltar tu belleza.</p>
+                                <a href="/tienda" class="btn btn-primary btn-accent">Ver Catálogo</a>
                             </div>
                         </div>
 
@@ -58,9 +58,9 @@
 
         <section class="hero-section hero-section-fallback" style="background-image: url('https://res.cloudinary.com/dmedd6w1q/image/upload/v1799799688/alethia-decora/placeholder-banner.jpg');">
             <div class="hero-content">
-                <h1>Decoración que inspira</h1>
-                <p>Encuentra piezas únicas para venta y alquiler que transformarán tu espacio.</p>
-                <a href="/tienda" class="btn btn-primary btn-accent">Ver Tienda</a>
+                <h1>FERUMI</h1>
+                <p>Descubre lo último en maquillaje, uñas y accesorios para resaltar tu belleza.</p>
+                <a href="/tienda" class="btn btn-primary btn-accent">Ver Catálogo</a>
             </div>
         </section>
         
@@ -69,7 +69,7 @@
     <% if (locals.categories && categories.length > 0) { %>
         <section class="category-highlight-section" style="margin-bottom: 3rem;">
             <h2 class="section-title">Categorías</h2>
-            <p class="section-subtitle">Explora nuestras colecciones principales.</p>
+            <p class="section-subtitle">Explora nuestras colecciones de belleza.</p>
             <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
                 <% categories.forEach(cat => { %>
                     <a href="/categoria/<%= cat.name %>" class="btn btn-secondary">
@@ -83,7 +83,7 @@
 
     <section class="featured-products">
         <h2 class="section-title">Productos Destacados</h2>
-        <p class="section-subtitle">Nuestra selección especial para ti.</p>
+        <p class="section-subtitle">Lo más nuevo en tendencias y cuidado personal.</p>
 
         <div class="product-grid">
             <% if (featuredProducts && featuredProducts.length > 0) { %>

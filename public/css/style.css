@@ -1,5 +1,5 @@
 /* ============================================= */
-/* --- ESTILOS COMPLETOS PARA ALETHIA DECORA --- */
+/* --- ESTILOS COMPLETOS PARA FERUMI ---         */
 /* v1.2 - Fix DEFINITIVO conflicto Bootstrap     */
 /* ============================================= */
 
@@ -10,17 +10,19 @@
 /* --- VARIABLES Y ESTILOS BASE --- */
 /* ============================================= */
 :root {
-    /* Paleta de colores Alethia (tonos cálidos, tierra y dorados) */
-    --primary-color: #8B4513; /* Marrón (SaddleBrown) */
-    --primary-color-dark: #6B360F;
-    --primary-color-light: #F5F1ED; /* Un beige muy claro para fondos */
-    --accent-color: #D4AF37; /* Dorado/Mostaza */
+    /* Paleta de colores FERUMI (tonos rosas) */
+    /* Colores base proporcionados: #eb85b3, #dd518f, #f7b4d6, #f25aa4, #dca4bc, #fbf3fb, #ece4ec, #fcd1e4 */
     
-    --background-color: #FFFFFF;
-    --surface-color: #FFFFFF;
+    --primary-color: #f25aa4;      /* Rosa vibrante principal */
+    --primary-color-dark: #dd518f; /* Rosa oscuro para textos/hover */
+    --primary-color-light: #fcd1e4; /* Rosa muy claro para fondos de items */
+    --accent-color: #eb85b3;       /* Rosa medio para acentos */
+    
+    --background-color: #fbf3fb;   /* Fondo general rosado muy pálido */
+    --surface-color: #FFFFFF;      /* Superficies blancas */
     --text-color: #333333;
     --text-muted-color: #6c757d;
-    --border-color: #dee2e6;
+    --border-color: #ece4ec;       /* Borde gris/rosáceo claro */
     --success-color: #28a745;
     --danger-color: #dc3545;
 
@@ -157,8 +159,8 @@ header.main-header .navbar-container .mobile-menu-icon { display: none; font-siz
 .btn-primary:hover { background-color: var(--primary-color-dark); color: white; }
 .btn-secondary { background-color: var(--surface-color); color: var(--text-color); border-color: var(--border-color); }
 .btn-secondary:hover { background-color: var(--border-color); }
-.btn-accent { background-color: var(--accent-color); color: var(--primary-color-dark); }
-.btn-accent:hover { background-color: #b8972c; } /* Dorado más oscuro */
+.btn-accent { background-color: var(--accent-color); color: white; }
+.btn-accent:hover { background-color: var(--primary-color-dark); }
 .btn-block { width: 100%; }
 
 .form-container {
@@ -173,7 +175,7 @@ header.main-header .navbar-container .mobile-menu-icon { display: none; font-siz
 .form-group { margin-bottom: 1.5rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
 .form-control { width: 100%; padding: 14px 18px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; background-color: #fff; }
-.form-control:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(139, 69, 19, 0.15); }
+.form-control:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(242, 90, 164, 0.15); }
 
 /* ============================================= */
 /* --- PÁGINA DE INICIO (INDEX) --- */
@@ -272,7 +274,7 @@ header.main-header .navbar-container .mobile-menu-icon { display: none; font-siz
 .product-card .btn { margin-top: 1.5rem; width: 100%; }
 .card-badge {
     position: absolute; top: 10px; left: 10px;
-    background-color: var(--accent-color); color: var(--primary-color-dark);
+    background-color: var(--accent-color); color: white;
     padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.8rem; font-weight: 700;
 }
 
@@ -463,7 +465,7 @@ header.main-header .navbar-container .mobile-menu-icon { display: none; font-siz
     opacity: 0.8;
 }
 .social-links-footer a:hover {
-    color: var(--accent-color); /* Color dorado al pasar el mouse */
+    color: var(--accent-color); /* Color de acento al pasar el mouse */
     opacity: 1;
     transform: scale(1.1); /* Efecto sutil */
 }
@@ -593,7 +595,7 @@ nav.mobile-nav-panel .dropdown-divider { border-top: 1px solid var(--border-colo
     transition: all 0.2s ease;
 }
 .filter-toggle-button:hover {
-    background-color: #e6e0da;
+    background-color: var(--border-color);
 }
 .filter-toggle-button i {
     transition: transform 0.3s ease;
