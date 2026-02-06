@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - FERUMI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <%- include('../partials/header.html') %>
+
+    <main class="container">
+        <section class="static-page-container">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-gift" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                <h1>Regala un momento FERUMI</h1>
+                <p>Crea una carta personalizada y una Gift Card online para esa persona especial. El pago se coordina por WhatsApp y tú recibes un enlace único para compartir.</p>
+            </div>
+
+            <div class="form-container">
+                <form action="/regalos/crear" method="POST">
+                    
+                    <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="senderName">Tu Nombre (De:)</label>
+                            <input type="text" id="senderName" name="senderName" class="form-control" placeholder="Ej: Luisa" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipientName">Su Nombre (Para:)</label>
+                            <input type="text" id="recipientName" name="recipientName" class="form-control" placeholder="Ej: María" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="template">Diseño de la Carta</label>
+                        <select id="template" name="template" class="form-control">
+                            <option value="romantico">💖 Romántico (Rosa)</option>
+                            <option value="cumpleanos">🎂 Cumpleaños (Dorado)</option>
+                            <option value="elegante">✨ Elegante (Negro/Blanco)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Monto de la Gift Card (Gs.)</label>
+                        <input type="number" id="amount" name="amount" class="form-control" placeholder="Ej: 250000" min="10000" required>
+                        <small style="color: var(--text-muted-color);">Este es el crédito que la persona podrá usar en nuestra tienda.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Tu mensaje especial</label>
+                        <textarea id="message" name="message" class="form-control" placeholder="Escribe aquí las palabras que quieres dedicar..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Continuar al Pago <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <%- include('../partials/footer.html') %>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

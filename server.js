@@ -1,5 +1,6 @@
 // =============================================
 //               SERVER.JS - FERUMI
+//             (PARTE 1 - INICIO)
 // =============================================
 
 // IMPORTACIONES Y CONFIGURACIÓN INICIAL
@@ -19,6 +20,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const crypto = require('crypto'); // NUEVO: Para generar IDs únicos y códigos de regalo
 
 // Inicialización de Express y DOMPurify (para seguridad)
 const app = express();
@@ -51,7 +53,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'ferumi', // Carpeta en Cloudinary actualizada
+        folder: 'ferumi', // Carpeta en Cloudinary
         resource_type: 'auto',
         allowed_formats: ['jpeg', 'png', 'jpg', 'webp'],
         transformation: [
@@ -78,7 +80,6 @@ const getPublicId = (url) => {
 // =============================================
 
 // --- Modelo de Admin (para el panel) ---
-// Solo habrá UN usuario: el admin.
 const adminUserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
@@ -127,6 +128,22 @@ const siteConfigSchema = new mongoose.Schema({
 });
 
 const SiteConfig = mongoose.model('SiteConfig', siteConfigSchema);
+
+// --- NUEVO: Modelo de Regalo Online ---
+const giftSchema = new mongoose.Schema({
+    senderName: { type: String, required: true }, // Quien envía
+    recipientName: { type: String, required: true }, // Para quien es
+    message: { type: String, required: true }, // Carta
+    template: { type: String, default: 'romantico' }, // Plantilla: romantico, cumpleaños, elegante
+    uniqueId: { type: String, unique: true }, // ID para la URL (ej: abc-123)
+    giftCardCode: { type: String, default: null }, // Código generado por admin (ej: GIFT-500)
+    giftCardAmount: { type: Number, default: 0 }, // Monto del regalo
+    status: { type: String, default: 'pendiente' }, // pendiente (pago), aprobado
+    isRedeemed: { type: Boolean, default: false }, // Si ya se usó el código
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Gift = mongoose.model('Gift', giftSchema);
 
 // =============================================
 // MIDDLEWARES Y PASSPORT (PARA LOGIN DE ADMIN)
@@ -399,6 +416,105 @@ app.get('/contacto', (req, res) => {
     });
 });
 
+
+
+// =============================================
+//               SERVER.JS - FERUMI
+//             (PARTE 2 - FINAL)
+// =============================================
+
+// =============================================
+// RUTAS DE REGALOS (CLIENTE - NUEVO)
+// =============================================
+
+// 1. Página para crear el regalo (Formulario)
+app.get('/regalos/crear', (req, res) => {
+    res.render('public/crear-regalo', {
+        pageTitle: 'Enviar Regalo Online'
+    });
+});
+
+// 2. Procesar la creación del regalo (Estado: Pendiente)
+app.post('/regalos/crear', async (req, res, next) => {
+    try {
+        const { senderName, recipientName, message, template, amount } = req.body;
+        
+        // Generar ID único para la URL pública (ej: ferumi-a1b2c3d4)
+        const uniqueId = 'regalo-' + crypto.randomBytes(4).toString('hex');
+
+        // Validar monto
+        const giftAmount = parseFloat(amount);
+        if (isNaN(giftAmount) || giftAmount <= 0) {
+            throw new Error('El monto del regalo debe ser válido.');
+        }
+
+        const newGift = new Gift({
+            senderName: purify.sanitize(senderName),
+            recipientName: purify.sanitize(recipientName),
+            message: purify.sanitize(message), // Sin HTML para seguridad básica en texto
+            template: template, // 'romantico', 'cumple', etc.
+            giftCardAmount: giftAmount,
+            uniqueId: uniqueId,
+            status: 'pendiente' // Esperando aprobación del admin
+        });
+
+        await newGift.save();
+
+        // Redirigir a una página de confirmación con instrucciones de pago
+        // Pasamos el ID del regalo para mostrar los datos
+        res.redirect(`/regalos/confirmacion/${newGift._id}`);
+
+    } catch (err) {
+        // En un caso real, podrías renderizar de nuevo con errores
+        next(err); 
+    }
+});
+
+// 3. Página de Confirmación / Instrucciones de Pago
+app.get('/regalos/confirmacion/:id', async (req, res, next) => {
+    try {
+        const gift = await Gift.findById(req.params.id);
+        if (!gift) return res.redirect('/regalos/crear');
+        
+        res.render('public/pago-regalo', { 
+            pageTitle: 'Confirmar Regalo',
+            gift: gift 
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// 4. Ver el Regalo FINAL (La carta pública)
+// Esta es la URL que se le comparte a la persona regalada
+app.get('/ver-regalo/:uniqueId', async (req, res, next) => {
+    try {
+        const gift = await Gift.findOne({ uniqueId: req.params.uniqueId });
+        
+        // Si no existe
+        if (!gift) {
+            return res.status(404).render('public/error', { message: 'Regalo no encontrado o enlace incorrecto.' });
+        }
+        
+        // Si el regalo NO está aprobado por el admin
+        if (gift.status !== 'aprobado') {
+            return res.render('public/error', { 
+                pageTitle: 'Regalo en proceso', 
+                message: '¡Sorpresa en camino! Este regalo se está preparando. El administrador aún está confirmando el envío.' 
+            });
+        }
+
+        // Renderizar la vista de la carta
+        res.render('public/vista-regalo', { 
+            pageTitle: `Regalo para ${gift.recipientName}`,
+            gift: gift 
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
 // =============================================
 // RUTAS API (PARA FUNCIONES DINÁMICAS)
 // =============================================
@@ -466,6 +582,9 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
     try {
         const totalProducts = await Product.countDocuments();
         const totalCategories = await Category.countDocuments();
+        // Nueva estadística: regalos pendientes
+        const pendingGifts = await Gift.countDocuments({ status: 'pendiente' });
+        
         const mostViewedProducts = await Product.find()
             .sort({ views: -1 })
             .limit(5)
@@ -473,7 +592,8 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
         
         const stats = {
             totalProducts: totalProducts,
-            totalCategories: totalCategories
+            totalCategories: totalCategories,
+            pendingGifts: pendingGifts
         };
 
         res.render('admin/dashboard', {
@@ -780,6 +900,76 @@ app.post('/admin/configuracion/banner/delete', requireAdmin, async (req, res, ne
     } catch (err) {
         req.session.error = `Error al eliminar banner: ${err.message}`;
         res.redirect('/admin/configuracion');
+    }
+});
+
+// =============================================
+// GESTIÓN DE REGALOS (ADMIN - NUEVO)
+// =============================================
+
+// 1. Ver lista de regalos (pendientes y aprobados)
+app.get('/admin/regalos', requireAdmin, async (req, res, next) => {
+    try {
+        // Obtenemos todos los regalos ordenados por fecha
+        const gifts = await Gift.find().sort({ createdAt: -1 });
+        
+        res.render('admin/regalos', {
+            pageTitle: 'Gestionar Regalos',
+            gifts: gifts,
+            success: req.session.success,
+            error: req.session.error
+        });
+        delete req.session.success;
+        delete req.session.error;
+    } catch (err) {
+        next(err);
+    }
+});
+
+// 2. Aprobar un regalo (Generar Código)
+// Cuando el admin confirma el pago, llama a esta ruta
+app.post('/admin/regalos/approve/:id', requireAdmin, async (req, res, next) => {
+    try {
+        const gift = await Gift.findById(req.params.id);
+        if (!gift) throw new Error('Regalo no encontrado');
+
+        // Generar código aleatorio de Gift Card (Ej: FERUMI-X8Z2-99AA)
+        const code = 'FERUMI-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+
+        gift.status = 'aprobado';
+        gift.giftCardCode = code;
+        await gift.save();
+
+        req.session.success = `¡Regalo aprobado! Código generado: ${code}. El enlace del regalo ya es accesible.`;
+        res.redirect('/admin/regalos');
+    } catch (err) {
+        req.session.error = `Error al aprobar: ${err.message}`;
+        res.redirect('/admin/regalos');
+    }
+});
+
+// 3. Verificar código de regalo (AJAX o Formulario desde el panel)
+// Para que tú verifiques si el código que te dan ya se usó
+app.post('/admin/regalos/verify', requireAdmin, async (req, res, next) => {
+    try {
+        const { code } = req.body;
+        // Buscar código exacto (sin importar mayúsculas)
+        const gift = await Gift.findOne({ giftCardCode: code.toUpperCase().trim() });
+
+        if (!gift) {
+            req.session.error = '❌ Código NO válido o no existe.';
+        } else if (gift.isRedeemed) {
+            req.session.error = `⚠️ Este código YA FUE USADO por ${gift.recipientName}.`;
+        } else {
+            // Si es válido y no usado, lo marcamos como usado (Canjeado)
+            gift.isRedeemed = true;
+            await gift.save();
+            req.session.success = `✅ ¡Código VÁLIDO! Monto: ${formatPrice(gift.giftCardAmount)}. Se ha marcado como canjeado.`;
+        }
+        res.redirect('/admin/regalos');
+    } catch (err) {
+        req.session.error = `Error: ${err.message}`;
+        res.redirect('/admin/regalos');
     }
 });
 

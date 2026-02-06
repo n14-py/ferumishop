@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - FERUMI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <%- include('../partials/header.html') %>
+
+    <main class="container">
+        <section class="static-page-container" style="text-align: center;">
+            
+            <div style="margin-bottom: 2rem;">
+                <i class="fas fa-clock" style="font-size: 4rem; color: #ffca28; margin-bottom: 1rem;"></i>
+                <h1 style="color: #333;">¡Casi listo!</h1>
+                <p style="font-size: 1.2rem; color: var(--text-muted-color);">Tu regalo para <strong><%= gift.recipientName %></strong> ha sido creado.</p>
+            </div>
+
+            <div class="form-container" style="background-color: #fff8e1; border: 2px dashed #ffca28;">
+                <h3 style="margin-bottom: 1rem;">Resumen del Pedido</h3>
+                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; font-size: 1.1rem;">
+                    <li style="margin-bottom: 0.5rem;"><strong>De:</strong> <%= gift.senderName %></li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Para:</strong> <%= gift.recipientName %></li>
+                    <li style="margin-bottom: 0.5rem;"><strong>Monto Gift Card:</strong> <%= formatPrice(gift.giftCardAmount) %></li>
+                    <li style="margin-bottom: 0.5rem;"><strong>ID de Referencia:</strong> <code style="background: #eee; padding: 2px 5px; border-radius: 4px;"><%= gift.uniqueId %></code></li>
+                </ul>
+
+                <hr style="margin: 2rem 0; border-color: rgba(0,0,0,0.1);">
+
+                <h3>¿Cómo finalizar?</h3>
+                <p style="margin-bottom: 1.5rem;">Para activar este regalo, debes realizar el pago. Envíanos un mensaje por WhatsApp con el ID de referencia para coordinar la transferencia.</p>
+
+                <% 
+                    const waMessage = `Hola FERUMI, acabo de crear un regalo online para ${gift.recipientName} (ID: ${gift.uniqueId}). Quiero realizar el pago de ${formatPrice(gift.giftCardAmount)}.`;
+                    const waLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
+                %>
+
+                <a href="<%= waLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="font-size: 1.1rem; padding: 1rem;">
+                    <i class="fab fa-whatsapp"></i> Pagar ahora por WhatsApp
+                </a>
+            </div>
+
+            <div style="margin-top: 2rem; color: var(--text-muted-color); font-size: 0.9rem;">
+                <p>Una vez confirmado el pago, recibirás un enlace especial para compartir el regalo.</p>
+                <a href="/" style="text-decoration: underline;">Volver al inicio</a>
+            </div>
+
+        </section>
+    </main>
+
+    <%- include('../partials/footer.html') %>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

@@ -730,3 +730,129 @@ nav.mobile-nav-panel .dropdown-divider { border-top: 1px solid var(--border-colo
     overflow: hidden;
     margin-bottom: 3rem;
 }
+
+
+
+/* ========================================================= */
+/* --- AGREGADO: FIX DE IMÁGENES Y SISTEMA DE REGALOS --- */
+/* ========================================================= */
+
+/* 1. ARREGLO PARA QUE LAS IMÁGENES NO ROMPAN EL SITIO */
+
+/* Esto asegura que las imágenes dentro de la descripción del producto
+   no se salgan de la pantalla en móviles */
+.product-info .description img,
+.static-page-container img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 8px;
+}
+
+/* Fix para la imagen principal en el detalle del producto */
+.main-image-container {
+    width: 100%;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden; /* Corta lo que sobresalga */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ece4ec;
+}
+
+.main-image-container img {
+    width: 100%;
+    max-height: 500px; /* Evita que la foto sea eterna hacia abajo */
+    object-fit: contain; /* Muestra toda la foto sin recortarla */
+}
+
+/* 2. ESTILOS PARA EL SISTEMA DE REGALOS ONLINE */
+
+.gift-view-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fce4ec; /* Fondo rosado suave */
+    padding: 1.5rem;
+}
+
+.gift-card-envelope {
+    background: #ffffff;
+    width: 100%;
+    max-width: 600px; /* Ancho máximo de la carta */
+    padding: 3rem 2rem;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    position: relative;
+    border: 1px solid #eee;
+}
+
+/* Colores de las plantillas (Borde superior) */
+.gift-card-envelope.template-romantico { border-top: 10px solid #f25aa4; }
+.gift-card-envelope.template-cumpleanos { border-top: 10px solid #ffca28; }
+.gift-card-envelope.template-elegante { border-top: 10px solid #333333; }
+
+.gift-header h2 {
+    font-family: 'Playfair Display', serif; /* Usa la fuente elegante */
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.gift-body {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.15rem;
+    color: #555;
+    margin: 2rem 0;
+    font-style: italic;
+    line-height: 1.8;
+}
+
+/* Caja del Código de Canje */
+.gift-code-box {
+    background: #fafafa;
+    border: 2px dashed #ddd;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-top: 2rem;
+}
+
+.gift-code-box .label {
+    display: block;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #999;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.gift-code-box .code {
+    font-family: monospace;
+    font-size: 1.8rem; /* Código grande */
+    font-weight: 700;
+    color: #333;
+    letter-spacing: 2px;
+    word-break: break-all; /* Evita que el código rompa en móvil */
+}
+
+.gift-amount-badge {
+    margin-top: 0.5rem;
+    font-weight: 700;
+    color: #f25aa4;
+    font-size: 1.1rem;
+}
+
+/* Responsive para la carta en celulares */
+@media (max-width: 600px) {
+    .gift-card-envelope {
+        padding: 2rem 1.5rem;
+    }
+    .gift-header h2 {
+        font-size: 2rem;
+    }
+    .gift-code-box .code {
+        font-size: 1.4rem;
+    }
+}

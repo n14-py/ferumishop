@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - FERUMI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="background-color: #fce4ec;"> <div style="text-align: center; padding-top: 2rem;">
+        <a href="/" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #d63d8b; text-decoration: none; font-weight: 700;">
+            FERUMI
+        </a>
+    </div>
+
+    <main class="gift-view-container">
+        
+        <div class="gift-card-envelope template-<%= gift.template %>">
+            
+            <div class="gift-header">
+                <% if (gift.template === 'romantico') { %>
+                    <i class="fas fa-heart" style="font-size: 3rem; color: #f25aa4; margin-bottom: 1rem;"></i>
+                <% } else if (gift.template === 'cumpleanos') { %>
+                    <i class="fas fa-birthday-cake" style="font-size: 3rem; color: #ffca28; margin-bottom: 1rem;"></i>
+                <% } else { %>
+                    <i class="fas fa-star" style="font-size: 3rem; color: #333; margin-bottom: 1rem;"></i>
+                <% } %>
+                
+                <h2>¡Hola, <%= gift.recipientName %>!</h2>
+                <p style="color: #888; margin-top: 0.5rem; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">
+                    Te han enviado una sorpresa
+                </p>
+            </div>
+
+            <div class="gift-body">
+                <p>"<%= gift.message %>"</p>
+                
+                <p style="margin-top: 2rem; font-weight: bold;">
+                    Con cariño, <br>
+                    <%= gift.senderName %>
+                </p>
+            </div>
+
+            <div class="gift-code-box">
+                <span class="label">Tu Código de Regalo</span>
+                <div class="code"><%= gift.giftCardCode %></div>
+                
+                <div class="gift-amount-badge">
+                    Valor: <%= formatPrice(gift.giftCardAmount) %>
+                </div>
+
+                <% if (gift.isRedeemed) { %>
+                    <div style="margin-top: 1rem; color: red; font-weight: bold; border: 1px solid red; padding: 5px; display: inline-block; border-radius: 4px;">
+                        YA CANJEADO
+                    </div>
+                <% } else { %>
+                    <p style="font-size: 0.85rem; color: #666; margin-top: 1rem;">
+                        Saca una captura o copia este código y úsalo para elegir lo que más te guste en nuestra tienda.
+                    </p>
+                    
+                    <a href="https://www.ferumi.shop" class="btn btn-primary" style="margin-top: 1rem; font-size: 0.9rem; padding: 12px 24px;">
+                        Entrar en la Web <i class="fas fa-arrow-right"></i>
+                    </a>
+                <% } %>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; color: #888; font-size: 0.8rem;">
+        &copy; <%= new Date().getFullYear() %> FERUMI. Todos los derechos reservados.
+    </footer>
+
+</body>
+</html>
