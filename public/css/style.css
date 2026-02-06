@@ -856,3 +856,38 @@ nav.mobile-nav-panel .dropdown-divider { border-top: 1px solid var(--border-colo
         font-size: 1.4rem;
     }
 }
+
+
+
+/* ============================================= */
+/* --- FIX DE IMÁGENES GIGANTES (Producto Detalle) --- */
+/* ============================================= */
+
+/* 1. Controlamos el contenedor de la imagen principal */
+.product-gallery .main-image {
+    width: 100%;
+    height: 500px; /* Límite de altura fija */
+    background-color: #ffffff; /* Fondo blanco por si la imagen es angosta */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Corta lo que sobre, por seguridad */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+/* 2. Controlamos la imagen en sí misma */
+.product-gallery .main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* ¡LA CLAVE! Hace que la imagen se achique para caber sin estirarse */
+    box-shadow: none; /* Quitamos sombra doble */
+    border-radius: 0;
+}
+
+/* 3. Ajuste para celulares (hacemos el cuadro un poco más bajo) */
+@media (max-width: 768px) {
+    .product-gallery .main-image {
+        height: 350px; /* En celular no queremos que ocupe toda la pantalla de alto */
+    }
+}
