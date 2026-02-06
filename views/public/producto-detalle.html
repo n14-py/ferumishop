@@ -25,7 +25,7 @@
         <div class="product-detail-layout">
             
             <div class="product-gallery">
-                <div class="main-image">
+                <div class="main-image-container">
                     <img src="<%= product.photos[0].replace('/upload/', '/upload/w_800,h_800,c_limit/') %>" id="mainProductImage" alt="Foto principal: <%= product.name %>">
                 </div>
                 
@@ -34,7 +34,7 @@
                         <% product.photos.forEach((photoUrl, index) => { %>
                             <img src="<%= photoUrl.replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" 
                                  alt="Miniatura <%= index + 1 %>"
-                                 class="<%= index === 0 ? 'active' : '' %>"
+                                 class="thumbnail <%= index === 0 ? 'active' : '' %>"
                                  onclick="changeMainImage('<%= photoUrl.replace('/upload/', '/upload/w_800,h_800,c_limit/') %>')">
                         <% }); %>
                     </div>
@@ -42,8 +42,8 @@
             </div>
 
             <div class="product-info">
-                <span class="card-category" style="text-align: left; margin-bottom: 0.5rem;">
-                    <a href="/categoria/<%= product.category.name %>"><%= product.category.name %></a>
+                <span class="card-category" style="display: block; margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.8rem; color: #666;">
+                    <a href="/categoria/<%= product.category.name %>" style="color: inherit;"><%= product.category.name %></a>
                 </span>
 
                 <h1><%= product.name %></h1>
@@ -58,18 +58,17 @@
                     const fullMessage = `${siteConfig.whatsappMessage} ${product.name}. \n\nPuedes verlo aquí: ${productUrl}`;
                     const whatsappLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
                 %>
-                <a href="<%= whatsappLink %>" target="_blank" class="btn btn-primary btn-block btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
-                </a>
-
-                <div class="description" style="margin-top: 2rem;">
-                    <h3>Descripción</h3>
-                    <%- product.description %>
+                
+                <div style="margin: 1.5rem 0;">
+                    <a href="<%= whatsappLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="padding: 1rem; font-size: 1.1rem;">
+                        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+                    </a>
                 </div>
 
-                <div class="product-meta">
-                    <span><strong>Categoría:</strong> <%= product.category.name %></span>
-                    </div>
+                <div class="description" style="margin-top: 2rem; line-height: 1.8;">
+                    <h3 style="font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;">Descripción</h3>
+                    <%- product.description %>
+                </div>
             </div>
         </div>
 
@@ -102,7 +101,8 @@
         
         const thumbnails = document.querySelectorAll('.product-thumbnails img');
         thumbnails.forEach(img => {
-            if (img.src.includes(newSrc.split('/upload/')[1].split('/')[1])) { 
+            // Compara las URLs para saber cuál activar
+            if (newSrc.includes(img.src.split('/upload/')[1].split('/')[1])) { 
                 img.classList.add('active');
             } else {
                 img.classList.remove('active');
