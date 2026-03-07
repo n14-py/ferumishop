@@ -1107,3 +1107,230 @@ nav.mobile-nav-panel .dropdown-divider { border-top: 1px solid var(--border-colo
     .coupon-left { border-right: none; border-bottom: 2px dashed rgba(255,255,255,0.3); padding: 1rem; width: 100%; }
     .circle-top, .circle-bottom { display: none; } /* Ocultar recortes en móvil para simplificar */
 }
+
+
+
+/* ========================================================= */
+/* --- AGREGADO: DISEÑO DEL CARRITO DE COMPRAS LATERAL --- */
+/* ========================================================= */
+
+/* Efecto hover del icono del carrito en el header */
+.cart-icon {
+    transition: transform 0.2s ease;
+}
+.cart-icon:hover {
+    transform: scale(1.1);
+    color: var(--primary-color) !important;
+}
+
+/* Fondo oscuro cuando se abre el carrito */
+.cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.cart-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Panel lateral del carrito */
+.cart-sidebar {
+    position: fixed;
+    top: 0;
+    right: -450px; /* Oculto a la derecha */
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    background: var(--surface-color);
+    z-index: 2001;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.cart-sidebar.active {
+    right: 0;
+}
+
+/* Cabecera del carrito */
+.cart-header {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-color);
+}
+.cart-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-family: var(--font-family-headings);
+    color: var(--primary-color-dark);
+}
+.cart-header button {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted-color);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.cart-header button:hover {
+    color: var(--danger-color);
+    transform: rotate(90deg);
+}
+
+/* Contenedor de los productos */
+.cart-items {
+    padding: 1.5rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Diseño individual de cada producto en el carrito */
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px dashed var(--border-color);
+    position: relative;
+    animation: slideUp 0.3s ease forwards;
+}
+.cart-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.cart-item img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+.cart-item-details {
+    flex-grow: 1;
+}
+.cart-item-title {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    color: var(--text-color);
+    font-weight: 600;
+    line-height: 1.2;
+}
+.cart-item-price {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+
+/* Botones de sumar/restar cantidad */
+.cart-item-qty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--background-color);
+    width: fit-content;
+    padding: 4px 8px;
+    border-radius: 50px;
+}
+.qty-btn {
+    background: transparent;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--primary-color-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.qty-btn:hover {
+    background: var(--primary-color-light);
+}
+
+/* Botón de eliminar producto (basurero) */
+.remove-item {
+    background: rgba(220, 53, 69, 0.1);
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.remove-item:hover {
+    background: var(--danger-color);
+    color: white;
+}
+
+/* Pie del carrito (Total y Botón WhatsApp) */
+.cart-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--background-color);
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.03);
+}
+.cart-coupon {
+    background: var(--surface-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+}
+.cart-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+#cart-total-price {
+    color: var(--primary-color-dark);
+    font-size: 1.5rem;
+}
+.cart-discount-info {
+    color: #28a745;
+    font-size: 0.95rem;
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    background: rgba(40, 167, 69, 0.1);
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+/* Estilos responsivos del carrito para móviles */
+@media (max-width: 500px) {
+    .cart-sidebar {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+

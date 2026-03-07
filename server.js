@@ -130,17 +130,22 @@ const siteConfigSchema = new mongoose.Schema({
 const SiteConfig = mongoose.model('SiteConfig', siteConfigSchema);
 
 // --- NUEVO: Modelo de Regalo Online ---
+// --- NUEVO: Modelo de Regalo Online ---
 const giftSchema = new mongoose.Schema({
-    senderName: { type: String, required: true }, // Quien envía
-    recipientName: { type: String, required: true }, // Para quien es
-    message: { type: String, required: true }, // Carta
-    template: { type: String, default: 'romantico' }, // Plantilla: romantico, cumpleaños, elegante
-    uniqueId: { type: String, unique: true }, // ID para la URL (ej: abc-123)
-    giftCardCode: { type: String, default: null }, // Código generado por admin (ej: GIFT-500)
-    giftCardAmount: { type: Number, default: 0 }, // Monto del regalo
-    status: { type: String, default: 'pendiente' }, // pendiente (pago), aprobado
-    isRedeemed: { type: Boolean, default: false }, // Si ya se usó el código
-    createdAt: { type: Date, default: Date.now }
+    senderName: { type: String, required: true }, 
+    recipientName: { type: String, required: true }, 
+    message: { type: String, required: true }, 
+    template: { type: String, default: 'romantico' }, 
+    uniqueId: { type: String, unique: true }, 
+    giftCardCode: { type: String, default: null }, 
+    giftCardAmount: { type: Number, default: 0 }, 
+    status: { type: String, default: 'pendiente' }, 
+    isRedeemed: { type: Boolean, default: false }, 
+    createdAt: { type: Date, default: Date.now },
+    // --- NUEVOS CAMPOS PARA CARTAS ETERNAS ---
+    giftType: { type: String, default: 'basico' }, // Tipo: 1-foto, 3-fotos, 10-fotos
+    spotifyUrl: { type: String, default: '' }, // Enlace de la canción
+    photos: [{ type: String }] // URLs de las fotos subidas
 });
 
 const Gift = mongoose.model('Gift', giftSchema);
@@ -435,37 +440,40 @@ app.get('/regalos/crear', (req, res) => {
 });
 
 // 2. Procesar la creación del regalo (Estado: Pendiente)
-app.post('/regalos/crear', async (req, res, next) => {
+// 2. Procesar la creación del regalo (Estado: Pendiente)
+app.post('/regalos/crear', upload.array('photos', 10), async (req, res, next) => {
     try {
-        const { senderName, recipientName, message, template, amount } = req.body;
+        const { senderName, recipientName, message, shortMessage, template, giftType, spotifyUrl, amount } = req.body;
         
-        // Generar ID único para la URL pública (ej: ferumi-a1b2c3d4)
         const uniqueId = 'regalo-' + crypto.randomBytes(4).toString('hex');
 
-        // Validar monto
-        const giftAmount = parseFloat(amount);
-        if (isNaN(giftAmount) || giftAmount <= 0) {
-            throw new Error('El monto del regalo debe ser válido.');
-        }
+        // El monto extra para que gaste en la tienda (Gift Card)
+        const giftAmount = parseFloat(amount || 0);
+
+        // Determinar qué mensaje usar (Si es solo Gift Card, usamos el título corto)
+        const finalMessage = giftType === 'gift-card' ? shortMessage : message;
+
+        // Extraer las URLs de las fotos
+        let uploadedPhotos = req.files ? req.files.map(f => f.path) : [];
 
         const newGift = new Gift({
             senderName: purify.sanitize(senderName),
             recipientName: purify.sanitize(recipientName),
-            message: purify.sanitize(message), // Sin HTML para seguridad básica en texto
-            template: template, // 'romantico', 'cumple', etc.
+            message: purify.sanitize(finalMessage || 'Un detalle especial.'),
+            template: template || 'romantico',
             giftCardAmount: giftAmount,
             uniqueId: uniqueId,
-            status: 'pendiente' // Esperando aprobación del admin
+            status: 'pendiente',
+            giftType: giftType || '1-foto',
+            spotifyUrl: purify.sanitize(spotifyUrl || ''),
+            photos: uploadedPhotos
         });
 
         await newGift.save();
 
-        // Redirigir a una página de confirmación con instrucciones de pago
-        // Pasamos el ID del regalo para mostrar los datos
         res.redirect(`/regalos/confirmacion/${newGift._id}`);
 
     } catch (err) {
-        // En un caso real, podrías renderizar de nuevo con errores
         next(err); 
     }
 });
@@ -476,9 +484,17 @@ app.get('/regalos/confirmacion/:id', async (req, res, next) => {
         const gift = await Gift.findById(req.params.id);
         if (!gift) return res.redirect('/regalos/crear');
         
+        // Calculamos el costo del servicio en base al paquete elegido
+        let serviceCost = 0;
+        if (gift.giftType === '1-foto') serviceCost = 5000;
+        else if (gift.giftType === '3-fotos') serviceCost = 12000;
+        else if (gift.giftType === '10-fotos') serviceCost = 25000;
+        else if (gift.giftType === 'gift-card') serviceCost = 0; // Solo paga el monto que eligió regalar
+        
         res.render('public/pago-regalo', { 
             pageTitle: 'Confirmar Regalo',
-            gift: gift 
+            gift: gift,
+            serviceCost: serviceCost
         });
     } catch (err) {
         next(err);
@@ -518,6 +534,34 @@ app.get('/ver-regalo/:uniqueId', async (req, res, next) => {
 // =============================================
 // RUTAS API (PARA FUNCIONES DINÁMICAS)
 // =============================================
+
+// --- API para Validar Cupones / Gift Cards desde el Carrito ---
+app.post('/api/regalos/validar', async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.json({ success: false, message: 'Código no proporcionado' });
+
+        // Busca el regalo por el código, que esté aprobado y que NO haya sido canjeado aún
+        const gift = await Gift.findOne({ 
+            giftCardCode: code.toUpperCase().trim(),
+            status: 'aprobado',
+            isRedeemed: false 
+        });
+
+        if (gift) {
+            res.json({ 
+                success: true, 
+                regalo: { code: gift.giftCardCode, amount: gift.giftCardAmount } 
+            });
+        } else {
+            res.json({ success: false, message: 'Código inválido o ya utilizado' });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error en el servidor' });
+    }
+});
+
+
 
 // --- API para el Buscador Instantáneo ---
 app.get('/api/search', async (req, res) => {

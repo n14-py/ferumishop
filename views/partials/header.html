@@ -13,6 +13,7 @@
         <nav class="navbar-nav">
              <a href="/" class="<%= path === '/' ? 'active' : '' %>">Inicio</a>
              <a href="/tienda" class="<%= path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') ? 'active' : '' %>">Tienda</a>
+             <a href="/regalos/crear" class="<%= path.includes('/regalos') ? 'active' : '' %>">Regalos Online</a>
              <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">Sobre Nosotros</a>
              <a href="/contacto" class="<%= path.includes('/contacto') ? 'active' : '' %>">Contacto</a>
         </nav>
@@ -25,6 +26,11 @@
                 </form>
                 <div id="search-results-popup"></div>
             </div>
+            
+            <div class="cart-icon" id="cart-icon" style="position: relative; cursor: pointer; font-size: 1.3rem; color: var(--primary-color-dark); margin-left: 15px;">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cart-count" style="position: absolute; top: -8px; right: -10px; background: var(--primary-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold;">0</span>
+            </div>
         </div>
 
         <div class="mobile-menu-icon" id="mobile-menu-open">
@@ -32,6 +38,33 @@
         </div>
     </div>
 </header>
+
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+        <h3>Tu Carrito</h3>
+        <button id="close-cart"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cart-items">
+        </div>
+    <div class="cart-footer">
+        <div class="cart-coupon">
+            <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted-color);">¿Tienes una Gift Card o Cupón?</label>
+            <div style="display: flex; gap: 5px; margin-top: 5px;">
+                <input type="text" id="coupon-code-input" placeholder="Ingresa tu código" class="form-control" style="padding: 8px; font-size: 0.9rem;">
+                <button id="apply-coupon-btn" class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">Aplicar</button>
+            </div>
+            <small id="coupon-message" style="display: none; margin-top: 5px; font-weight: 600;"></small>
+        </div>
+        <div class="cart-total">
+            <span>Total:</span>
+            <span id="cart-total-price">0 Gs.</span>
+        </div>
+        <button id="checkout-whatsapp" class="btn btn-primary btn-block" style="background-color: #25D366; border-color: #25D366; display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+            <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Terminar compra
+        </button>
+    </div>
+</div>
 
 <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
 <nav class="mobile-nav-panel" id="mobile-nav-panel"></nav>
@@ -56,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         divider.className = 'dropdown-divider';
         mobileNavPanel.appendChild(divider);
 
-        // 3. Clonar acciones (buscador)
+        // 3. Clonar acciones (buscador y carrito)
         const desktopActions = document.querySelector('.main-header .navbar-actions');
         if (desktopActions) mobileNavPanel.appendChild(desktopActions.cloneNode(true));
     };
@@ -70,10 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobileMenuOpenBtn) {
         mobileMenuOpenBtn.addEventListener('click', toggleMobileMenu);
         mobileNavOverlay.addEventListener('click', toggleMobileMenu);
-        setupMobileMenu(); // Configurar el contenido del menú
+        setupMobileMenu(); 
     }
 
-    // --- Lógica del Buscador Instantáneo (petición al API /api/search) ---
+    // --- Lógica del Buscador Instantáneo ---
     const searchInput = document.getElementById('header-search-input');
     const searchPopup = document.getElementById('search-results-popup');
 
@@ -86,21 +119,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                // Llama al API que creamos en server.js
                 const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
                 const products = await response.json();
 
                 if (products.length > 0) {
-                    searchPopup.innerHTML = ''; // Limpiar resultados
+                    searchPopup.innerHTML = ''; 
                     products.forEach(product => {
                         const item = document.createElement('a');
                         item.href = `/producto/${product._id}`;
                         item.className = 'search-result-item';
                         
-                        // Usar la primera foto si existe
                         const photoUrl = product.photos && product.photos.length > 0 
                             ? product.photos[0].replace('/upload/', '/upload/w_80,h_80,c_fill/') 
-                            : 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png'; // Placeholder
+                            : 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png'; 
                         
                         item.innerHTML = `
                             <img src="${photoUrl}" alt="${product.name}">
@@ -109,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         searchPopup.appendChild(item);
                     });
                     
-                    // Añadir enlace "Ver todo"
                     const viewAll = document.createElement('a');
                     viewAll.href = `/tienda?q=${encodeURIComponent(query)}`;
                     viewAll.className = 'view-all';
@@ -126,12 +156,213 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Ocultar popup si se hace clic fuera
         document.addEventListener('click', (e) => {
             if (e.target.id !== 'header-search-input') {
                 searchPopup.style.display = 'none';
             }
         });
     }
+
+    // ==========================================
+    // --- LÓGICA DEL CARRITO Y CUPONES ---
+    // ==========================================
+    const cartSidebar = document.getElementById('cart-sidebar');
+    const cartOverlay = document.getElementById('cart-overlay');
+    const closeCartBtn = document.getElementById('close-cart');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalPrice = document.getElementById('cart-total-price');
+    const checkoutWhatsappBtn = document.getElementById('checkout-whatsapp');
+    const applyCouponBtn = document.getElementById('apply-coupon-btn');
+    const couponInput = document.getElementById('coupon-code-input');
+    const couponMessage = document.getElementById('coupon-message');
+
+    let cart = JSON.parse(localStorage.getItem('ferumi_cart')) || [];
+    let appliedCoupon = null;
+
+    function saveCart() {
+        localStorage.setItem('ferumi_cart', JSON.stringify(cart));
+        updateCartUI();
+    }
+
+    // SOLUCIÓN AL PROBLEMA DE "25.000" -> 25. Ahora elimina los puntos para sumar correctamente
+    function parsePrice(priceStr) {
+        if (typeof priceStr === 'number') return priceStr;
+        if (!priceStr) return 0;
+        return parseInt(priceStr.toString().replace(/\./g, '').replace(/,/g, ''));
+    }
+
+    function formatPrice(price) {
+        return new Intl.NumberFormat('es-PY').format(price);
+    }
+
+    // Función global para añadir desde cualquier página
+    window.addToCart = function(id, name, price, image) {
+        const cleanPrice = parsePrice(price);
+        const existingItem = cart.find(item => item.id === id);
+        
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({ id, name, price: cleanPrice, image, quantity: 1 });
+        }
+        saveCart();
+        openCart();
+    };
+
+    function updateCartUI() {
+        if (!cartItemsContainer) return;
+        cartItemsContainer.innerHTML = '';
+        let total = 0;
+        let itemCount = 0;
+
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">Tu carrito está vacío.</p>';
+        }
+
+        cart.forEach((item, index) => {
+            total += item.price * item.quantity;
+            itemCount += item.quantity;
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'cart-item';
+            itemEl.innerHTML = `
+                <img src="${item.image}" alt="${item.name}">
+                <div class="cart-item-details">
+                    <h4 class="cart-item-title">${item.name}</h4>
+                    <p class="cart-item-price">${formatPrice(item.price)} Gs.</p>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                    </div>
+                </div>
+                <button class="remove-item" onclick="removeFromCart(${index})"><i class="fas fa-trash"></i></button>
+            `;
+            cartItemsContainer.appendChild(itemEl);
+        });
+
+        // Actualizar todos los contadores de iconos (desktop y móvil)
+        const countElements = document.querySelectorAll('#cart-count');
+        countElements.forEach(el => el.innerText = itemCount);
+
+        // Descontar cupón
+        if (appliedCoupon) {
+            let discount = appliedCoupon.amount;
+            total -= discount;
+            if (total < 0) total = 0;
+            
+            const discountEl = document.createElement('div');
+            discountEl.className = 'cart-discount-info';
+            discountEl.innerHTML = `<strong>Cupón aplicado:</strong> -${formatPrice(discount)} Gs.`;
+            cartItemsContainer.appendChild(discountEl);
+        }
+
+        if (cartTotalPrice) cartTotalPrice.innerText = formatPrice(total) + ' Gs.';
+    }
+
+    window.changeQty = function(index, delta) {
+        cart[index].quantity += delta;
+        if (cart[index].quantity <= 0) {
+            cart.splice(index, 1);
+        }
+        saveCart();
+    };
+
+    window.removeFromCart = function(index) {
+        cart.splice(index, 1);
+        saveCart();
+    };
+
+    function openCart() {
+        if(cartSidebar) cartSidebar.classList.add('active');
+        if(cartOverlay) cartOverlay.classList.add('active');
+    }
+
+    function closeCart() {
+        if(cartSidebar) cartSidebar.classList.remove('active');
+        if(cartOverlay) cartOverlay.classList.remove('active');
+    }
+
+    // Eventos para abrir el carrito (detecta clicks en ambos menus)
+    document.body.addEventListener('click', (e) => {
+        if (e.target.closest('.cart-icon')) {
+            openCart();
+            if (mobileNavPanel && mobileNavPanel.classList.contains('active')) {
+                mobileNavPanel.classList.remove('active');
+                mobileNavOverlay.classList.remove('active');
+            }
+        }
+    });
+
+    if(closeCartBtn) closeCartBtn.addEventListener('click', closeCart);
+    if(cartOverlay) cartOverlay.addEventListener('click', closeCart);
+
+    // Sistema de Cupón
+    if (applyCouponBtn) {
+        applyCouponBtn.addEventListener('click', async () => {
+            const code = couponInput.value.trim();
+            if (!code) return;
+            
+            try {
+                // Consultamos a la DB si el cupón existe (endpoint a crear en server.js)
+                const res = await fetch('/api/regalos/validar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+                
+                if (data.success && data.regalo && data.regalo.amount) {
+                    appliedCoupon = { code: data.regalo.code, amount: data.regalo.amount };
+                    couponMessage.style.display = 'block';
+                    couponMessage.style.color = '#28a745'; // Éxito
+                    couponMessage.innerText = '¡Descuento de ' + formatPrice(data.regalo.amount) + ' Gs. aplicado!';
+                    updateCartUI();
+                } else {
+                    couponMessage.style.display = 'block';
+                    couponMessage.style.color = '#dc3545'; // Error
+                    couponMessage.innerText = 'Código inválido o ya utilizado.';
+                    appliedCoupon = null;
+                    updateCartUI();
+                }
+            } catch (error) {
+                console.error('Error al validar cupón:', error);
+            }
+        });
+    }
+
+    // Finalizar por WhatsApp
+    if (checkoutWhatsappBtn) {
+        checkoutWhatsappBtn.addEventListener('click', () => {
+            if (cart.length === 0) return alert('El carrito está vacío');
+            
+            let message = '¡Hola FERUMI! Quiero realizar la siguiente compra:%0A%0A';
+            let subtotal = 0;
+            
+            cart.forEach(item => {
+                message += `🛍️ ${item.quantity}x ${item.name} (${formatPrice(item.price)} Gs. c/u)%0A`;
+                subtotal += item.price * item.quantity;
+            });
+            
+            message += `%0A*Subtotal:* ${formatPrice(subtotal)} Gs.`;
+            
+            if (appliedCoupon) {
+                message += `%0A*Cupón aplicado (${appliedCoupon.code}):* -${formatPrice(appliedCoupon.amount)} Gs.`;
+                let total = subtotal - appliedCoupon.amount;
+                if(total < 0) total = 0;
+                message += `%0A*TOTAL A PAGAR:* ${formatPrice(total)} Gs.`;
+            } else {
+                message += `%0A*TOTAL A PAGAR:* ${formatPrice(subtotal)} Gs.`;
+            }
+            
+            message += '%0A%0A¿Cuáles son los métodos de pago o envío?';
+            
+            // Usamos el número guardado en la config
+            const waNumber = '<%= siteConfig.whatsappNumber || "595999999999" %>'.replace(/\+/g, ''); 
+            window.open(`https://wa.me/${waNumber}?text=${message}`, '_blank');
+        });
+    }
+
+    updateCartUI();
 });
 </script>

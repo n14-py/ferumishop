@@ -59,10 +59,16 @@
                     const whatsappLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
                 %>
                 
-                <div style="margin: 1.5rem 0;">
-                    <a href="<%= whatsappLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="padding: 1rem; font-size: 1.1rem;">
+                <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 12px;">
+                    
+<button data-id="<%= product._id %>" data-name="<%= product.name %>" data-price="<%= product.price %>" data-image="<%= product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price, this.dataset.image)" class="btn btn-primary btn-block" style="padding: 1rem; font-size: 1.1rem; display: flex; justify-content: center; gap: 10px; align-items: center; cursor: pointer; border: none; border-radius: 8px; font-weight: bold;">
+    <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+</button>
+
+                    <a href="<%= whatsappLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="padding: 1rem; font-size: 1.1rem; background-color: #25D366; color: white; display: flex; justify-content: center; gap: 10px; align-items: center; text-decoration: none; border-radius: 8px; font-weight: bold;">
                         <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
                     </a>
+                    
                 </div>
 
                 <div class="description" style="margin-top: 2rem; line-height: 1.8;">
@@ -101,7 +107,6 @@
         
         const thumbnails = document.querySelectorAll('.product-thumbnails img');
         thumbnails.forEach(img => {
-            // Compara las URLs para saber cuál activar
             if (newSrc.includes(img.src.split('/upload/')[1].split('/')[1])) { 
                 img.classList.add('active');
             } else {

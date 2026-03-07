@@ -8,6 +8,67 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Estilos adicionales para la galería y Spotify */
+        .gift-media-section {
+            margin: 2rem 0;
+            padding-top: 2rem;
+            border-top: 1px dashed rgba(0,0,0,0.1);
+        }
+        
+        .gift-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 2rem;
+            justify-items: center;
+        }
+
+        /* Estilo especial si es una sola foto para que se vea más grande */
+        .gift-gallery.single-photo {
+            grid-template-columns: 1fr;
+        }
+        .gift-gallery.single-photo .gallery-img-wrapper {
+            max-width: 300px;
+        }
+
+        .gallery-img-wrapper {
+            width: 100%;
+            position: relative;
+            padding-bottom: 100%; /* Cuadrado perfecto */
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border: 4px solid white;
+            transform: rotate(-2deg);
+            transition: transform 0.3s ease;
+        }
+        
+        /* Rotar imágenes alternativamente para efecto de álbum de recortes */
+        .gallery-img-wrapper:nth-child(even) {
+            transform: rotate(2deg);
+        }
+        .gallery-img-wrapper:hover {
+            transform: scale(1.05) rotate(0deg);
+            z-index: 10;
+        }
+
+        .gallery-img-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .spotify-container {
+            margin-top: 1.5rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
 
@@ -49,41 +110,78 @@
             </div>
 
             <div class="gift-body">
-                <p>"<%= gift.message %>"</p>
+                <p style="font-size: 1.2rem; line-height: 1.8; font-style: italic;">"<%= gift.message %>"</p>
                 
-                <div class="gift-signature">
-                    Con cariño,<br>
-                    <strong><%= gift.senderName %></strong>
-                </div>
-            </div>
+                <% if ((gift.photos && gift.photos.length > 0) || gift.spotifyUrl) { %>
+                    <div class="gift-media-section">
+                        
+                        <% if (gift.photos && gift.photos.length > 0) { %>
+                            <div class="gift-gallery <%= gift.photos.length === 1 ? 'single-photo' : '' %>">
+                                <% gift.photos.forEach(photo => { 
+                                    const optimizedPhoto = photo.replace('/upload/', '/upload/w_600,h_600,c_fill,g_auto/');
+                                %>
+                                    <div class="gallery-img-wrapper">
+                                        <img src="<%= optimizedPhoto %>" alt="Recuerdo de <%= gift.senderName %>">
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } %>
 
-            <div class="premium-coupon-container">
-                <div class="coupon-left">
-                    <span class="coupon-label">GIFT CARD</span>
-                    <span class="coupon-amount"><%= formatPrice(gift.giftCardAmount) %></span>
-                </div>
-                <div class="coupon-right">
-                    <span class="coupon-code-label">CÓDIGO:</span>
-                    <code class="coupon-code"><%= gift.giftCardCode %></code>
-                </div>
-                <div class="circle-top"></div>
-                <div class="circle-bottom"></div>
-            </div>
+                        <% if (gift.spotifyUrl) { 
+                            // Convertir URL normal de Spotify a URL de embed
+                            let embedUrl = gift.spotifyUrl;
+                            if (embedUrl.includes('/track/')) {
+                                embedUrl = embedUrl.replace('/track/', '/embed/track/').split('?')[0];
+                            }
+                        %>
+                            <div class="spotify-container">
+                                <iframe style="border-radius:12px" src="<%= embedUrl %>?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                            </div>
+                        <% } %>
 
-            <div class="gift-actions">
-                <% if (gift.isRedeemed) { %>
-                    <div class="redeemed-badge">YA CANJEADO</div>
-                <% } else { %>
-                    <p class="instruction-text">Usa este código en la web para elegir tu regalo favorito.</p>
-                    <a href="https://www.ferumi.shop" class="btn btn-primary btn-glow">
-                        Ir a la Tienda <i class="fas fa-arrow-right"></i>
-                    </a>
+                    </div>
                 <% } %>
+                <div class="gift-signature" style="margin-top: 2rem;">
+                    Con cariño,<br>
+                    <strong style="font-size: 1.5rem; font-family: 'Dancing Script', cursive; color: var(--primary-color);"><%= gift.senderName %></strong>
+                </div>
             </div>
+
+            <% if (gift.giftCardAmount > 0) { %>
+                <div class="premium-coupon-container">
+                    <div class="coupon-left">
+                        <span class="coupon-label">GIFT CARD</span>
+                        <span class="coupon-amount"><%= formatPrice(gift.giftCardAmount) %></span>
+                    </div>
+                    <div class="coupon-right">
+                        <span class="coupon-code-label">CÓDIGO:</span>
+                        <code class="coupon-code"><%= gift.giftCardCode %></code>
+                    </div>
+                    <div class="circle-top"></div>
+                    <div class="circle-bottom"></div>
+                </div>
+
+                <div class="gift-actions">
+                    <% if (gift.isRedeemed) { %>
+                        <div class="redeemed-badge">YA CANJEADO</div>
+                    <% } else { %>
+                        <p class="instruction-text">Usa este código en la web para elegir tu regalo favorito.</p>
+                        <a href="/" class="btn btn-primary btn-glow">
+                            Ir a la Tienda <i class="fas fa-arrow-right"></i>
+                        </a>
+                    <% } %>
+                </div>
+            <% } else { %>
+                <div class="gift-actions" style="margin-top: 2rem;">
+                    <a href="/" class="btn btn-primary btn-glow" style="border-radius: 50px;">
+                        Visitar FERUMI <i class="fas fa-heart"></i>
+                    </a>
+                </div>
+            <% } %>
 
         </div>
 
-        <footer class="simple-footer">
+        <footer class="simple-footer" style="margin-top: 3rem;">
             &copy; FERUMI - Hecho con amor
         </footer>
 
