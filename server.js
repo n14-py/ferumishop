@@ -683,10 +683,11 @@ app.post('/admin/productos/add', requireAdmin, upload.array('photos', 5), async 
             throw new Error('Debes subir al menos una foto del producto.');
         }
 
-        const newProduct = new Product({
+const newProduct = new Product({
             name: purify.sanitize(name),
             description: purify.sanitize(description, { USE_PROFILES: { html: true } }),
-            price: parseFloat(price),
+            // Ignoramos los puntos que ponga el usuario para guardar el número real
+            price: parseInt(price.toString().replace(/\./g, '')) || 0,
             category,
             photos: req.files.map(f => f.path),
             isForRent: isForRent === 'on',
@@ -742,10 +743,11 @@ app.post('/admin/producto/edit/:id', requireAdmin, upload.array('new_photos', 5)
         // 2. Añadir nuevas fotos
         let newPhotos = req.files ? req.files.map(f => f.path) : [];
         
-        // 3. Actualizar el producto
+// 3. Actualizar el producto
         product.name = purify.sanitize(name);
         product.description = purify.sanitize(description, { USE_PROFILES: { html: true } });
-        product.price = parseFloat(price);
+        // Ignoramos los puntos que ponga el usuario al editar
+        product.price = parseInt(price.toString().replace(/\./g, '')) || 0;
         product.category = category;
         product.photos = [...photosToKeep, ...newPhotos];
         product.isForRent = isForRent === 'on';
