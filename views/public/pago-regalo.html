@@ -7,53 +7,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body style="background-color: #fcfcfc;">
 
     <%- include('../partials/header.html') %>
 
-    <main class="container">
-        <section class="static-page-container" style="text-align: center;">
+    <main class="container" style="padding: 4rem 1rem; max-width: 600px; margin: 0 auto;">
+        <div style="background: white; border-radius: 20px; padding: 3rem 2rem; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border-top: 8px solid var(--primary-color);">
             
-            <div style="margin-bottom: 2rem;">
-                <i class="fas fa-clock" style="font-size: 4rem; color: #ffca28; margin-bottom: 1rem;"></i>
-                <h1 style="color: #333;">¡Casi listo!</h1>
-                <p style="font-size: 1.2rem; color: var(--text-muted-color);">Tu regalo para <strong><%= gift.recipientName %></strong> ha sido creado.</p>
+            <i class="fas fa-heart" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+            <h1 style="color: var(--primary-color-dark); margin-bottom: 10px; font-family: 'Georgia', serif;">¡Tu regalo está casi listo!</h1>
+            <p style="color: #666; margin-bottom: 2rem; font-size: 1.1rem;">Solo falta realizar el pago para que preparemos tu Carta Eterna y activemos tu enlace mágico.</p>
+
+            <div style="background: #fafafa; border-radius: 15px; padding: 1.5rem; text-align: left; margin-bottom: 2rem; border: 1px solid #eee;">
+                <h3 style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 15px; color: #333; font-size: 1.1rem;">Resumen de tu pedido</h3>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #555;">
+                    <span>Paquete Elegido:</span>
+                    <strong style="color: var(--primary-color);"><%= gift.giftType.replace('-', ' ').toUpperCase() %></strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #555;">
+                    <span>Costo del Servicio (Carta Eterna):</span>
+                    <strong><%= formatPrice(serviceCost) %> Gs.</strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; color: #555;">
+                    <span>Saldo de Gift Card (Para compras):</span>
+                    <strong><%= formatPrice(gift.giftCardAmount) %> Gs.</strong>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ccc; font-size: 1.4rem; color: var(--primary-color-dark); font-weight: 900;">
+                    <span>Total a Transferir:</span>
+                    <span><%= formatPrice(serviceCost + gift.giftCardAmount) %> Gs.</span>
+                </div>
             </div>
 
-            <div class="form-container" style="background-color: #fff8e1; border: 2px dashed #ffca28;">
-                <h3 style="margin-bottom: 1rem;">Resumen del Pedido</h3>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; font-size: 1.1rem;">
-                    <li style="margin-bottom: 0.5rem;"><strong>De:</strong> <%= gift.senderName %></li>
-                    <li style="margin-bottom: 0.5rem;"><strong>Para:</strong> <%= gift.recipientName %></li>
-                    <li style="margin-bottom: 0.5rem;"><strong>Monto Gift Card:</strong> <%= formatPrice(gift.giftCardAmount) %></li>
-                    <li style="margin-bottom: 0.5rem;"><strong>ID de Referencia:</strong> <code style="background: #eee; padding: 2px 5px; border-radius: 4px;"><%= gift.uniqueId %></code></li>
-                </ul>
-
-                <hr style="margin: 2rem 0; border-color: rgba(0,0,0,0.1);">
-
-                <h3>¿Cómo finalizar?</h3>
-                <p style="margin-bottom: 1.5rem;">Para activar este regalo, debes realizar el pago. Envíanos un mensaje por WhatsApp con el ID de referencia para coordinar la transferencia.</p>
-
-                <% 
-                    const waMessage = `Hola FERUMI, acabo de crear un regalo online para ${gift.recipientName} (ID: ${gift.uniqueId}). Quiero realizar el pago de ${formatPrice(gift.giftCardAmount)}.`;
-                    const waLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
-                %>
-
-                <a href="<%= waLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="font-size: 1.1rem; padding: 1rem;">
-                    <i class="fab fa-whatsapp"></i> Pagar ahora por WhatsApp
-                </a>
+            <div style="text-align: left; margin-bottom: 2rem; background: #fff5f8; padding: 1.5rem; border-radius: 15px; border: 1px dashed var(--primary-color-light);">
+                <h4 style="color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem;"><i class="fas fa-university"></i> Datos para transferencia</h4>
+                <p style="margin-bottom: 8px; color: #444;"><strong>Banco:</strong> Ueno Bank</p>
+                <p style="margin-bottom: 8px; color: #444;"><strong>Cuenta:</strong> XXXXXXXX</p> <p style="margin-bottom: 8px; color: #444;"><strong>Titular:</strong> Luisa / Nando</p>
+                <p style="color: #444;"><strong>CI:</strong> X.XXX.XXX</p>
             </div>
 
-            <div style="margin-top: 2rem; color: var(--text-muted-color); font-size: 0.9rem;">
-                <p>Una vez confirmado el pago, recibirás un enlace especial para compartir el regalo.</p>
-                <a href="/" style="text-decoration: underline;">Volver al inicio</a>
-            </div>
+            <%
+                const total = serviceCost + gift.giftCardAmount;
+                const wppMessage = `¡Hola FERUMI! Acabo de crear un regalo online.%0A%0A*Para:* ${gift.recipientName}%0A*Paquete:* ${gift.giftType.toUpperCase()}%0A*Total a pagar:* ${formatPrice(total)} Gs.%0A%0AAquí envío mi comprobante de transferencia:`;
+                const wppLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${wppMessage}`;
+            %>
 
-        </section>
+            <a href="<%= wppLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="padding: 1.2rem; font-size: 1.1rem; background-color: #25D366; color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; font-weight: bold; transition: transform 0.2s;">
+                <i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i> Confirmar y Enviar Comprobante
+            </a>
+            
+            <p style="margin-top: 15px; font-size: 0.85rem; color: #999;">Una vez enviado el comprobante, validaremos el pago y activaremos tu enlace en menos de 15 minutos.</p>
+        </div>
     </main>
 
     <%- include('../partials/footer.html') %>
 
-    <script src="/js/main.js"></script>
 </body>
 </html>
