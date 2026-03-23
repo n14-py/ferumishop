@@ -421,6 +421,11 @@ app.get('/contacto', (req, res) => {
     });
 });
 
+// Ruta para la página de Enlaces (Bio Links)
+app.get('/links', (req, res) => {
+    res.render('public/enlaces', { pageTitle: 'FERUMI - Enlaces' });
+});
+
 
 
 // =============================================
