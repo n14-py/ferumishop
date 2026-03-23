@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FERUMI - Enlaces Oficiales</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           TEMA: FERUMI BIO LINKS
+           ========================================= */
+        :root {
+            --ferumi-pink: #ff69b4;
+            --ferumi-dark: #d81b60;
+            --ferumi-light: #ffe6ee;
+            --text-dark: #2d3436;
+            --bg-gradient: linear-gradient(135deg, #fff5f8 0%, #ffe6ee 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Formas decorativas de fondo */
+        .blob-1 {
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 105, 180, 0.2);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 0;
+        }
+        .blob-2 {
+            position: absolute;
+            bottom: 10%;
+            right: -50px;
+            width: 250px;
+            height: 250px;
+            background: rgba(216, 27, 96, 0.15);
+            border-radius: 50%;
+            filter: blur(50px);
+            z-index: 0;
+        }
+
+        /* Contenedor Principal */
+        .links-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 400px; /* Ideal para móviles */
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        /* Perfil de FERUMI */
+        .profile-header {
+            margin-bottom: 2.5rem;
+        }
+        
+        .profile-img-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1rem;
+        }
+        
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.3);
+            animation: bounceIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Insignia de verificado pequeña */
+        .verified-badge {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: #1DA1F2;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border: 2px solid white;
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--ferumi-dark);
+            margin-bottom: 0.2rem;
+            letter-spacing: 1px;
+        }
+
+        .profile-bio {
+            font-size: 0.95rem;
+            color: #636e72;
+            font-weight: 400;
+        }
+
+        /* Botones de Enlaces */
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 18px 25px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 1.05rem;
+            border: 2px solid transparent;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+        }
+
+        .link-btn .icon-left {
+            position: absolute;
+            left: 20px;
+            font-size: 1.4rem;
+            transition: transform 0.3s;
+        }
+
+        .link-btn:hover {
+            transform: translateY(-4px);
+            background: white;
+            box-shadow: 0 12px 25px rgba(255, 105, 180, 0.2);
+            border-color: var(--ferumi-pink);
+            color: var(--ferumi-dark);
+        }
+
+        .link-btn:hover .icon-left {
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        /* Colores específicos para cada red social al pasar el ratón */
+        .btn-store:hover { border-color: var(--ferumi-dark); color: var(--ferumi-dark); }
+        .btn-store .icon-left { color: var(--ferumi-dark); }
+        
+        .btn-gifts:hover { border-color: #f6ad55; color: #dd6b20; }
+        .btn-gifts .icon-left { color: #f6ad55; }
+
+        .btn-wa:hover { border-color: #25D366; color: #1da851; }
+        .btn-wa .icon-left { color: #25D366; }
+
+        .btn-ig:hover { border-color: #E1306C; color: #E1306C; }
+        .btn-ig .icon-left { color: #E1306C; }
+
+        .btn-tk:hover { border-color: #000000; color: #000000; }
+        .btn-tk .icon-left { color: #000000; }
+
+        /* Efecto de destello en el botón principal (Tienda) */
+        .btn-store::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255, 105, 180, 0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shine 4s infinite;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            font-size: 0.85rem;
+            color: #b2bec3;
+            text-align: center;
+        }
+        .footer i { color: var(--ferumi-pink); }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob-1"></div>
+    <div class="blob-2"></div>
+
+    <main class="links-wrapper">
+        
+        <header class="profile-header">
+            <div class="profile-img-container">
+                <img src="https://res.cloudinary.com/dmedd6w1q/image/upload/h_60/v1772846700/ferumi/ndmqamd6cqfutuzwobid.png" alt="FERUMI Logo" class="profile-img" onerror="this.src='https://ui-avatars.com/api/?name=FE&background=ff69b4&color=fff&size=200'">
+                <div class="verified-badge"><i class="fas fa-check"></i></div>
+            </div>
+            <h1 class="profile-name">FERUMI</h1>
+            <p class="profile-bio">Belleza, Maquillaje y Regalos Inolvidables ✨</p>
+        </header>
+
+        <section class="links-container">
+            
+            <a href="https://ferumi.shop/" class="link-btn btn-store">
+                <i class="fas fa-shopping-bag icon-left"></i>
+                Ir a la Tienda Online
+            </a>
+
+            <a href="https://www.ferumi.shop/regalos/crear" class="link-btn btn-gifts">
+                <i class="fas fa-envelope-open-heart icon-left"></i>
+                Crear Regalo / Carta Eterna
+            </a>
+
+            <a href="https://wa.me/595983243632" target="_blank" class="link-btn btn-wa">
+                <i class="fab fa-whatsapp icon-left"></i>
+                Atención por WhatsApp
+            </a>
+
+            <a href="https://instagram.com/ferumishop" target="_blank" class="link-btn btn-ig">
+                <i class="fab fa-instagram icon-left"></i>
+                Síguenos en Instagram
+            </a>
+
+            <a href="https://tiktok.com/@ferumishop" target="_blank" class="link-btn btn-tk">
+                <i class="fab fa-tiktok icon-left"></i>
+                Videos en TikTok
+            </a>
+
+        </section>
+
+        <footer class="footer">
+            <p>Hecho con <i class="fas fa-heart"></i> en Paraguay<br>© 2026 FERUMI</p>
+        </footer>
+
+    </main>
+
+</body>
+</html>

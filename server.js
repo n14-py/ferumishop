@@ -521,10 +521,23 @@ app.get('/ver-regalo/:uniqueId', async (req, res, next) => {
         }
 
         // Renderizar la vista de la carta
-        res.render('public/vista-regalo', { 
-            pageTitle: `Regalo para ${gift.recipientName}`,
+// --- INICIO NUEVO SISTEMA DE PLANTILLAS SEPARADAS ---
+        let plantilla = 'public/vista-regalo'; // Por defecto o si eligen "Solo Gift Card"
+
+        if (gift.template === 'romantico') {
+            plantilla = 'public/regalo-romantico';
+        } else if (gift.template === 'cumpleanos') {
+            plantilla = 'public/regalo-cumpleanos';
+        } else if (gift.template === 'elegante') {
+            plantilla = 'public/regalo-elegante';
+        }
+
+        // Renderizar la vista correspondiente a lo que eligió el cliente
+        res.render(plantilla, { 
+            pageTitle: `Regalo para ${gift.recipientName} ❤️`,
             gift: gift 
         });
+        // --- FIN NUEVO SISTEMA ---
 
     } catch (err) {
         next(err);

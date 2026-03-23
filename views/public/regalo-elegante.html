@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para <%= gift.recipientName %> - FERUMI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           TEMA: ELEGANTE / MINIMALISTA
+           ========================================= */
+        :root {
+            --el-black: #1a1a1a;
+            --el-white: #fcfcfc;
+            --el-gold: #c5a059;
+            --el-gray: #777777;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--el-white);
+            font-family: 'Lato', sans-serif;
+            color: var(--el-black);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Pantalla 1: La Portada Oscura (Sello de cera digital) */
+        #cover-screen {
+            height: 100vh;
+            background-color: var(--el-black);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 50;
+            position: relative;
+            color: var(--el-white);
+            transition: opacity 1.5s ease;
+        }
+
+        .cover-subtitle {
+            font-family: 'Lato', sans-serif;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            color: var(--el-gold);
+            margin-bottom: 1rem;
+            animation: fadeIn 2s ease forwards;
+        }
+
+        .cover-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 400;
+            margin: 0 0 3rem 0;
+            font-style: italic;
+            animation: fadeIn 2s ease forwards 0.5s;
+            opacity: 0;
+        }
+
+        .btn-reveal {
+            background: transparent;
+            color: var(--el-gold);
+            border: 1px solid var(--el-gold);
+            padding: 12px 35px;
+            font-family: 'Lato', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            animation: fadeIn 2s ease forwards 1s;
+            opacity: 0;
+        }
+
+        .btn-reveal:hover {
+            background: var(--el-gold);
+            color: var(--el-black);
+        }
+
+        /* Pantalla 2: El Contenido Elegante */
+        .experience-container {
+            position: relative;
+            z-index: 10;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            display: none; /* Oculto al inicio */
+            opacity: 0;
+            animation: slowFadeIn 2s ease forwards;
+        }
+
+        .elegant-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+        
+        .elegant-header::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 1px;
+            background-color: var(--el-gold);
+            margin: 2rem auto 0;
+        }
+
+        .elegant-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin: 0;
+            color: var(--el-black);
+        }
+        
+        .elegant-header p {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--el-gray);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .elegant-message {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            line-height: 2;
+            color: #333;
+            text-align: justify;
+            white-space: pre-wrap;
+            margin-bottom: 4rem;
+            padding: 0 1rem;
+        }
+
+        /* Galería Minimalista */
+        .elegant-gallery {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 15px;
+            padding-bottom: 20px;
+            scrollbar-width: none;
+        }
+        .elegant-gallery::-webkit-scrollbar { display: none; }
+        
+        .gallery-item {
+            flex: 0 0 100%;
+            scroll-snap-align: center;
+            position: relative;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+            filter: grayscale(20%); /* Un toque cinemático/desaturado */
+            transition: filter 0.5s ease;
+        }
+        .gallery-item img:hover {
+            filter: grayscale(0%);
+        }
+
+        .swipe-hint {
+            text-align: center;
+            color: var(--el-gray);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            margin-bottom: 4rem;
+        }
+
+        /* Reproductor y Gift Card - Estilo Luxe */
+        .luxe-box {
+            border: 1px solid #eaeaea;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: #fff;
+        }
+        .luxe-box h3 { 
+            font-family: 'Playfair Display', serif; 
+            font-weight: 400;
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--el-black);
+            letter-spacing: 1px;
+        }
+
+        .gift-card-luxe {
+            background-color: var(--el-black);
+            color: var(--el-white);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        .gift-card-luxe::before {
+            content: '';
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid rgba(197, 160, 89, 0.3); /* Borde dorado interior */
+            pointer-events: none;
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slowFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cover-screen">
+        <p class="cover-subtitle">Una experiencia diseñada para</p>
+        <h1 class="cover-title"><%= gift.recipientName %></h1>
+        <button class="btn-reveal" onclick="revealElegance()">Descubrir</button>
+    </div>
+
+    <div class="experience-container" id="gift-content">
+        
+        <header class="elegant-header">
+            <p>De parte de <%= gift.senderName %></p>
+            <h1>Un Detalle Especial</h1>
+        </header>
+
+        <% if (gift.message) { %>
+            <div class="elegant-message">
+                <%= gift.message %>
+            </div>
+        <% } %>
+
+        <% if (gift.photos && gift.photos.length > 0) { %>
+            <div class="elegant-gallery">
+                <% gift.photos.forEach(function(photoUrl) { %>
+                    <div class="gallery-item">
+                        <img src="<%= photoUrl %>" alt="Fotografía">
+                    </div>
+                <% }); %>
+            </div>
+            <% if (gift.photos.length > 1) { %>
+                <p class="swipe-hint">Desliza para continuar <i class="fas fa-long-arrow-alt-right" style="margin-left: 5px;"></i></p>
+            <% } %>
+        <% } %>
+
+        <% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
+            <div class="luxe-box">
+                <h3>Selección Musical</h3>
+                <% 
+                    let embedUrl = gift.spotifyUrl;
+                    if (embedUrl.includes('open.spotify.com')) {
+                        embedUrl = embedUrl.replace('open.spotify.com', 'open.spotify.com/embed');
+                        if (embedUrl.includes('?')) embedUrl = embedUrl.split('?')[0];
+                    }
+                %>
+                <iframe style="border-radius:0" src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        <% } %>
+
+        <% if (gift.giftCardAmount > 0) { %>
+            <div class="gift-card-luxe">
+                <p style="font-family: 'Lato', sans-serif; letter-spacing: 2px; font-size: 0.8rem; text-transform: uppercase; color: var(--el-gold); margin-top: 0;">Obsequio Exclusivo</p>
+                <div style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 400; margin: 20px 0;">
+                    <%= formatPrice(gift.giftCardAmount) %> Gs.
+                </div>
+                <p style="font-family: 'Lato', sans-serif; font-size: 0.9rem; color: #aaa;">Código de canje:</p>
+                <div style="font-family: monospace; font-size: 1.2rem; letter-spacing: 3px; margin-bottom: 30px; color: var(--el-white);">
+                    <%= gift.giftCardCode || 'PENDIENTE' %>
+                </div>
+                <a href="/" style="color: var(--el-black); background: var(--el-gold); text-decoration: none; padding: 12px 30px; font-family: 'Lato', sans-serif; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; transition: opacity 0.3s;">
+                    Visitar Boutique
+                </a>
+            </div>
+        <% } %>
+
+        <div style="text-align: center; font-family: 'Lato', sans-serif; letter-spacing: 2px; font-size: 0.7rem; color: #ccc; margin-top: 4rem; text-transform: uppercase;">
+            <p>FERUMI - Edición Especial</p>
+        </div>
+    </div>
+
+    <script>
+        function revealElegance() {
+            const cover = document.getElementById('cover-screen');
+            const content = document.getElementById('gift-content');
+            
+            // Efecto de desvanecimiento de la portada
+            cover.style.opacity = '0';
+            
+            setTimeout(() => {
+                cover.style.display = 'none';
+                content.style.display = 'block';
+                window.scrollTo(0, 0);
+            }, 1000); // Espera a que termine la transición de opacidad
+        }
+    </script>
+</body>
+</html>

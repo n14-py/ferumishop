@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para <%= gift.recipientName %> ❤️</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           TEMA: ROMÁNTICO PREMIUM
+           ========================================= */
+        :root {
+            --rose-bg: #fff0f5;
+            --rose-dark: #d81b60;
+            --rose-gold: #b76e79;
+            --text-main: #4a4a4a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--rose-bg);
+            background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff0f5 100%);
+            font-family: 'Lora', serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Corazones flotantes animados en el fondo */
+        .floating-hearts {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .heart {
+            position: absolute;
+            color: rgba(216, 27, 96, 0.15);
+            font-size: 20px;
+            animation: floatUp 10s linear infinite;
+            bottom: -50px;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Contenedor principal (sobre el fondo) */
+        .experience-container {
+            position: relative;
+            z-index: 10;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            display: none; /* Se oculta hasta que "abran" la carta */
+            animation: fadeIn 1.5s ease-out forwards;
+        }
+
+        /* Pantalla de Inicio: El Sobre interactivo */
+        #envelope-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 50;
+            position: relative;
+        }
+        .tap-to-open {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3rem;
+            color: var(--rose-dark);
+            margin-bottom: 2rem;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        .envelope-icon {
+            font-size: 6rem;
+            color: var(--rose-gold);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .envelope-icon:hover { transform: scale(1.1); }
+        .tap-hint { margin-top: 1rem; color: #888; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* Estilos de la Carta Revelada */
+        .names-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .names-header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            color: var(--rose-dark);
+            margin: 0;
+            line-height: 1.2;
+        }
+        .names-header p {
+            font-size: 1.1rem;
+            color: var(--rose-gold);
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .love-letter {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(216, 27, 96, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            margin-bottom: 3rem;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            text-align: center;
+        }
+
+        /* Galería estilo Polaroid */
+        .polaroid-gallery {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 20px;
+            padding: 10px 0 30px 0;
+            scrollbar-width: none; /* Firefox */
+        }
+        .polaroid-gallery::-webkit-scrollbar { display: none; /* Chrome */ }
+        
+        .polaroid {
+            flex: 0 0 85%;
+            scroll-snap-align: center;
+            background: white;
+            padding: 15px 15px 40px 15px;
+            border-radius: 5px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: rotate(-2deg);
+            transition: transform 0.3s;
+        }
+        .polaroid:nth-child(even) { transform: rotate(2deg); }
+        .polaroid img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 3px;
+        }
+
+        .swipe-hint {
+            text-align: center;
+            color: var(--rose-gold);
+            font-size: 0.9rem;
+            margin-top: -10px;
+            margin-bottom: 3rem;
+            font-style: italic;
+        }
+
+        /* Reproductor Spotify integrado sutilmente */
+        .music-box {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(216, 27, 96, 0.08);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .music-box h3 { margin-top: 0; color: var(--rose-dark); font-family: 'Dancing Script', cursive; font-size: 2rem;}
+
+        /* Animaciones */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="floating-hearts" id="hearts-container"></div>
+
+    <div id="envelope-screen">
+        <h1 class="tap-to-open">Para <%= gift.recipientName %></h1>
+        <i class="fas fa-envelope-open-text envelope-icon" onclick="openGift()"></i>
+        <p class="tap-hint">Toca el sobre para abrir</p>
+    </div>
+
+    <div class="experience-container" id="gift-content">
+        
+        <header class="names-header">
+            <p>Una carta eterna de</p>
+            <h1><%= gift.senderName %></h1>
+        </header>
+
+        <% if (gift.message) { %>
+            <div class="love-letter">
+                <%= gift.message %>
+            </div>
+        <% } %>
+
+        <% if (gift.photos && gift.photos.length > 0) { %>
+            <div class="polaroid-gallery">
+                <% gift.photos.forEach(function(photoUrl) { %>
+                    <div class="polaroid">
+                        <img src="<%= photoUrl %>" alt="Nuestro recuerdo">
+                    </div>
+                <% }); %>
+            </div>
+            <% if (gift.photos.length > 1) { %>
+                <p class="swipe-hint"><i class="fas fa-hand-pointer"></i> Desliza para ver más recuerdos</p>
+            <% } %>
+        <% } %>
+
+        <% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
+            <div class="music-box">
+                <h3>Nuestra Canción</h3>
+                <% 
+                    let embedUrl = gift.spotifyUrl;
+                    if (embedUrl.includes('open.spotify.com')) {
+                        embedUrl = embedUrl.replace('open.spotify.com', 'open.spotify.com/embed');
+                        if (embedUrl.includes('?')) embedUrl = embedUrl.split('?')[0];
+                    }
+                %>
+                <iframe style="border-radius:12px" src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        <% } %>
+
+        <% if (gift.giftCardAmount > 0) { %>
+            <div style="text-align: center; padding: 20px; background: white; border-radius: 15px; border: 2px dashed var(--rose-gold); margin-bottom: 2rem;">
+                <h4 style="color: var(--rose-dark); margin-top: 0;">¡Tienes una sorpresa extra!</h4>
+                <p style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;"><%= formatPrice(gift.giftCardAmount) %> Gs.</p>
+                <p style="margin: 0; font-size: 0.9rem;">Código: <strong><%= gift.giftCardCode || 'PENDIENTE' %></strong></p>
+                <a href="/" style="display: inline-block; margin-top: 15px; color: var(--rose-dark); text-decoration: none; font-weight: bold;">Ir a la tienda FERUMI &rarr;</a>
+            </div>
+        <% } %>
+
+        <div style="text-align: center; color: var(--rose-gold); font-size: 0.8rem; padding-top: 2rem; border-top: 1px solid rgba(216, 27, 96, 0.2);">
+            <p>Creado con amor en FERUMI</p>
+        </div>
+    </div>
+
+    <script>
+        // Generar corazones flotantes aleatorios
+        const heartsContainer = document.getElementById('hearts-container');
+        const heartIcons = ['fa-heart', 'fa-heart-pulse', 'fa-face-kiss-wink-heart'];
+        
+        for (let i = 0; i < 15; i++) {
+            let heart = document.createElement('i');
+            let randomIcon = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+            heart.className = `fas ${randomIcon} heart`;
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            heart.style.animationDelay = Math.random() * 5 + 's';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heartsContainer.appendChild(heart);
+        }
+
+        // Función mágica para revelar el regalo
+        function openGift() {
+            document.getElementById('envelope-screen').style.display = 'none';
+            document.getElementById('gift-content').style.display = 'block';
+            window.scrollTo(0, 0); // Sube arriba por si acaso
+        }
+    </script>
+</body>
+</html>

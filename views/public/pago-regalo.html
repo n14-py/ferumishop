@@ -51,11 +51,11 @@
 
             <%
                 const total = serviceCost + gift.giftCardAmount;
-                /* Agregamos el ID y forzamos la URL real de ferumi.shop */
-                const idRegalo = gift._id || gift.id;
-                const urlReal = `https://ferumi.shop/regalo/${idRegalo}`; 
+                // Usamos uniqueId que es el formato "regalo-00ae130b"
+                const idReal = gift.uniqueId || gift._id;
+                const urlReal = `https://ferumi.shop/ver-regalo/${idReal}`; 
                 
-                const wppMessage = `¡Hola FERUMI! Acabo de crear un regalo online.%0A%0A*ID del Regalo:* ${idRegalo}%0A*Para:* ${gift.recipientName}%0A*Paquete:* ${gift.giftType.toUpperCase()}%0A*Total a pagar:* ${formatPrice(total)} Gs.%0A*Enlace del regalo:* ${urlReal}%0A%0AAquí envío mi comprobante de transferencia:`;
+                const wppMessage = `¡Hola FERUMI! Acabo de crear un regalo online.%0A%0A*ID Pago:* ${gift._id}%0A*Para:* ${gift.recipientName}%0A*Paquete:* ${gift.giftType.toUpperCase()}%0A*Total a pagar:* ${formatPrice(total)} Gs.%0A%0A*Enlace del regalo:* ${urlReal}%0A_(Nota: El enlace se activará automáticamente cuando confirmes mi pago)_.%0A%0AAquí envío mi comprobante:`;
                 
                 const wppLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${wppMessage}`;
             %>
