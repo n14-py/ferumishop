@@ -3,235 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¡Una Sorpresa para Ti!</title>
+    <title>De <%= gift.senderName %> para <%= gift.recipientName %> - FERUMI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
-        /* Estilos adicionales para la galería y Spotify */
-        .gift-media-section {
-            margin: 2rem 0;
-            padding-top: 2rem;
-            border-top: 1px dashed rgba(0,0,0,0.1);
+        /* =========================================
+           ESTILOS BASE Y ESTRUCTURA PRESTIGIO
+           ========================================= */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; /* Evitar scroll horizontal indeseado */
         }
-        
-        .gift-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+
+        .eterna-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem 5rem 1rem;
+            min-height: 100vh;
+        }
+
+        /* Cabecera de la carta (Nombres) */
+        .carta-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            margin-top: 2rem;
+            opacity: 0;
+            animation: fadeInDown 1s forwards;
+        }
+
+        .nombres-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 15px;
-            margin-bottom: 2rem;
-            justify-items: center;
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 10px;
         }
 
-        /* Estilo especial si es una sola foto para que se vea más grande */
-        .gift-gallery.single-photo {
-            grid-template-columns: 1fr;
-        }
-        .gift-gallery.single-photo .gallery-img-wrapper {
-            max-width: 300px;
+        .linea-decorativa {
+            height: 1px;
+            background: #ddd;
+            width: 50px;
         }
 
-        .gallery-img-wrapper {
-            width: 100%;
+        .nombre-grande {
+            font-family: 'Georgia', serif;
+            font-size: 3rem;
+            font-weight: 400;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        @media (max-width: 600px) {
+            .nombre-grande { font-size: 2.2rem; }
+            .nombres-wrapper { flex-direction: column; gap: 5px; }
+            .linea-decorativa { display: none; }
+        }
+
+        /* =========================================
+           GALERÍA DE FOTOS SLIDER CSS (NUEVO)
+           Soluciona el problema de fotos "rotas"
+           ========================================= */
+        .galeria-slider-wrapper {
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeIn 1s forwards 0.5s;
+        }
+
+        .galeria-slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            /* Ocultar barra de scroll para estética */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Ocultar barra de scroll para Chrome, Safari y Opera */
+        .galeria-slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .foto-slide {
+            flex: 0 0 100%; /* Cada foto ocupa todo el ancho */
+            scroll-snap-align: start;
             position: relative;
-            padding-bottom: 100%; /* Cuadrado perfecto */
-            overflow: hidden;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            border: 4px solid white;
-            transform: rotate(-2deg);
-            transition: transform 0.3s ease;
-        }
-        
-        /* Rotar imágenes alternativamente para efecto de álbum de recortes */
-        .gallery-img-wrapper:nth-child(even) {
-            transform: rotate(2deg);
-        }
-        .gallery-img-wrapper:hover {
-            transform: scale(1.05) rotate(0deg);
-            z-index: 10;
+            /* Proporción de imagen para que no varíe el alto (ej: 4:3) */
+            padding-top: 75%; 
+            background: #eee;
         }
 
-        .gallery-img-wrapper img {
+        .foto-slide img {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: cover; /* Recorta la imagen para llenar el contenedor sin deformarse */
+            border-radius: 20px;
         }
 
-        .spotify-container {
-            margin-top: 1.5rem;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        /* Controles visuales opcionales (solo si hay > 1 foto) */
+        .slider-instrucciones {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none; /* Se activa con JS si hay múltiples fotos */
+        }
+
+        /* =========================================
+           EL MENSAJE (LA CARTA)
+           ========================================= */
+        .carta-body {
+            background: white;
+            padding: 4rem 3rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            position: relative;
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeInUp 1s forwards 1s;
+        }
+
+        /* Icono decorativo inicial */
+        .carta-body::before {
+            content: '\f10d'; /* Icono comilla FontAwesome */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            background: white;
+            padding: 10px;
+            border-radius: 50%;
+            color: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .mensaje-texto {
+            font-family: 'Georgia', serif;
+            font-size: 1.25rem;
+            line-height: 1.9;
+            color: #333;
+            white-space: pre-wrap; /* Mantiene los saltos de línea del textarea */
+            text-align: justify;
+        }
+
+        @media (max-width: 600px) {
+            .carta-body { padding: 3rem 1.5rem; }
+            .mensaje-texto { font-size: 1.15rem; }
+        }
+
+        /* =========================================
+           REPRODUCTOR SPOTIFY (Solo Premium)
+           ========================================= */
+        .spotify-wrapper {
+            margin-bottom: 3rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s forwards 1.2s;
+        }
+
+        /* =========================================
+           GIFT CARD (Si aplica)
+           ========================================= */
+        .gift-card-final {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeInUp 1s forwards 1.5s;
+        }
+        .gc-monto {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #f6ad55; /* Color dorado/naranja */
+            margin-bottom: 10px;
+        }
+        .gc-codigo {
+            font-family: monospace;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 1.1rem;
+        }
+
+        /* =========================================
+           FOOTER Y BOTÓN TIENDA
+           ========================================= */
+        .ferumi-footer {
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 3rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .btn-usar-saldo {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.3);
+        }
+        .btn-usar-saldo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 105, 180, 0.4);
+        }
+
+        /* =========================================
+           TEMPLATES VISUALES (EJS dinámico)
+           ========================================= */
+        
+        <% if (gift.template === 'romantico') { %>
+            /* Diseño Romántico: Rosas y Elegancia */
+            body { background-color: #fff5f8; }
+            .nombre-grande { color: var(--primary-color-dark); }
+            .carta-body { border: 2px solid #ffe6ee; }
+            .carta-body::before { color: var(--primary-color); }
+        
+        <% } else if (gift.template === 'cumpleanos') { %>
+            /* Diseño Cumpleaños: Dorado y Festivo */
+            body { background-color: #fffdf5; }
+            .nombre-grande { color: #b7791f; }
+            .carta-body { border: 2px solid #fef3c7; }
+            .carta-body::before { color: #f6ad55; content: '\f1fd'; } /* Icono Pastel */
+            .linea-decorativa { background: #f6ad55; }
+        
+        <% } else if (gift.template === 'elegante') { %>
+            /* Diseño Elegante: Minimalista y Sofisticado */
+            body { background-color: #f4f4f4; }
+            .nombre-grande { color: #1a1a1a; font-family: 'Times New Roman', Times, serif; }
+            .carta-body { border: 1px solid #e1e1e1; border-radius: 0; } /* Menos redondeado */
+            .carta-body::before { color: #333; content: '\f005'; } /* Icono Estrella */
+            .mensaje-texto { font-family: 'Times New Roman', Times, serif; color: #1a1a1a; }
+        <% } %>
+
+
+        /* =========================================
+           ANIMACIONES
+           ========================================= */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <div id="intro-screen" class="gift-intro-overlay" onclick="abrirRegalo()">
-        <div class="intro-content">
-            <div class="bouncing-gift">
-                <i class="fas fa-gift"></i>
-            </div>
-            <h1 class="intro-title">¡Hola, <%= gift.recipientName %>!</h1>
-            <p class="intro-subtitle"><%= gift.senderName %> te envió un pequeño detallito...</p>
-            <div class="tap-hint">
-                <span class="pulse-text">Toca para abrir</span>
-                <i class="fas fa-fingerprint"></i>
-            </div>
-        </div>
-    </div>
-
-    <main id="gift-content" class="gift-view-container hidden-content">
+    <main class="eterna-container">
         
-        <div class="gift-top-brand">
-            FERUMI
-        </div>
+        <header class="carta-header">
+            <div class="nombres-wrapper">
+                <span>De</span>
+                <div class="linea-decorativa"></div>
+                <span>Para</span>
+            </div>
+            <h1 class="nombre-grande"><%= gift.senderName %> ❤️ <%= gift.recipientName %></h1>
+        </header>
 
-        <div class="gift-card-envelope template-<%= gift.template %> animate-slide-up">
-            
-            <div class="gift-header">
-                <div class="icon-badge">
-                    <% if (gift.template === 'romantico') { %>
-                        ❤️
-                    <% } else if (gift.template === 'cumpleanos') { %>
-                        🎂
-                    <% } else { %>
-                        ✨
-                    <% } %>
+        <% if (gift.photos && gift.photos.length > 0) { %>
+            <div class="galeria-slider-wrapper">
+                <div class="galeria-slider" id="mainSlider">
+                    <% gift.photos.forEach(function(photoUrl) { %>
+                        <div class="foto-slide">
+                            <img src="<%= photoUrl %>" alt="Recuerdo especial">
+                        </div>
+                    <% }); %>
                 </div>
                 
-                <h2>Para ti, <%= gift.recipientName %></h2>
-                <div class="divider-line"></div>
-            </div>
-
-            <div class="gift-body">
-                <p style="font-size: 1.2rem; line-height: 1.8; font-style: italic;">"<%= gift.message %>"</p>
-                
-                <% if ((gift.photos && gift.photos.length > 0) || gift.spotifyUrl) { %>
-                    <div class="gift-media-section">
-                        
-                        <% if (gift.photos && gift.photos.length > 0) { %>
-                            <div class="gift-gallery <%= gift.photos.length === 1 ? 'single-photo' : '' %>">
-                                <% gift.photos.forEach(photo => { 
-                                    const optimizedPhoto = photo.replace('/upload/', '/upload/w_600,h_600,c_fill,g_auto/');
-                                %>
-                                    <div class="gallery-img-wrapper">
-                                        <img src="<%= optimizedPhoto %>" alt="Recuerdo de <%= gift.senderName %>">
-                                    </div>
-                                <% }); %>
-                            </div>
-                        <% } %>
-
-                        <% if (gift.spotifyUrl) { 
-                            // Convertir URL normal de Spotify a URL de embed
-                            let embedUrl = gift.spotifyUrl;
-                            if (embedUrl.includes('/track/')) {
-                                embedUrl = embedUrl.replace('/track/', '/embed/track/').split('?')[0];
-                            }
-                        %>
-                            <div class="spotify-container">
-                                <iframe style="border-radius:12px" src="<%= embedUrl %>?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-                            </div>
-                        <% } %>
-
-                    </div>
+                <% if (gift.photos.length > 1) { %>
+                    <p class="slider-instrucciones" id="sliderInstr" style="display: block;">
+                        <i class="fas fa-arrows-left-right"></i> Desliza para ver más fotos (<%= gift.photos.length %>)
+                    </p>
                 <% } %>
-                <div class="gift-signature" style="margin-top: 2rem;">
-                    Con cariño,<br>
-                    <strong style="font-size: 1.5rem; font-family: 'Dancing Script', cursive; color: var(--primary-color);"><%= gift.senderName %></strong>
-                </div>
             </div>
+        <% } %>
 
-            <% if (gift.giftCardAmount > 0) { %>
-                <div class="premium-coupon-container">
-                    <div class="coupon-left">
-                        <span class="coupon-label">GIFT CARD</span>
-                        <span class="coupon-amount"><%= formatPrice(gift.giftCardAmount) %></span>
-                    </div>
-                    <div class="coupon-right">
-                        <span class="coupon-code-label">CÓDIGO:</span>
-                        <code class="coupon-code"><%= gift.giftCardCode %></code>
-                    </div>
-                    <div class="circle-top"></div>
-                    <div class="circle-bottom"></div>
-                </div>
+        <% if (gift.message) { %>
+            <article class="carta-body">
+                <div class="mensaje-texto"><%= gift.message %></div>
+            </article>
+        <% } %>
 
-                <div class="gift-actions">
-                    <% if (gift.isRedeemed) { %>
-                        <div class="redeemed-badge">YA CANJEADO</div>
-                    <% } else { %>
-                        <p class="instruction-text">Usa este código en la web para elegir tu regalo favorito.</p>
-                        <a href="/" class="btn btn-primary btn-glow">
-                            Ir a la Tienda <i class="fas fa-arrow-right"></i>
-                        </a>
-                    <% } %>
-                </div>
-            <% } else { %>
-                <div class="gift-actions" style="margin-top: 2rem;">
-                    <a href="/" class="btn btn-primary btn-glow" style="border-radius: 50px;">
-                        Visitar FERUMI <i class="fas fa-heart"></i>
-                    </a>
-                </div>
-            <% } %>
+        <% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
+            <div class="spotify-wrapper">
+                <h3 style="color: #555; font-family: 'Georgia', serif; font-weight: 400; margin-bottom: 15px;">
+                    <i class="fab fa-spotify" style="color: #1DB954;"></i> Dale play a nuestra canción
+                </h3>
+                <% 
+                    // Convertimos URL normal de Spotify en URL de Embed
+                    let embedUrl = gift.spotifyUrl;
+                    if (embedUrl.includes('open.spotify.com')) {
+                        embedUrl = embedUrl.replace('open.spotify.com', 'open.spotify.com/embed');
+                        // Limpiamos posibles parámetros extras si vienen del móvil (?si=...)
+                        if (embedUrl.includes('?')) {
+                            embedUrl = embedUrl.split('?')[0];
+                        }
+                    }
+                %>
+                <iframe style="border-radius:12px" src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        <% } %>
 
-        </div>
+        <% if (gift.giftCardAmount > 0) { %>
+            <div class="gift-card-final">
+                <i class="fas fa-gift" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p style="margin: 0 0 10px 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">¡Tienes saldo de regalo!</p>
+                <div class="gc-monto"><%= formatPrice(gift.giftCardAmount) %> Gs.</div>
+                <p style="margin: 10px 0;">Código: <span class="gc-codigo"><%= gift.giftCardCode || 'PENDIENTE' %></span></p>
+                <small style="opacity: 0.8;">Válido para cualquier producto en ferumi.shop</small>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="/" class="btn-usar-saldo">
+                    <i class="fas fa-shopping-bag"></i> Ir a la tienda a usar mi saldo
+                </a>
+            </div>
+        <% } %>
 
-        <footer class="simple-footer" style="margin-top: 3rem;">
-            &copy; FERUMI - Hecho con amor
+        <footer class="ferumi-footer">
+            <p>Esta Carta Eterna fue creada con amor a través de FERUMI.</p>
+            <p style="font-size: 0.8rem; opacity: 0.7;">© <%= new Date().getFullYear() %> FERUMI - ferumi.shop</p>
         </footer>
 
     </main>
-
-    <script>
-        function abrirRegalo() {
-            const intro = document.getElementById('intro-screen');
-            const content = document.getElementById('gift-content');
-
-            // 1. Animación de salida de la intro
-            intro.style.opacity = '0';
-            intro.style.transform = 'scale(1.1)';
-            
-            setTimeout(() => {
-                intro.style.display = 'none';
-                
-                // 2. Mostrar el contenido
-                content.classList.remove('hidden-content');
-                
-                // 3. ¡LANZAR CONFETI!
-                lanzarConfeti();
-                
-            }, 500);
-        }
-
-        function lanzarConfeti() {
-            var duration = 3 * 1000;
-            var animationEnd = Date.now() + duration;
-            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-            var interval = setInterval(function() {
-                var timeLeft = animationEnd - Date.now();
-
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
-
-                var particleCount = 50 * (timeLeft / duration);
-                
-                // Confeti desde dos lados
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }, 250);
-        }
-
-        function randomInRange(min, max) {
-            return Math.random() * (max - min) + min;
-        }
-    </script>
 
 </body>
 </html>

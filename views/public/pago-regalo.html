@@ -45,13 +45,18 @@
             <div style="text-align: left; margin-bottom: 2rem; background: #fff5f8; padding: 1.5rem; border-radius: 15px; border: 1px dashed var(--primary-color-light);">
                 <h4 style="color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem;"><i class="fas fa-university"></i> Datos para transferencia</h4>
                 <p style="margin-bottom: 8px; color: #444;"><strong>Banco:</strong> Ueno Bank</p>
-                <p style="margin-bottom: 8px; color: #444;"><strong>Cuenta:</strong> XXXXXXXX</p> <p style="margin-bottom: 8px; color: #444;"><strong>Titular:</strong> Luisa / Nando</p>
-                <p style="color: #444;"><strong>CI:</strong> X.XXX.XXX</p>
+                <p style="margin-bottom: 8px; color: #444;"><strong>Alias:</strong> 6692796</p> <p style="margin-bottom: 8px; color: #444;"><strong>Titular:</strong> Luis Fernando Arce Fretes</p>
+                <p style="color: #444;"><strong></strong> </p>
             </div>
 
             <%
                 const total = serviceCost + gift.giftCardAmount;
-                const wppMessage = `¡Hola FERUMI! Acabo de crear un regalo online.%0A%0A*Para:* ${gift.recipientName}%0A*Paquete:* ${gift.giftType.toUpperCase()}%0A*Total a pagar:* ${formatPrice(total)} Gs.%0A%0AAquí envío mi comprobante de transferencia:`;
+                /* Agregamos el ID y forzamos la URL real de ferumi.shop */
+                const idRegalo = gift._id || gift.id;
+                const urlReal = `https://ferumi.shop/regalo/${idRegalo}`; 
+                
+                const wppMessage = `¡Hola FERUMI! Acabo de crear un regalo online.%0A%0A*ID del Regalo:* ${idRegalo}%0A*Para:* ${gift.recipientName}%0A*Paquete:* ${gift.giftType.toUpperCase()}%0A*Total a pagar:* ${formatPrice(total)} Gs.%0A*Enlace del regalo:* ${urlReal}%0A%0AAquí envío mi comprobante de transferencia:`;
+                
                 const wppLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${wppMessage}`;
             %>
 
