@@ -2,273 +2,727 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Para <%= gift.recipientName %> ❤️</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Great+Vibes&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
-        /* =========================================
-           TEMA: ROMÁNTICO PREMIUM
-           ========================================= */
+        /* ==========================================================================
+           VARIABLES GLOBALES - DISEÑO ROMÁNTICO EXTREMO
+           ========================================================================== */
         :root {
-            --rose-bg: #fff0f5;
-            --rose-dark: #d81b60;
-            --rose-gold: #b76e79;
-            --text-main: #4a4a4a;
+            --rose-100: #fff0f5;
+            --rose-200: #ffd6e6;
+            --rose-500: #ff4d85;
+            --rose-700: #c2185b;
+            --rose-900: #880e4f;
+            --gold-light: #f9ecc9;
+            --gold-main: #d4af37;
+            --text-dark: #2c1a22;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px 0 rgba(194, 24, 91, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--rose-bg);
-            background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff0f5 100%);
-            font-family: 'Lora', serif;
-            color: var(--text-main);
+            background-color: var(--rose-100);
+            background: radial-gradient(circle at 50% 0%, #ffffff 0%, var(--rose-100) 70%, #ffd6e6 100%);
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
             overflow-x: hidden;
             min-height: 100vh;
-        }
-
-        /* Corazones flotantes animados en el fondo */
-        .floating-hearts {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .heart {
-            position: absolute;
-            color: rgba(216, 27, 96, 0.15);
-            font-size: 20px;
-            animation: floatUp 10s linear infinite;
-            bottom: -50px;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
-        }
-
-        /* Contenedor principal (sobre el fondo) */
-        .experience-container {
             position: relative;
-            z-index: 10;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-            display: none; /* Se oculta hasta que "abran" la carta */
-            animation: fadeIn 1.5s ease-out forwards;
         }
 
-        /* Pantalla de Inicio: El Sobre interactivo */
-        #envelope-screen {
-            height: 100vh;
+        /* ==========================================================================
+           FONDO MÁGICO (PARTÍCULAS)
+           ========================================================================== */
+        #magic-particles {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .magic-particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,77,133,0.4) 50%, rgba(255,255,255,0) 100%);
+            border-radius: 50%;
+            animation: floatParticle linear infinite;
+        }
+
+        .heart-particle {
+            position: absolute;
+            color: rgba(255, 77, 133, 0.3);
+            animation: floatHeart linear infinite;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            20% { opacity: 1; transform: translateY(80vh) scale(1); }
+            80% { opacity: 1; }
+            100% { transform: translateY(-20px) scale(0.5); opacity: 0; }
+        }
+
+        @keyframes floatHeart {
+            0% { transform: translateY(100vh) rotate(-20deg) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-50px) rotate(20deg) scale(1.2); opacity: 0; }
+        }
+
+        /* ==========================================================================
+           ESCENA 1: EL SOBRE 3D
+           ========================================================================== */
+        #scene-envelope {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            z-index: 100;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,240,245,0.95) 100%);
+            backdrop-filter: blur(10px);
+            transition: opacity 1.5s ease-in-out, visibility 1.5s;
+        }
+
+        .envelope-text-wrapper {
             text-align: center;
-            z-index: 50;
+            margin-bottom: 3rem;
+            z-index: 2;
+        }
+
+        .envelope-for {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--rose-700);
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .envelope-name {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(3.5rem, 10vw, 6rem);
+            color: var(--rose-900);
+            line-height: 1;
+            text-shadow: 2px 4px 10px rgba(194, 24, 91, 0.15);
+        }
+
+        /* Estructura del Sobre CSS Puro */
+        .envelope-container {
+            position: relative;
+            width: clamp(280px, 80vw, 400px);
+            height: clamp(180px, 55vw, 250px);
+            background: #fdf5f7;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(194, 24, 91, 0.2), inset 0 0 20px rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            perspective: 1000px;
+        }
+
+        .envelope-container:hover {
+            transform: scale(1.05) translateY(-10px);
+            box-shadow: 0 30px 60px rgba(194, 24, 91, 0.3);
+        }
+
+        .envelope-front {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent;
+            z-index: 3;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        /* Triángulos del sobre */
+        .envelope-front::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            border-left: clamp(140px, 40vw, 200px) solid #fce8ef;
+            border-top: clamp(90px, 27.5vw, 125px) solid transparent;
+            border-bottom: clamp(90px, 27.5vw, 125px) solid #fce8ef;
+            z-index: 3;
+        }
+        .envelope-front::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            border-right: clamp(140px, 40vw, 200px) solid #f9e0e8;
+            border-top: clamp(90px, 27.5vw, 125px) solid transparent;
+            border-bottom: clamp(90px, 27.5vw, 125px) solid #f9e0e8;
+            z-index: 3;
+        }
+
+        .envelope-bottom {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 50%;
+            background: #fdf5f7;
+            clip-path: polygon(0 100%, 50% 0, 100% 100%);
+            z-index: 4;
+            filter: drop-shadow(0 -5px 5px rgba(0,0,0,0.02));
+        }
+
+        /* Solapa Superior (Animada) */
+        .envelope-flap {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 60%;
+            background: #ffe3ec;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            z-index: 5;
+            transform-origin: top;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 5px 10px rgba(194, 24, 91, 0.15));
+        }
+
+        .wax-seal {
+            position: absolute;
+            bottom: 15%; left: 50%;
+            transform: translate(-50%, 50%);
+            width: 50px; height: 50px;
+            background: radial-gradient(circle at 30% 30%, #ff4d85, #c2185b);
+            border-radius: 50%;
+            z-index: 6;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-light);
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.5rem;
+            transition: opacity 0.3s;
+        }
+
+        /* La carta asomándose */
+        .envelope-letter-inside {
+            position: absolute;
+            top: 5%; left: 5%; width: 90%; height: 90%;
+            background: #fff;
+            border-radius: 5px;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 1s ease-in-out;
+        }
+
+        .envelope-instruction {
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--rose-500);
+            animation: pulseOpacity 2s infinite;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Animación de apertura mediante clase JS */
+        .envelope-container.open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 1; /* Pasa atrás */
+        }
+        .envelope-container.open .wax-seal {
+            opacity: 0;
+            transform: translate(-50%, 50%) scale(2);
+        }
+        .envelope-container.open .envelope-letter-inside {
+            transform: translateY(-80%); /* La carta sale hacia arriba */
+        }
+
+        @keyframes pulseOpacity {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* ==========================================================================
+           ESCENA 2: LA CARTA REVELADA (CONTENIDO)
+           ========================================================================== */
+        #scene-content {
+            position: relative;
+            z-index: 10;
+            padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem);
+            max-width: 800px;
+            margin: 0 auto;
+            display: none; /* Oculto al inicio */
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+
+        #scene-content.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Efecto Glassmorphism Premium para contenedores */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 24px;
+            padding: clamp(2rem, 6vw, 4rem);
+            margin-bottom: clamp(2rem, 5vw, 4rem);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Destello dentro del vidrio */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%);
+            opacity: 0.1;
+            pointer-events: none;
+            transform: rotate(30deg);
+        }
+
+        .header-names {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-names h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(0.8rem, 1.5vw, 1rem);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--rose-700);
+            margin-bottom: 10px;
+        }
+
+        .header-names h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(3rem, 8vw, 5rem);
+            color: var(--rose-900);
+            line-height: 1.1;
+        }
+
+        /* El Texto de la Carta */
+        .letter-body {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            line-height: 1.8;
+            color: var(--text-dark);
+            text-align: center;
+            white-space: pre-wrap;
             position: relative;
         }
-        .tap-to-open {
-            font-family: 'Dancing Script', cursive;
-            font-size: 3rem;
-            color: var(--rose-dark);
-            margin-bottom: 2rem;
-            cursor: pointer;
-            animation: pulse 2s infinite;
-        }
-        .envelope-icon {
-            font-size: 6rem;
-            color: var(--rose-gold);
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        .envelope-icon:hover { transform: scale(1.1); }
-        .tap-hint { margin-top: 1rem; color: #888; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; }
 
-        /* Estilos de la Carta Revelada */
-        .names-header {
+        /* Comillas decorativas */
+        .letter-body::before, .letter-body::after {
+            content: '"';
+            font-family: 'Great Vibes', cursive;
+            font-size: 4rem;
+            color: var(--rose-200);
+            position: absolute;
+            line-height: 0;
+            opacity: 0.6;
+        }
+        .letter-body::before { top: 1rem; left: -1rem; }
+        .letter-body::after { bottom: -1rem; right: -1rem; }
+
+        /* ==========================================================================
+           GALERÍA POLAROID EXTREMA CON LIGHTBOX
+           ========================================================================== */
+        .gallery-wrapper {
+            margin-bottom: clamp(3rem, 6vw, 5rem);
+            position: relative;
+        }
+
+        .gallery-title {
             text-align: center;
-            margin-bottom: 2rem;
-        }
-        .names-header h1 {
-            font-family: 'Dancing Script', cursive;
-            font-size: 3.5rem;
-            color: var(--rose-dark);
-            margin: 0;
-            line-height: 1.2;
-        }
-        .names-header p {
-            font-size: 1.1rem;
-            color: var(--rose-gold);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
             font-style: italic;
-            margin-top: 5px;
+            color: var(--rose-900);
+            margin-bottom: 2rem;
         }
 
-        .love-letter {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 2.5rem 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(216, 27, 96, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            margin-bottom: 3rem;
-            font-size: 1.15rem;
-            line-height: 1.8;
-            white-space: pre-wrap;
-            text-align: center;
-        }
-
-        /* Galería estilo Polaroid */
-        .polaroid-gallery {
+        .polaroid-scroll {
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            gap: 20px;
-            padding: 10px 0 30px 0;
+            gap: clamp(15px, 3vw, 30px);
+            padding: 20px 10px 50px 10px;
             scrollbar-width: none; /* Firefox */
         }
-        .polaroid-gallery::-webkit-scrollbar { display: none; /* Chrome */ }
-        
-        .polaroid {
-            flex: 0 0 85%;
+        .polaroid-scroll::-webkit-scrollbar { display: none; } /* Chrome */
+
+        .polaroid-frame {
+            flex: 0 0 clamp(260px, 75vw, 350px);
             scroll-snap-align: center;
-            background: white;
-            padding: 15px 15px 40px 15px;
+            background: #fff;
+            padding: 15px 15px 50px 15px;
+            border-radius: 2px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            cursor: zoom-in;
+            /* Textura de papel sutil */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        }
+
+        /* Inclinaciones aleatorias para realismo */
+        .polaroid-frame:nth-child(odd) { transform: rotate(-3deg); }
+        .polaroid-frame:nth-child(even) { transform: rotate(3deg); }
+        .polaroid-frame:nth-child(3n) { transform: rotate(-1deg); }
+
+        .polaroid-frame:hover {
+            transform: scale(1.05) rotate(0deg) translateY(-10px);
+            box-shadow: 0 20px 40px rgba(194, 24, 91, 0.2);
+            z-index: 5;
+        }
+
+        .polaroid-frame img {
+            width: 100%;
+            height: clamp(280px, 60vw, 400px);
+            object-fit: cover;
+            border-radius: 2px;
+            filter: contrast(1.05) saturate(1.1); /* Toque vibrante */
+        }
+
+        .polaroid-pin {
+            position: absolute;
+            top: 5px; left: 50%;
+            transform: translateX(-50%);
+            width: 15px; height: 15px;
+            background: radial-gradient(circle at 30% 30%, #ffd6e6, #ff4d85);
+            border-radius: 50%;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 -2px 5px rgba(0,0,0,0.2);
+        }
+
+        .swipe-indicator {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--rose-700);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: -10px;
+            animation: moveRight 1.5s infinite alternate;
+        }
+        @keyframes moveRight {
+            from { transform: translateX(-5px); }
+            to { transform: translateX(5px); }
+        }
+
+        /* ==========================================================================
+           REPRODUCTOR SPOTIFY Y GIFT CARD PREMIUM
+           ========================================================================== */
+        .spotify-container {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 4px solid white;
+            position: relative;
+            background: #fff;
+        }
+
+        .premium-giftcard {
+            background: linear-gradient(135deg, #2c1a22 0%, #4a2b39 100%);
+            color: var(--gold-light);
+            padding: clamp(2rem, 5vw, 3rem);
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            overflow: hidden;
+        }
+
+        /* Brillo dorado en la tarjeta */
+        .premium-giftcard::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.2), transparent);
+            transform: skewX(-25deg);
+            animation: goldShine 6s infinite;
+        }
+        @keyframes goldShine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        .gc-title { font-family: 'Montserrat', sans-serif; font-size: 0.9rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 1rem; color: var(--gold-main); }
+        .gc-amount { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 600; margin-bottom: 1.5rem; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2); }
+        .gc-code-box { background: rgba(0,0,0,0.3); border: 1px dashed var(--gold-main); padding: 15px; border-radius: 10px; font-family: monospace; font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 2rem; }
+        
+        .btn-luxury {
+            display: inline-block;
+            background: var(--gold-main);
+            color: #2c1a22;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+        .btn-luxury:hover {
+            background: #f9ecc9;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .footer-sig {
+            text-align: center;
+            margin-top: 4rem;
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.5rem;
+            color: var(--rose-500);
+            opacity: 0.7;
+        }
+
+        /* ==========================================================================
+           LIGHTBOX PARA FOTOS EN PANTALLA COMPLETA
+           ========================================================================== */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(28, 16, 22, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #lightbox.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90%;
             border-radius: 5px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            transform: rotate(-2deg);
+            box-shadow: 0 0 50px rgba(255, 77, 133, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #lightbox.active img {
+            transform: scale(1);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
             transition: transform 0.3s;
         }
-        .polaroid:nth-child(even) { transform: rotate(2deg); }
-        .polaroid img {
-            width: 100%;
-            height: 350px;
-            object-fit: cover;
-            border-radius: 3px;
-        }
+        .lightbox-close:hover { transform: scale(1.2) rotate(90deg); }
 
-        .swipe-hint {
-            text-align: center;
-            color: var(--rose-gold);
-            font-size: 0.9rem;
-            margin-top: -10px;
-            margin-bottom: 3rem;
-            font-style: italic;
-        }
-
-        /* Reproductor Spotify integrado sutilmente */
-        .music-box {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(216, 27, 96, 0.08);
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        .music-box h3 { margin-top: 0; color: var(--rose-dark); font-family: 'Dancing Script', cursive; font-size: 2rem;}
-
-        /* Animaciones */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
 
-    <div class="floating-hearts" id="hearts-container"></div>
+    <div id="magic-particles"></div>
 
-    <div id="envelope-screen">
-        <h1 class="tap-to-open">Para <%= gift.recipientName %></h1>
-        <i class="fas fa-envelope-open-text envelope-icon" onclick="openGift()"></i>
-        <p class="tap-hint">Toca el sobre para abrir</p>
+    <div id="scene-envelope">
+        <div class="envelope-text-wrapper">
+            <div class="envelope-for">Una Carta Eterna para</div>
+            <div class="envelope-name"><%= gift.recipientName %></div>
+        </div>
+        
+        <div class="envelope-container" id="the-envelope">
+            <div class="envelope-front"></div>
+            <div class="envelope-bottom"></div>
+            <div class="envelope-letter-inside">
+                <i class="fas fa-heart" style="color: var(--rose-200); font-size: 3rem; opacity: 0.5;"></i>
+            </div>
+            <div class="envelope-flap"></div>
+            <div class="wax-seal">F</div>
+        </div>
+        
+        <div class="envelope-instruction">
+            <i class="fas fa-hand-pointer"></i> Toca el sobre para abrir
+        </div>
     </div>
 
-    <div class="experience-container" id="gift-content">
+    <main id="scene-content">
         
-        <header class="names-header">
-            <p>Una carta eterna de</p>
-            <h1><%= gift.senderName %></h1>
+        <header class="header-names">
+            <h2>De parte de <%= gift.senderName %></h2>
+            <h1>Con todo mi amor</h1>
         </header>
 
         <% if (gift.message) { %>
-            <div class="love-letter">
-                <%= gift.message %>
-            </div>
+            <article class="glass-panel">
+                <div class="letter-body"><%= gift.message %></div>
+            </article>
         <% } %>
 
         <% if (gift.photos && gift.photos.length > 0) { %>
-            <div class="polaroid-gallery">
-                <% gift.photos.forEach(function(photoUrl) { %>
-                    <div class="polaroid">
-                        <img src="<%= photoUrl %>" alt="Nuestro recuerdo">
+            <div class="gallery-wrapper">
+                <h3 class="gallery-title">Nuestros Recuerdos</h3>
+                
+                <div class="polaroid-scroll">
+                    <% gift.photos.forEach(function(photoUrl) { %>
+                        <div class="polaroid-frame" onclick="openLightbox('<%= photoUrl %>')">
+                            <div class="polaroid-pin"></div>
+                            <img src="<%= photoUrl %>" alt="Recuerdo especial" loading="lazy">
+                        </div>
+                    <% }); %>
+                </div>
+                
+                <% if (gift.photos.length > 1) { %>
+                    <div class="swipe-indicator">
+                        <i class="fas fa-chevron-left"></i> Desliza <i class="fas fa-chevron-right"></i>
                     </div>
-                <% }); %>
+                <% } %>
             </div>
-            <% if (gift.photos.length > 1) { %>
-                <p class="swipe-hint"><i class="fas fa-hand-pointer"></i> Desliza para ver más recuerdos</p>
-            <% } %>
         <% } %>
 
-        <% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
-            <div class="music-box">
-                <h3>Nuestra Canción</h3>
-                <% 
-                    let embedUrl = gift.spotifyUrl;
-                    if (embedUrl.includes('open.spotify.com')) {
-                        embedUrl = embedUrl.replace('open.spotify.com', 'open.spotify.com/embed');
-                        if (embedUrl.includes('?')) embedUrl = embedUrl.split('?')[0];
-                    }
-                %>
-                <iframe style="border-radius:12px" src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+<% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
+            <div class="glass-panel" style="padding: clamp(1.5rem, 4vw, 3rem); text-align: center;">
+                <h3 class="gallery-title" style="margin-bottom: 1.5rem; font-size: clamp(1.5rem, 3vw, 2rem);">Nuestra Canción</h3>
+                <div class="spotify-container">
+                    <% 
+                        let embedUrl = gift.spotifyUrl;
+                        /* Convertimos la URL normal de Spotify a formato reproductor (Embed) */
+                        if (embedUrl.includes('open.spotify.com')) {
+                            embedUrl = embedUrl.replace('/track/', '/embed/track/')
+                                               .replace('/playlist/', '/embed/playlist/')
+                                               .replace('/album/', '/embed/album/');
+                            /* Limpiamos basura extra de la URL si lo copiaron del celular */
+                            if (embedUrl.includes('?')) {
+                                embedUrl = embedUrl.split('?')[0];
+                            }
+                        }
+                    %>
+                    <iframe src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display: block; border-radius: 12px;"></iframe>
+                </div>
             </div>
         <% } %>
 
         <% if (gift.giftCardAmount > 0) { %>
-            <div style="text-align: center; padding: 20px; background: white; border-radius: 15px; border: 2px dashed var(--rose-gold); margin-bottom: 2rem;">
-                <h4 style="color: var(--rose-dark); margin-top: 0;">¡Tienes una sorpresa extra!</h4>
-                <p style="font-size: 1.5rem; font-weight: bold; margin: 10px 0;"><%= formatPrice(gift.giftCardAmount) %> Gs.</p>
-                <p style="margin: 0; font-size: 0.9rem;">Código: <strong><%= gift.giftCardCode || 'PENDIENTE' %></strong></p>
-                <a href="/" style="display: inline-block; margin-top: 15px; color: var(--rose-dark); text-decoration: none; font-weight: bold;">Ir a la tienda FERUMI &rarr;</a>
+            <div class="premium-giftcard">
+                <div class="gc-title">Tarjeta de Regalo Exclusiva</div>
+                <div class="gc-amount"><%= formatPrice(gift.giftCardAmount) %> Gs.</div>
+                <div style="font-family: 'Montserrat'; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; color: #aaa;">Tu código secreto</div>
+                <div class="gc-code-box"><%= gift.giftCardCode || 'PENDIENTE' %></div>
+                <a href="/" class="btn-luxury">Ir a FERUMI</a>
             </div>
         <% } %>
 
-        <div style="text-align: center; color: var(--rose-gold); font-size: 0.8rem; padding-top: 2rem; border-top: 1px solid rgba(216, 27, 96, 0.2);">
-            <p>Creado con amor en FERUMI</p>
+        <div class="footer-sig">
+            Creado para la eternidad en FERUMI
         </div>
+
+    </main>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <i class="fas fa-times lightbox-close"></i>
+        <img id="lightbox-img" src="" alt="Vista ampliada">
     </div>
 
     <script>
-        // Generar corazones flotantes aleatorios
-        const heartsContainer = document.getElementById('hearts-container');
-        const heartIcons = ['fa-heart', 'fa-heart-pulse', 'fa-face-kiss-wink-heart'];
-        
-        for (let i = 0; i < 15; i++) {
-            let heart = document.createElement('i');
-            let randomIcon = heartIcons[Math.floor(Math.random() * heartIcons.length)];
-            heart.className = `fas ${randomIcon} heart`;
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 10 + 8) + 's';
-            heart.style.animationDelay = Math.random() * 5 + 's';
-            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-            heartsContainer.appendChild(heart);
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. GENERADOR DE PARTÍCULAS MÁGICAS (Optimizado)
+            const particleContainer = document.getElementById('magic-particles');
+            const particleCount = window.innerWidth < 768 ? 15 : 30; // Menos en móvil para no trabar
+            
+            for(let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                // Mezcla de destellos y corazones
+                const isHeart = Math.random() > 0.7; 
+                
+                if (isHeart) {
+                    particle.innerHTML = '<i class="fas fa-heart"></i>';
+                    particle.className = 'heart-particle';
+                    particle.style.fontSize = `${Math.random() * 15 + 10}px`;
+                } else {
+                    particle.className = 'magic-particle';
+                    const size = Math.random() * 6 + 2;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                }
+
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.animationDuration = `${Math.random() * 10 + 10}s`; // Muy lento y relajante
+                particle.style.animationDelay = `${Math.random() * 10}s`;
+                
+                particleContainer.appendChild(particle);
+            }
+
+            // 2. LÓGICA DEL SOBRE 3D INFALIBLE
+            const sceneEnvelope = document.getElementById('scene-envelope');
+            const envelope = document.getElementById('the-envelope');
+            const sceneContent = document.getElementById('scene-content');
+            let isOpened = false;
+
+            // Escuchar clic en toda la pantalla del sobre
+            sceneEnvelope.addEventListener('click', () => {
+                if(isOpened) return; // Evitar doble clic
+                isOpened = true;
+
+                // Paso 1: Animar la apertura del sobre
+                envelope.classList.add('open');
+
+                // Paso 2: Esperar que salga la carta (1.2s) y desvanecer escena 1
+                setTimeout(() => {
+                    sceneEnvelope.style.opacity = '0';
+                    sceneEnvelope.style.visibility = 'hidden';
+                    
+                    // Paso 3: Preparar escena 2
+                    sceneContent.style.display = 'block';
+                    
+                    // Paso 4: Forzar el renderizado y aplicar el FadeIn de la carta
+                    setTimeout(() => {
+                        sceneContent.classList.add('visible');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 50);
+
+                }, 1200);
+            });
+        });
+
+        // 3. LÓGICA DEL LIGHTBOX (ZOOM FOTOS)
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+
+        function openLightbox(imgSrc) {
+            lightboxImg.src = imgSrc;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Evita scroll de fondo
         }
 
-        // Función mágica para revelar el regalo
-        function openGift() {
-            document.getElementById('envelope-screen').style.display = 'none';
-            document.getElementById('gift-content').style.display = 'block';
-            window.scrollTo(0, 0); // Sube arriba por si acaso
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = ''; // Restaura scroll
+            setTimeout(() => { lightboxImg.src = ''; }, 400); // Limpia fuente tras transición
         }
     </script>
 </body>

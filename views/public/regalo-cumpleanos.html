@@ -2,311 +2,626 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>¡Feliz Cumpleaños <%= gift.recipientName %>! 🎂</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Sniglet:wght@400;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
+    
     <style>
-        /* =========================================
-           TEMA: CUMPLEAÑOS FESTIVO
-           ========================================= */
+        /* ==========================================================================
+           VARIABLES GLOBALES - DISEÑO CUMPLEAÑOS EXTREMO
+           ========================================================================== */
         :root {
-            --bday-bg: #fffbf0;
-            --bday-primary: #ff6b6b;
-            --bday-secondary: #feca57;
-            --bday-accent: #48dbfb;
-            --text-dark: #2d3436;
+            --bday-bg: #fffcf2;
+            --bday-primary: #ff5e7e;   /* Rosa sandía vibrante */
+            --bday-secondary: #ffb142; /* Naranja festivo */
+            --bday-accent: #32ff7e;    /* Verde neón */
+            --bday-cyan: #18dcff;      /* Cyan brillante */
+            --bday-dark: #2f3542;
+            --bday-surface: #ffffff;
+            --shadow-pop: 0 15px 35px rgba(255, 94, 126, 0.2);
+            --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background-color: var(--bday-bg);
-            background-image: radial-gradient(circle at top right, #fff9e6 0%, #fff0c7 100%);
-            font-family: 'Fredoka', sans-serif;
-            color: var(--text-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 177, 66, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(24, 220, 255, 0.08), transparent 25%);
+            font-family: 'Nunito', sans-serif;
+            color: var(--bday-dark);
             overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* Pantalla 1: La Caja de Regalo */
-        #present-screen {
-            height: 100vh;
+        /* ==========================================================================
+           ESCENA 1: LA CAJA DE REGALO GIGANTE
+           ========================================================================== */
+        #scene-present {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            z-index: 50;
-            position: relative;
+            z-index: 100;
+            background: linear-gradient(135deg, #fffcf2 0%, #ffeaa7 100%);
+            transition: opacity 1s ease, transform 1s ease;
         }
 
-        .bday-title-intro {
-            font-family: 'Pacifico', cursive;
-            font-size: 3.5rem;
+        .present-title {
+            font-family: 'Sniglet', cursive;
+            font-size: clamp(2.5rem, 8vw, 5rem);
             color: var(--bday-primary);
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            padding: 0 20px;
-        }
-
-        .gift-box-container {
-            font-size: 8rem;
-            color: var(--bday-secondary);
-            cursor: pointer;
-            animation: bounce 2s infinite;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
-            transition: transform 0.2s;
-        }
-        .gift-box-container:active {
-            transform: scale(0.9);
-        }
-
-        .tap-hint {
-            margin-top: 2rem;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #636e72;
-            background: rgba(255,255,255,0.6);
-            padding: 10px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-
-        /* Pantalla 2: El Contenido del Regalo */
-        .experience-container {
-            position: relative;
-            z-index: 10;
-            max-width: 650px;
-            margin: 0 auto;
-            padding: 3rem 1.5rem;
-            display: none; /* Oculto al inicio */
-            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        .bday-header {
-            text-align: center;
+            text-shadow: 3px 3px 0px var(--bday-secondary);
             margin-bottom: 3rem;
-            background: white;
-            padding: 2rem;
-            border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(254, 202, 87, 0.2);
-            border: 3px solid var(--bday-secondary);
-            position: relative;
-        }
-        
-        .bday-header::before {
-            content: '\f1fd'; /* Icono de pastel */
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 3rem;
-            color: var(--bday-primary);
-            background: var(--bday-bg);
-            border-radius: 50%;
-            padding: 10px;
-        }
-
-        .bday-header h1 {
-            font-family: 'Pacifico', cursive;
-            font-size: 3rem;
-            color: var(--bday-primary);
-            margin: 10px 0;
+            animation: bounceInDown 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            padding: 0 20px;
             line-height: 1.2;
         }
-        .bday-header p {
-            font-size: 1.2rem;
-            color: #636e72;
-            margin: 0;
-            font-weight: 600;
+
+        /* La Caja Mágica en CSS */
+        .gift-box-wrapper {
+            position: relative;
+            width: clamp(200px, 50vw, 300px);
+            height: clamp(200px, 50vw, 300px);
+            cursor: pointer;
+            perspective: 1000px;
+            animation: floatBox 3s ease-in-out infinite;
         }
 
-        .bday-message {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            margin-bottom: 3rem;
+        .gift-bottom {
+            position: absolute;
+            bottom: 0; left: 10%; width: 80%; height: 75%;
+            background: var(--bday-primary);
+            border-radius: 10px;
+            box-shadow: inset -15px -15px 0px rgba(0,0,0,0.1), 0 20px 40px rgba(255, 94, 126, 0.4);
+            border: 4px solid var(--bday-dark);
+        }
+        
+        .gift-ribbon-vertical {
+            position: absolute;
+            left: 50%; top: 0; width: 15%; height: 100%;
+            background: var(--bday-secondary);
+            transform: translateX(-50%);
+            border-left: 3px solid var(--bday-dark);
+            border-right: 3px solid var(--bday-dark);
+        }
+
+        .gift-lid {
+            position: absolute;
+            top: 10%; left: 0; width: 100%; height: 25%;
+            background: var(--bday-primary);
+            border-radius: 8px;
+            border: 4px solid var(--bday-dark);
+            box-shadow: inset -10px -10px 0px rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.15);
+            z-index: 2;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom center;
+        }
+
+        .gift-ribbon-horizontal {
+            position: absolute;
+            top: 50%; left: 0; width: 100%; height: 40%;
+            background: var(--bday-secondary);
+            transform: translateY(-50%);
+            border-top: 3px solid var(--bday-dark);
+            border-bottom: 3px solid var(--bday-dark);
+        }
+
+        .gift-bow {
+            position: absolute;
+            top: -30%; left: 50%; transform: translateX(-50%);
+            width: 100%; height: 60%;
+            display: flex;
+            justify-content: center;
+            z-index: 3;
+            transition: transform 0.6s;
+        }
+        
+        .bow-left, .bow-right {
+            width: 40%; height: 100%;
+            background: var(--bday-secondary);
+            border: 4px solid var(--bday-dark);
+            border-radius: 50% 50% 0 50%;
+            transform-origin: bottom right;
+        }
+        .bow-right {
+            border-radius: 50% 50% 50% 0;
+            transform-origin: bottom left;
+        }
+
+        .tap-hint-bday {
+            margin-top: 3rem;
             font-size: 1.2rem;
-            line-height: 1.8;
-            white-space: pre-wrap;
-            color: #2d3436;
+            font-weight: 800;
+            color: var(--bday-dark);
+            background: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: 3px solid var(--bday-dark);
+            box-shadow: 4px 4px 0px var(--bday-secondary);
+            animation: pulseBtn 1.5s infinite;
+        }
+
+        /* Animaciones Caja */
+        @keyframes floatBox {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        @keyframes pulseBtn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes bounceInDown {
+            0% { opacity: 0; transform: translateY(-500px); }
+            60% { opacity: 1; transform: translateY(30px); }
+            80% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Clase JS para abrir */
+        .gift-box-wrapper.open .gift-lid { transform: translateY(-100px) rotate(-15deg); opacity: 0; }
+        .gift-box-wrapper.open .gift-bow { transform: translateY(-100px) rotate(-15deg); opacity: 0; }
+
+        /* ==========================================================================
+           ESCENA 2: LA FIESTA (CONTENIDO)
+           ========================================================================== */
+        #scene-party {
+            position: relative;
+            z-index: 10;
+            padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem);
+            max-width: 750px;
+            margin: 0 auto;
+            display: none;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #scene-party.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Banners Decorativos Arriba */
+        .bunting {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+        .flag {
+            width: 30px; height: 40px;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            transform-origin: top;
+            animation: swing 3s ease-in-out infinite alternate;
+        }
+        .flag:nth-child(1) { background: var(--bday-primary); animation-delay: 0.1s; }
+        .flag:nth-child(2) { background: var(--bday-secondary); animation-delay: 0.3s; }
+        .flag:nth-child(3) { background: var(--bday-cyan); animation-delay: 0.5s; }
+        .flag:nth-child(4) { background: var(--bday-accent); animation-delay: 0.7s; }
+        .flag:nth-child(5) { background: var(--bday-primary); animation-delay: 0.9s; }
+
+        @keyframes swing {
+            0% { transform: rotate(10deg); }
+            100% { transform: rotate(-10deg); }
+        }
+
+        /* Cabecera Cumpleaños */
+        .party-header {
+            text-align: center;
+            background: white;
+            padding: clamp(2rem, 5vw, 3rem);
+            border-radius: 30px;
+            border: 4px solid var(--bday-dark);
+            box-shadow: 8px 8px 0px var(--bday-cyan);
+            margin-bottom: clamp(3rem, 6vw, 4rem);
             position: relative;
         }
 
-        /* Galería Festiva (Scroll Horizontal) */
-        .festive-gallery {
+        .party-header::before {
+            content: '🎈';
+            font-size: 3rem;
+            position: absolute;
+            top: -25px; left: -20px;
+            animation: floatBox 4s infinite;
+        }
+        .party-header::after {
+            content: '🎊';
+            font-size: 3rem;
+            position: absolute;
+            bottom: -25px; right: -20px;
+            animation: floatBox 3s infinite reverse;
+        }
+
+        .party-header h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            color: #747d8c;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .party-header h1 {
+            font-family: 'Sniglet', cursive;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            color: var(--bday-primary);
+            line-height: 1.1;
+        }
+
+        /* El Mensaje Festivo */
+        .party-message-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: clamp(2rem, 5vw, 3.5rem);
+            border-radius: 25px;
+            box-shadow: var(--shadow-glass);
+            border: 2px dashed var(--bday-secondary);
+            margin-bottom: clamp(3rem, 6vw, 4rem);
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(1.1rem, 3vw, 1.35rem);
+            line-height: 1.8;
+            color: var(--bday-dark);
+            font-weight: 600;
+            text-align: center;
+            white-space: pre-wrap;
+        }
+
+        /* Galería Festiva (Flotante) */
+        .festive-gallery-wrapper {
+            margin-bottom: clamp(3rem, 6vw, 5rem);
+        }
+
+        .festive-title {
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            color: var(--bday-dark);
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 0px white;
+        }
+
+        .festive-scroll {
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             gap: 20px;
-            padding-bottom: 20px;
+            padding: 20px 10px 40px 10px;
             scrollbar-width: none;
         }
-        .festive-gallery::-webkit-scrollbar { display: none; }
-        
-        .photo-frame {
-            flex: 0 0 90%;
+        .festive-scroll::-webkit-scrollbar { display: none; }
+
+        .festive-frame {
+            flex: 0 0 clamp(250px, 70vw, 320px);
             scroll-snap-align: center;
             background: white;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border: 4px solid var(--bday-accent);
+            padding: 12px;
+            border-radius: 20px;
+            border: 4px solid var(--bday-dark);
+            box-shadow: 6px 6px 0px var(--bday-secondary);
+            cursor: zoom-in;
+            transition: transform 0.3s;
         }
-        .photo-frame img {
+        
+        .festive-frame:nth-child(even) { box-shadow: 6px 6px 0px var(--bday-primary); }
+        .festive-frame:nth-child(3n) { box-shadow: 6px 6px 0px var(--bday-cyan); }
+
+        .festive-frame:hover {
+            transform: translateY(-10px) scale(1.02);
+        }
+
+        .festive-frame img {
             width: 100%;
-            height: 350px;
+            height: clamp(250px, 60vw, 320px);
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 2px solid #f1f2f6;
         }
 
         .swipe-hint {
             text-align: center;
-            color: var(--bday-accent);
+            font-family: 'Fredoka', sans-serif;
             font-weight: bold;
-            margin-top: 5px;
-            margin-bottom: 3rem;
+            color: var(--bday-secondary);
+            margin-top: -10px;
+            font-size: 1.1rem;
         }
 
-        /* Reproductor y Gift Card */
-        .music-box, .gift-card-box {
+        /* Componentes: Música y Gift Card */
+        .party-component {
             background: white;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            border-radius: 25px;
+            border: 4px solid var(--bday-dark);
+            box-shadow: 8px 8px 0px var(--bday-accent);
             text-align: center;
             margin-bottom: 3rem;
-            border-top: 5px solid var(--bday-primary);
-        }
-        .music-box h3, .gift-card-box h3 { 
-            font-family: 'Pacifico', cursive; 
-            color: var(--bday-primary); 
-            font-size: 2rem; 
-            margin-top: 0; 
         }
 
-        /* Animaciones */
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-30px) rotate(5deg); }
-            60% { transform: translateY(-15px) rotate(-5deg); }
+        .giftcard-premium {
+            background: var(--bday-dark);
+            color: white;
+            box-shadow: 8px 8px 0px var(--bday-primary);
         }
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
+
+        .gc-amount {
+            font-family: 'Sniglet', cursive;
+            font-size: clamp(3rem, 7vw, 4.5rem);
+            color: var(--bday-secondary);
+            margin: 1rem 0;
+            text-shadow: 2px 2px 0px var(--bday-primary);
         }
+
+        .gc-code {
+            background: rgba(255,255,255,0.1);
+            border: 2px dashed var(--bday-cyan);
+            padding: 15px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            font-weight: bold;
+            color: var(--bday-cyan);
+            letter-spacing: 3px;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .btn-party {
+            display: inline-block;
+            background: var(--bday-primary);
+            color: white;
+            text-decoration: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 3px solid var(--bday-dark);
+            box-shadow: 4px 4px 0px var(--bday-dark);
+            transition: all 0.2s;
+        }
+        .btn-party:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--bday-dark);
+        }
+
+        /* ==========================================================================
+           LIGHTBOX PARA FOTOS EN PANTALLA COMPLETA
+           ========================================================================== */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(47, 53, 66, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #lightbox.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        #lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 15px;
+            border: 4px solid white;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #lightbox.active img { transform: scale(1); }
+        .lightbox-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .lightbox-close:hover { transform: scale(1.2) rotate(90deg); color: var(--bday-primary); }
+
     </style>
 </head>
 <body>
 
-    <div id="present-screen">
-        <h1 class="bday-title-intro">¡Tienes un regalo!</h1>
-        <div class="gift-box-container" onclick="openBirthdayGift()">
-            <i class="fas fa-gift"></i>
+    <div id="scene-present">
+        <h1 class="present-title">¡Es tu día,<br><%= gift.recipientName %>!</h1>
+        
+        <div class="gift-box-wrapper" id="the-present">
+            <div class="gift-bottom"></div>
+            <div class="gift-ribbon-vertical"></div>
+            <div class="gift-lid">
+                <div class="gift-ribbon-horizontal"></div>
+            </div>
+            <div class="gift-bow">
+                <div class="bow-left"></div>
+                <div class="bow-right"></div>
+            </div>
         </div>
-        <div class="tap-hint"><i class="fas fa-hand-pointer"></i> Toca la caja para abrirla</div>
+        
+        <div class="tap-hint-bday">
+            <i class="fas fa-hand-pointer"></i> Toca el regalo
+        </div>
     </div>
 
-    <div class="experience-container" id="gift-content">
+    <main id="scene-party">
         
-        <div class="bday-header">
-            <p>Con mucho cariño de <strong><%= gift.senderName %></strong></p>
-            <h1>¡Feliz Cumpleaños <%= gift.recipientName %>!</h1>
+        <div class="bunting">
+            <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+            <div class="flag"></div><div class="flag"></div>
         </div>
 
+        <header class="party-header">
+            <h2>Un regalo sorpresa de <%= gift.senderName %></h2>
+            <h1>¡Feliz Cumpleaños!</h1>
+        </header>
+
         <% if (gift.message) { %>
-            <div class="bday-message">
+            <article class="party-message-box">
                 <%= gift.message %>
-            </div>
+            </article>
         <% } %>
 
         <% if (gift.photos && gift.photos.length > 0) { %>
-            <div class="festive-gallery">
-                <% gift.photos.forEach(function(photoUrl) { %>
-                    <div class="photo-frame">
-                        <img src="<%= photoUrl %>" alt="Recuerdo de cumpleaños">
-                    </div>
-                <% }); %>
+            <div class="festive-gallery-wrapper">
+                <h3 class="festive-title">Momentos Geniales 📸</h3>
+                
+                <div class="festive-scroll">
+                    <% gift.photos.forEach(function(photoUrl) { %>
+                        <div class="festive-frame" onclick="openLightbox('<%= photoUrl %>')">
+                            <img src="<%= photoUrl %>" alt="Foto de Cumpleaños" loading="lazy">
+                        </div>
+                    <% }); %>
+                </div>
+                
+                <% if (gift.photos.length > 1) { %>
+                    <p class="swipe-hint">Desliza para ver más 👉</p>
+                <% } %>
             </div>
-            <% if (gift.photos.length > 1) { %>
-                <p class="swipe-hint"><i class="fas fa-arrows-left-right"></i> Desliza para ver más fotos</p>
-            <% } %>
         <% } %>
 
         <% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
-            <div class="music-box">
-                <h3>Tu Canción 🎵</h3>
+            <div class="party-component">
+                <h3 class="festive-title" style="margin-bottom: 1.5rem; font-size: clamp(1.5rem, 3vw, 2rem);">Tu Canción 🎵</h3>
                 <% 
                     let embedUrl = gift.spotifyUrl;
-                    if (embedUrl.includes('open.spotify.com')) {
-                        embedUrl = embedUrl.replace('open.spotify.com', 'open.spotify.com/embed');
-                        if (embedUrl.includes('?')) embedUrl = embedUrl.split('?')[0];
+                    if (embedUrl) {
+                        if (embedUrl.includes('spotify.com/track/')) {
+                            embedUrl = embedUrl.replace('/track/', '/embed/track/');
+                        } else if (embedUrl.includes('spotify.com/playlist/')) {
+                            embedUrl = embedUrl.replace('/playlist/', '/embed/playlist/');
+                        } else if (embedUrl.includes('spotify.com/album/')) {
+                            embedUrl = embedUrl.replace('/album/', '/embed/album/');
+                        }
+                        if (embedUrl.includes('?')) {
+                            embedUrl = embedUrl.split('?')[0];
+                        }
                     }
                 %>
-                <iframe style="border-radius:12px" src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                <iframe src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius: 12px;"></iframe>
             </div>
         <% } %>
 
         <% if (gift.giftCardAmount > 0) { %>
-            <div class="gift-card-box">
-                <h3>¡Sorpresa Extra! 🎁</h3>
-                <p style="font-size: 1.1rem; color: #636e72;">Te han regalado saldo para que te compres lo que quieras en la tienda.</p>
-                <div style="font-size: 2.5rem; font-weight: 700; color: var(--bday-secondary); margin: 15px 0; text-shadow: 1px 1px 0px rgba(0,0,0,0.1);">
-                    <%= formatPrice(gift.giftCardAmount) %> Gs.
-                </div>
-                <div style="background: #f1f2f6; padding: 10px; border-radius: 10px; font-family: monospace; font-size: 1.2rem; margin-bottom: 20px;">
-                    Código: <strong><%= gift.giftCardCode || 'PENDIENTE' %></strong>
-                </div>
-                <a href="/" style="background: var(--bday-primary); color: white; text-decoration: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; display: inline-block; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);">
-                    <i class="fas fa-shopping-bag"></i> Ir de Compras a FERUMI
-                </a>
+            <div class="party-component giftcard-premium">
+                <h3 style="font-family: 'Fredoka'; color: var(--bday-cyan); font-size: 1.8rem;">¡Sorpresa Extra! 🎁</h3>
+                <p style="font-weight: 600; font-size: 1.1rem; margin-top: 10px; color: #f1f2f6;">Tienes saldo a tu favor en la tienda:</p>
+                
+                <div class="gc-amount"><%= formatPrice(gift.giftCardAmount) %> Gs.</div>
+                
+                <p style="font-size: 0.9rem; color: #a4b0be; margin-bottom: 5px; text-transform: uppercase;">Tu código de descuento</p>
+                <div class="gc-code"><%= gift.giftCardCode || 'PENDIENTE' %></div>
+                <br>
+                <a href="/" class="btn-party">¡Ir de Compras!</a>
             </div>
         <% } %>
 
-        <div style="text-align: center; color: #b2bec3; font-size: 0.9rem; margin-top: 2rem;">
-            <p>Creado en FERUMI</p>
+        <div style="text-align: center; margin-top: 3rem; font-family: 'Fredoka'; color: #a4b0be; font-size: 0.9rem;">
+            Hecho con 🎉 en FERUMI
         </div>
+
+    </main>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <i class="fas fa-times lightbox-close"></i>
+        <img id="lightbox-img" src="" alt="Foto ampliada">
     </div>
 
     <script>
-        function openBirthdayGift() {
-            // Ocultar caja, mostrar contenido
-            document.getElementById('present-screen').style.display = 'none';
-            document.getElementById('gift-content').style.display = 'block';
-            window.scrollTo(0, 0);
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const scenePresent = document.getElementById('scene-present');
+            const thePresent = document.getElementById('the-present');
+            const sceneParty = document.getElementById('scene-party');
+            let isOpened = false;
 
-            // ¡EXPLOSIÓN DE CONFETI MÁGICA! (Usa la librería importada arriba)
-            var duration = 3 * 1000;
-            var animationEnd = Date.now() + duration;
-            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+            // Al hacer clic en la pantalla principal
+            scenePresent.addEventListener('click', () => {
+                if(isOpened) return;
+                isOpened = true;
 
-            function randomInRange(min, max) {
-                return Math.random() * (max - min) + min;
-            }
+                // 1. Abrir la caja
+                thePresent.classList.add('open');
 
-            var interval = setInterval(function() {
-                var timeLeft = animationEnd - Date.now();
+                // 2. ¡EXPLOSIÓN DE CONFETI REALISTA!
+                const duration = 4000; // 4 segundos de confeti
+                const end = Date.now() + duration;
 
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0, y: 0.8 },
+                        colors: ['#ff5e7e', '#ffb142', '#32ff7e', '#18dcff']
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1, y: 0.8 },
+                        colors: ['#ff5e7e', '#ffb142', '#32ff7e', '#18dcff']
+                    });
 
-                var particleCount = 50 * (timeLeft / duration);
-                
-                // Dispara confeti desde dos lados
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }, 250);
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+
+                // 3. Transición a la fiesta
+                setTimeout(() => {
+                    scenePresent.style.opacity = '0';
+                    scenePresent.style.transform = 'scale(1.2)';
+                    
+                    setTimeout(() => {
+                        scenePresent.style.display = 'none';
+                        sceneParty.style.display = 'block';
+                        
+                        // Forzar renderizado y aplicar fade in
+                        setTimeout(() => {
+                            sceneParty.classList.add('visible');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }, 50);
+
+                    }, 1000); // Esperar fade out de caja
+                }, 800); // Esperar que la caja se abra
+            });
+        });
+
+        // Funciones del Lightbox
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+
+        function openLightbox(imgSrc) {
+            lightboxImg.src = imgSrc;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(() => { lightboxImg.src = ''; }, 400);
         }
     </script>
 </body>

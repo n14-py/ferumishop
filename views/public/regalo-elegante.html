@@ -2,308 +2,584 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para <%= gift.recipientName %> - FERUMI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para <%= gift.recipientName %> - Edición Exclusiva</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
-        /* =========================================
-           TEMA: ELEGANTE / MINIMALISTA
-           ========================================= */
+        /* ==========================================================================
+           VARIABLES GLOBALES - DISEÑO LUJO / VIP
+           ========================================================================== */
         :root {
-            --el-black: #1a1a1a;
-            --el-white: #fcfcfc;
-            --el-gold: #c5a059;
-            --el-gray: #777777;
+            --vip-bg: #0a0a0a;         /* Negro Medianoche */
+            --vip-surface: #141414;    /* Gris muy oscuro para tarjetas */
+            --vip-gold: #d4af37;       /* Oro clásico */
+            --vip-gold-light: #f3e5ab; /* Oro claro / Vainilla */
+            --vip-gold-dark: #aa8529;  /* Oro oscuro para sombras */
+            --vip-text: #f0f0f0;       /* Blanco humo para lectura */
+            --vip-muted: #888888;      /* Gris elegante para subtítulos */
+            --vip-border: rgba(212, 175, 55, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--el-white);
+            background-color: var(--vip-bg);
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, var(--vip-bg) 70%);
             font-family: 'Lato', sans-serif;
-            color: var(--el-black);
+            color: var(--vip-text);
             overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* Pantalla 1: La Portada Oscura (Sello de cera digital) */
-        #cover-screen {
-            height: 100vh;
-            background-color: var(--el-black);
+        /* ==========================================================================
+           ESCENA 1: LA PORTADA CINEMÁTICA
+           ========================================================================== */
+        #scene-cover {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            z-index: 50;
-            position: relative;
-            color: var(--el-white);
-            transition: opacity 1.5s ease;
+            z-index: 100;
+            background: var(--vip-bg);
+            transition: opacity 2s ease, visibility 2s;
+        }
+
+        /* Brillo sutil de fondo */
+        #scene-cover::before {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 60%);
+            pointer-events: none;
         }
 
         .cover-subtitle {
             font-family: 'Lato', sans-serif;
-            letter-spacing: 4px;
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            letter-spacing: 6px;
             text-transform: uppercase;
-            font-size: 0.8rem;
-            color: var(--el-gold);
-            margin-bottom: 1rem;
-            animation: fadeIn 2s ease forwards;
+            color: var(--vip-gold);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: slowFadeIn 2s ease forwards 0.5s;
+            text-align: center;
         }
 
         .cover-title {
             font-family: 'Playfair Display', serif;
-            font-size: 3rem;
+            font-size: clamp(3rem, 8vw, 6rem);
             font-weight: 400;
-            margin: 0 0 3rem 0;
+            color: var(--vip-text);
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: slideUpFade 2s ease forwards 1s;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .cover-title span {
             font-style: italic;
-            animation: fadeIn 2s ease forwards 0.5s;
-            opacity: 0;
+            color: var(--vip-gold-light);
         }
 
-        .btn-reveal {
+        .btn-discover {
             background: transparent;
-            color: var(--el-gold);
-            border: 1px solid var(--el-gold);
-            padding: 12px 35px;
+            color: var(--vip-gold);
+            border: 1px solid var(--vip-gold);
+            padding: 15px 45px;
             font-family: 'Lato', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 2px;
             font-size: 0.85rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.4s ease;
-            animation: fadeIn 2s ease forwards 1s;
+            position: relative;
+            overflow: hidden;
             opacity: 0;
+            animation: slowFadeIn 2s ease forwards 2s;
+            transition: color 0.4s ease;
         }
 
-        .btn-reveal:hover {
-            background: var(--el-gold);
-            color: var(--el-black);
+        /* Efecto de llenado dorado al pasar el ratón o tocar */
+        .btn-discover::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 0; height: 100%;
+            background: var(--vip-gold);
+            z-index: -1;
+            transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1);
         }
 
-        /* Pantalla 2: El Contenido Elegante */
-        .experience-container {
+        .btn-discover:hover, .btn-discover:active {
+            color: var(--vip-bg);
+        }
+        .btn-discover:hover::before, .btn-discover:active::before {
+            width: 100%;
+        }
+
+        /* ==========================================================================
+           ESCENA 2: LA EXPERIENCIA VIP (CONTENIDO)
+           ========================================================================== */
+        #scene-vip {
             position: relative;
             z-index: 10;
-            max-width: 700px;
+            padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 3rem);
+            max-width: 800px;
             margin: 0 auto;
-            padding: 4rem 2rem;
-            display: none; /* Oculto al inicio */
+            display: none;
             opacity: 0;
-            animation: slowFadeIn 2s ease forwards;
+            transform: translateY(40px);
+            transition: opacity 1.5s ease, transform 1.5s ease;
         }
 
-        .elegant-header {
+        #scene-vip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Decoración de Cabecera */
+        .vip-header {
             text-align: center;
-            margin-bottom: 4rem;
+            margin-bottom: clamp(4rem, 8vw, 6rem);
             position: relative;
         }
-        
-        .elegant-header::after {
+
+        .vip-header::after {
             content: '';
             display: block;
-            width: 50px;
-            height: 1px;
-            background-color: var(--el-gold);
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--vip-gold), transparent);
             margin: 2rem auto 0;
         }
 
-        .elegant-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 400;
-            margin: 0;
-            color: var(--el-black);
-        }
-        
-        .elegant-header p {
-            font-family: 'Playfair Display', serif;
-            font-style: italic;
-            color: var(--el-gray);
-            font-size: 1.1rem;
-            margin-bottom: 10px;
+        .vip-header p {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--vip-muted);
+            margin-bottom: 1rem;
         }
 
-        .elegant-message {
+        .vip-header h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 1.25rem;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 400;
+            color: var(--vip-gold-light);
+            line-height: 1.2;
+        }
+
+        /* La Carta (Mensaje) */
+        .vip-message-container {
+            position: relative;
+            padding: clamp(2rem, 5vw, 4rem);
+            margin-bottom: clamp(4rem, 8vw, 6rem);
+            background: var(--vip-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Esquinas doradas sutiles */
+        .vip-message-container::before, .vip-message-container::after {
+            content: '';
+            position: absolute;
+            width: 30px; height: 30px;
+            border: 1px solid var(--vip-gold);
+            opacity: 0.5;
+        }
+        .vip-message-container::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .vip-message-container::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+
+        .vip-message {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
             line-height: 2;
-            color: #333;
+            color: var(--vip-text);
             text-align: justify;
             white-space: pre-wrap;
-            margin-bottom: 4rem;
-            padding: 0 1rem;
+            font-weight: 300;
         }
 
-        /* Galería Minimalista */
-        .elegant-gallery {
+        /* ==========================================================================
+           GALERÍA CINEMÁTICA (BLANCO Y NEGRO A COLOR)
+           ========================================================================== */
+        .vip-gallery-wrapper {
+            margin-bottom: clamp(4rem, 8vw, 6rem);
+        }
+
+        .section-title {
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-style: italic;
+            color: var(--vip-gold);
+            margin-bottom: 3rem;
+        }
+
+        .vip-scroll {
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            gap: 15px;
-            padding-bottom: 20px;
+            gap: 20px;
+            padding-bottom: 30px;
             scrollbar-width: none;
         }
-        .elegant-gallery::-webkit-scrollbar { display: none; }
-        
-        .gallery-item {
-            flex: 0 0 100%;
+        .vip-scroll::-webkit-scrollbar { display: none; }
+
+        .vip-frame {
+            flex: 0 0 clamp(280px, 80vw, 400px);
             scroll-snap-align: center;
             position: relative;
-        }
-        .gallery-item img {
-            width: 100%;
-            height: 450px;
-            object-fit: cover;
-            filter: grayscale(20%); /* Un toque cinemático/desaturado */
-            transition: filter 0.5s ease;
-        }
-        .gallery-item img:hover {
-            filter: grayscale(0%);
+            cursor: zoom-in;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        .swipe-hint {
-            text-align: center;
-            color: var(--el-gray);
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-top: 10px;
-            margin-bottom: 4rem;
-        }
-
-        /* Reproductor y Gift Card - Estilo Luxe */
-        .luxe-box {
-            border: 1px solid #eaeaea;
-            padding: 3rem 2rem;
-            text-align: center;
-            margin-bottom: 3rem;
-            background: #fff;
-        }
-        .luxe-box h3 { 
-            font-family: 'Playfair Display', serif; 
-            font-weight: 400;
-            font-size: 1.5rem;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            color: var(--el-black);
-            letter-spacing: 1px;
-        }
-
-        .gift-card-luxe {
-            background-color: var(--el-black);
-            color: var(--el-white);
-            padding: 3rem 2rem;
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-        }
-        .gift-card-luxe::before {
+        /* Borde interior muy fino */
+        .vip-frame::after {
             content: '';
             position: absolute;
             top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border: 1px solid rgba(197, 160, 89, 0.3); /* Borde dorado interior */
+            border: 1px solid rgba(255,255,255,0.2);
             pointer-events: none;
+            transition: border-color 0.5s ease;
         }
 
-        /* Animaciones */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .vip-frame img {
+            width: 100%;
+            height: clamp(350px, 60vw, 500px);
+            object-fit: cover;
+            filter: grayscale(100%) brightness(0.8) contrast(1.2); /* Blanco y negro cinemático */
+            transition: filter 0.8s ease, transform 1s ease;
+            display: block;
         }
+
+        /* Al tocar o pasar el ratón, recupera el color suavemente */
+        .vip-frame:hover img, .vip-frame:active img {
+            filter: grayscale(0%) brightness(1) contrast(1);
+            transform: scale(1.05);
+        }
+        .vip-frame:hover::after, .vip-frame:active::after {
+            border-color: var(--vip-gold);
+        }
+
+        .swipe-hint-vip {
+            text-align: center;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            color: var(--vip-muted);
+            text-transform: uppercase;
+            margin-top: 1rem;
+        }
+
+        /* ==========================================================================
+           MÚSICA Y BLACK CARD (GIFT CARD)
+           ========================================================================== */
+        .vip-component {
+            margin-bottom: clamp(4rem, 8vw, 6rem);
+            text-align: center;
+        }
+
+        /* Diseño de la Tarjeta "Black Card" */
+        .black-card {
+            background: linear-gradient(135deg, #111 0%, #222 50%, #111 100%);
+            border-radius: 16px;
+            padding: clamp(2rem, 5vw, 3rem);
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            overflow: hidden;
+            text-align: left;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Textura metálica/brillo de la tarjeta */
+        .black-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+            transform: skewX(-25deg);
+            animation: silverShine 8s infinite;
+        }
+        @keyframes silverShine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        .bc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 1rem;
+        }
+
+        .bc-logo {
+            font-family: 'Playfair Display', serif;
+            color: var(--vip-gold);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .bc-amount {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 6vw, 3.5rem);
+            color: #fff;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .bc-code-label {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            color: var(--vip-muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .bc-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: var(--vip-gold-light);
+            letter-spacing: 6px;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.8);
+        }
+
+        .btn-vip-store {
+            display: inline-block;
+            margin-top: 3rem;
+            color: var(--vip-bg);
+            background: var(--vip-gold);
+            padding: 15px 40px;
+            text-decoration: none;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        .btn-vip-store:hover {
+            background: var(--vip-gold-light);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .vip-footer {
+            text-align: center;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            color: #444;
+            text-transform: uppercase;
+            margin-top: 5rem;
+            padding-top: 2rem;
+            border-top: 1px solid #222;
+        }
+
+        /* ==========================================================================
+           LIGHTBOX VIP (MODO OSCURO)
+           ========================================================================== */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #lightbox.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        #lightbox img {
+            max-width: 95%;
+            max-height: 95%;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            transform: scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            filter: grayscale(0%) brightness(1); /* Siempre a color en zoom */
+        }
+        #lightbox.active img { transform: scale(1); }
+        .lightbox-close {
+            position: absolute;
+            top: 25px; right: 25px;
+            color: var(--vip-muted);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .lightbox-close:hover { 
+            color: var(--vip-gold); 
+            transform: rotate(90deg);
+        }
+
+        /* Animaciones base */
         @keyframes slowFadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <div id="cover-screen">
+    <div id="scene-cover">
         <p class="cover-subtitle">Una experiencia diseñada para</p>
-        <h1 class="cover-title"><%= gift.recipientName %></h1>
-        <button class="btn-reveal" onclick="revealElegance()">Descubrir</button>
+        <h1 class="cover-title"><span><%= gift.recipientName %></span></h1>
+        <button class="btn-discover" id="btn-reveal">Descubrir</button>
     </div>
 
-    <div class="experience-container" id="gift-content">
+    <main id="scene-vip">
         
-        <header class="elegant-header">
+        <header class="vip-header">
             <p>De parte de <%= gift.senderName %></p>
-            <h1>Un Detalle Especial</h1>
+            <h1>Un Detalle<br>Exclusivo</h1>
         </header>
 
         <% if (gift.message) { %>
-            <div class="elegant-message">
-                <%= gift.message %>
+            <div class="vip-message-container">
+                <div class="vip-message"><%= gift.message %></div>
             </div>
         <% } %>
 
         <% if (gift.photos && gift.photos.length > 0) { %>
-            <div class="elegant-gallery">
-                <% gift.photos.forEach(function(photoUrl) { %>
-                    <div class="gallery-item">
-                        <img src="<%= photoUrl %>" alt="Fotografía">
-                    </div>
-                <% }); %>
+            <div class="vip-gallery-wrapper">
+                <h2 class="section-title">Nuestra Historia</h2>
+                
+                <div class="vip-scroll">
+                    <% gift.photos.forEach(function(photoUrl) { %>
+                        <div class="vip-frame" onclick="openLightbox('<%= photoUrl %>')">
+                            <img src="<%= photoUrl %>" alt="Memoria" loading="lazy">
+                        </div>
+                    <% }); %>
+                </div>
+                
+                <% if (gift.photos.length > 1) { %>
+                    <p class="swipe-hint-vip">Desliza para explorar</p>
+                <% } %>
             </div>
-            <% if (gift.photos.length > 1) { %>
-                <p class="swipe-hint">Desliza para continuar <i class="fas fa-long-arrow-alt-right" style="margin-left: 5px;"></i></p>
-            <% } %>
         <% } %>
 
         <% if (gift.giftType === '10-fotos' && gift.spotifyUrl) { %>
-            <div class="luxe-box">
-                <h3>Selección Musical</h3>
+            <div class="vip-component">
+                <h2 class="section-title" style="font-size: clamp(1.2rem, 3vw, 1.8rem);">Selección Musical</h2>
                 <% 
                     let embedUrl = gift.spotifyUrl;
-                    if (embedUrl.includes('open.spotify.com')) {
-                        embedUrl = embedUrl.replace('open.spotify.com', 'open.spotify.com/embed');
-                        if (embedUrl.includes('?')) embedUrl = embedUrl.split('?')[0];
+                    if (embedUrl) {
+                        if (embedUrl.includes('spotify.com/track/')) {
+                            embedUrl = embedUrl.replace('/track/', '/embed/track/');
+                        } else if (embedUrl.includes('spotify.com/playlist/')) {
+                            embedUrl = embedUrl.replace('/playlist/', '/embed/playlist/');
+                        } else if (embedUrl.includes('spotify.com/album/')) {
+                            embedUrl = embedUrl.replace('/album/', '/embed/album/');
+                        }
+                        if (embedUrl.includes('?')) {
+                            embedUrl = embedUrl.split('?')[0];
+                        }
                     }
                 %>
-                <iframe style="border-radius:0" src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                <div style="border: 1px solid #333; padding: 5px; background: #000;">
+                    <iframe src="<%= embedUrl %>" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display: block;"></iframe>
+                </div>
             </div>
         <% } %>
 
         <% if (gift.giftCardAmount > 0) { %>
-            <div class="gift-card-luxe">
-                <p style="font-family: 'Lato', sans-serif; letter-spacing: 2px; font-size: 0.8rem; text-transform: uppercase; color: var(--el-gold); margin-top: 0;">Obsequio Exclusivo</p>
-                <div style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 400; margin: 20px 0;">
-                    <%= formatPrice(gift.giftCardAmount) %> Gs.
+            <div class="vip-component">
+                <div class="black-card">
+                    <div class="bc-header">
+                        <span class="bc-logo">FERUMI</span>
+                        <i class="fas fa-gem" style="color: #444;"></i>
+                    </div>
+                    <p class="bc-code-label">Saldo Disponible</p>
+                    <div class="bc-amount"><%= formatPrice(gift.giftCardAmount) %> Gs.</div>
+                    
+                    <p class="bc-code-label">Código de Autorización</p>
+                    <div class="bc-code"><%= gift.giftCardCode || 'PENDIENTE' %></div>
                 </div>
-                <p style="font-family: 'Lato', sans-serif; font-size: 0.9rem; color: #aaa;">Código de canje:</p>
-                <div style="font-family: monospace; font-size: 1.2rem; letter-spacing: 3px; margin-bottom: 30px; color: var(--el-white);">
-                    <%= gift.giftCardCode || 'PENDIENTE' %>
-                </div>
-                <a href="/" style="color: var(--el-black); background: var(--el-gold); text-decoration: none; padding: 12px 30px; font-family: 'Lato', sans-serif; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; transition: opacity 0.3s;">
-                    Visitar Boutique
-                </a>
+                
+                <a href="/" class="btn-vip-store">Visitar Boutique</a>
             </div>
         <% } %>
 
-        <div style="text-align: center; font-family: 'Lato', sans-serif; letter-spacing: 2px; font-size: 0.7rem; color: #ccc; margin-top: 4rem; text-transform: uppercase;">
-            <p>FERUMI - Edición Especial</p>
-        </div>
+        <footer class="vip-footer">
+            FERUMI • Private Collection
+        </footer>
+
+    </main>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <i class="fas fa-times lightbox-close"></i>
+        <img id="lightbox-img" src="" alt="Vista Detallada">
     </div>
 
     <script>
-        function revealElegance() {
-            const cover = document.getElementById('cover-screen');
-            const content = document.getElementById('gift-content');
-            
-            // Efecto de desvanecimiento de la portada
-            cover.style.opacity = '0';
-            
-            setTimeout(() => {
-                cover.style.display = 'none';
-                content.style.display = 'block';
-                window.scrollTo(0, 0);
-            }, 1000); // Espera a que termine la transición de opacidad
+        document.addEventListener('DOMContentLoaded', () => {
+            const sceneCover = document.getElementById('scene-cover');
+            const btnReveal = document.getElementById('btn-reveal');
+            const sceneVip = document.getElementById('scene-vip');
+            let isOpened = false;
+
+            btnReveal.addEventListener('click', () => {
+                if(isOpened) return;
+                isOpened = true;
+
+                // 1. Desvanecer la portada
+                sceneCover.style.opacity = '0';
+                
+                // 2. Esperar y cambiar de escena
+                setTimeout(() => {
+                    sceneCover.style.display = 'none';
+                    sceneVip.style.display = 'block';
+                    
+                    // 3. Forzar renderizado y aplicar fade up
+                    setTimeout(() => {
+                        sceneVip.classList.add('visible');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 50);
+
+                }, 2000); // 2 segundos, muy lento y dramático
+            });
+        });
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+
+        function openLightbox(imgSrc) {
+            lightboxImg.src = imgSrc;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(() => { lightboxImg.src = ''; }, 500);
         }
     </script>
 </body>
