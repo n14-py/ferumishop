@@ -102,17 +102,28 @@ const categorySchema = new mongoose.Schema({
 
 const Category = mongoose.model('Category', categorySchema);
 
+// --- Sub-esquema para las Variantes (Ej: 30D, 40D, Tonos de base) ---
+const variantSchema = new mongoose.Schema({
+    name: { type: String, required: true }, // Ej: "30D", "Tono Claro"
+    stock: { type: Number, default: 0 },
+    photoUrl: { type: String } // Foto específica de esta variante (opcional)
+});
+
 // --- Modelo de Producto ---
 const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
-    price: { type: Number, required: true, default: 0 },
-    photos: [{ type: String }], // Array de URLs de Cloudinary
+    costPrice: { type: Number, default: 0 }, // NUEVO: Precio de compra (costo)
+    price: { type: Number, required: true, default: 0 }, // Precio de venta al público
+    stock: { type: Number, default: 0 }, // NUEVO: Stock general (si el producto no tiene variantes)
+    hasVariants: { type: Boolean, default: false }, // NUEVO: Indica si usa las opciones de abajo
+    variants: [variantSchema], // NUEVO: Lista de variantes disponibles
+    photos: [{ type: String }], // Array de URLs de Cloudinary (Fotos generales)
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-    isFeatured: { type: Boolean, default: false }, // Para "productos destacados"
-    isForRent: { type: Boolean, default: false }, // Para diferenciar venta/alquiler
+    isFeatured: { type: Boolean, default: false }, 
+    isForRent: { type: Boolean, default: false }, 
     isForSale: { type: Boolean, default: true },
-    views: { type: Number, default: 0 } // Para estadísticas
+    views: { type: Number, default: 0 } 
 }, { timestamps: true });
 
 const Product = mongoose.model('Product', productSchema);
@@ -120,7 +131,7 @@ const Product = mongoose.model('Product', productSchema);
 // --- Modelo de Configuración del Sitio ---
 const siteConfigSchema = new mongoose.Schema({
     configKey: { type: String, default: 'main_config', unique: true },
-    whatsappNumber: { type: String, default: '595981123456' },
+    whatsappNumber: { type: String, default: '595987301591' },
     whatsappMessage: { type: String, default: 'Hola, vi este producto en la web y quisiera más información: ' },
     aboutUsText: { type: String, default: 'Escribe aquí la descripción de "Sobre Nosotros".' },
     logoUrl: { type: String },
@@ -149,6 +160,34 @@ const giftSchema = new mongoose.Schema({
 });
 
 const Gift = mongoose.model('Gift', giftSchema);
+
+// --- Modelo de Sorteos Mensuales ---
+const giveawaySchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    drawDate: { type: Date, required: true },
+    photos: [{ type: String }],
+    instagramUrl: { type: String },
+    isActive: { type: Boolean, default: true },
+    winner: { type: String, default: '' } // NUEVO: Para guardar "Ganadora de Mayo: @maria"
+}, { timestamps: true });
+
+const Giveaway = mongoose.model('Giveaway', giveawaySchema);
+
+
+
+// --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
+const transactionSchema = new mongoose.Schema({
+    type: { type: String, enum: ['ingreso', 'egreso'], required: true },
+    description: { type: String, required: true }, // Ej: "Venta: Pestañas 30D" o "Gasto: Bolsitas"
+    amount: { type: Number, required: true }, // Lo que pagó el cliente o lo que gastaste
+    cost: { type: Number, default: 0 }, // El precio de compra del producto (solo para ingresos)
+    date: { type: Date, default: Date.now }
+});
+
+const Transaction = mongoose.model('Transaction', transactionSchema);
+
+
 
 // =============================================
 // MIDDLEWARES Y PASSPORT (PARA LOGIN DE ADMIN)
@@ -693,19 +732,47 @@ app.get('/admin/productos', requireAdmin, async (req, res, next) => {
 });
 
 // --- Añadir nuevo producto ---
+// --- Añadir nuevo producto ---
 app.post('/admin/productos/add', requireAdmin, upload.array('photos', 5), async (req, res, next) => {
     try {
-        const { name, description, price, category, isForRent, isForSale, isFeatured } = req.body;
+        const { name, description, costPrice, price, stock, category, isForRent, isForSale, isFeatured, hasVariants, variantNames, variantStocks } = req.body;
         
         if (!req.files || req.files.length === 0) {
             throw new Error('Debes subir al menos una foto del producto.');
         }
 
-const newProduct = new Product({
+        // Construir el array de variantes si el producto las tiene
+        let variantsArray = [];
+        let totalVariantStock = 0;
+
+        if (hasVariants === 'on' && variantNames) {
+            // Asegurarnos de que sea un array (por si solo envían una variante)
+            const names = Array.isArray(variantNames) ? variantNames : [variantNames];
+            const stocks = Array.isArray(variantStocks) ? variantStocks : [variantStocks];
+
+            for (let i = 0; i < names.length; i++) {
+                if (names[i].trim() !== '') {
+                    const vStock = parseInt(stocks[i]) || 0;
+                    variantsArray.push({
+                        name: purify.sanitize(names[i]),
+                        stock: vStock
+                    });
+                    totalVariantStock += vStock;
+                }
+            }
+        }
+
+        // El stock final: si tiene variantes, es la suma de los stocks de las variantes. Si no, es el stock general.
+        const finalStock = (hasVariants === 'on') ? totalVariantStock : (parseInt(stock) || 0);
+
+        const newProduct = new Product({
             name: purify.sanitize(name),
             description: purify.sanitize(description, { USE_PROFILES: { html: true } }),
-            // Ignoramos los puntos que ponga el usuario para guardar el número real
+            costPrice: parseInt(costPrice.toString().replace(/\./g, '')) || 0,
             price: parseInt(price.toString().replace(/\./g, '')) || 0,
+            stock: finalStock,
+            hasVariants: hasVariants === 'on',
+            variants: variantsArray,
             category,
             photos: req.files.map(f => f.path),
             isForRent: isForRent === 'on',
@@ -803,6 +870,108 @@ app.post('/admin/producto/delete/:id', requireAdmin, async (req, res, next) => {
         res.redirect('/admin/productos');
     }
 });
+
+
+// =============================================
+// GESTIÓN DE SORTEOS (ADMIN Y PÚBLICO)
+// =============================================
+
+// --- PÚBLICO: Ver Sorteo Activo ---
+// --- PÚBLICO: Ver Sorteo Activo y Ganadoras Anteriores ---
+app.get('/sorteos', async (req, res, next) => {
+    try {
+        // Buscar el sorteo activo más próximo
+        const activeGiveaway = await Giveaway.findOne({ isActive: true }).sort({ drawDate: 1 });
+        
+        // NUEVO: Buscar sorteos anteriores que ya tengan ganadora
+        const pastWinners = await Giveaway.find({ isActive: false, winner: { $ne: '' } }).sort({ drawDate: -1 });
+
+        res.render('public/sorteos', {
+            pageTitle: 'Sorteos Mensuales FERUMI',
+            giveaway: activeGiveaway,
+            pastWinners: pastWinners
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// --- ADMIN: Ver lista de sorteos ---
+app.get('/admin/sorteos', requireAdmin, async (req, res, next) => {
+    try {
+        const giveaways = await Giveaway.find().sort({ createdAt: -1 });
+        res.render('admin/sorteos', {
+            pageTitle: 'Gestionar Sorteos',
+            giveaways,
+            success: req.session.success,
+            error: req.session.error
+        });
+        delete req.session.success;
+        delete req.session.error;
+    } catch (err) {
+        next(err);
+    }
+});
+
+
+// --- ADMIN: Registrar Ganadora de un Sorteo ---
+app.post('/admin/sorteos/winner/:id', requireAdmin, async (req, res, next) => {
+    try {
+        const { winner } = req.body;
+        // Al registrar ganadora, el sorteo ya no está "activo" para participar
+        await Giveaway.findByIdAndUpdate(req.params.id, {
+            winner: purify.sanitize(winner),
+            isActive: false 
+        });
+        req.session.success = '¡Ganadora registrada con éxito!';
+        res.redirect('/admin/sorteos');
+    } catch (err) {
+        req.session.error = `Error al registrar ganadora: ${err.message}`;
+        res.redirect('/admin/sorteos');
+    }
+});
+
+// --- ADMIN: Crear nuevo sorteo ---
+app.post('/admin/sorteos/add', requireAdmin, upload.array('photos', 5), async (req, res, next) => {
+    try {
+        const { title, description, drawDate, instagramUrl } = req.body;
+        
+        const newGiveaway = new Giveaway({
+            title: purify.sanitize(title),
+            description: purify.sanitize(description, { USE_PROFILES: { html: true } }),
+            drawDate: new Date(drawDate),
+            instagramUrl: purify.sanitize(instagramUrl),
+            photos: req.files ? req.files.map(f => f.path) : []
+        });
+        
+        await newGiveaway.save();
+        req.session.success = '¡Sorteo programado con éxito!';
+        res.redirect('/admin/sorteos');
+    } catch (err) {
+        req.session.error = `Error al crear sorteo: ${err.message}`;
+        res.redirect('/admin/sorteos');
+    }
+});
+
+// --- ADMIN: Eliminar sorteo ---
+app.post('/admin/sorteos/delete/:id', requireAdmin, async (req, res, next) => {
+    try {
+        const giveaway = await Giveaway.findById(req.params.id);
+        if(giveaway) {
+            for (const url of giveaway.photos) {
+                const publicId = getPublicId(url);
+                if (publicId) await cloudinary.uploader.destroy(publicId);
+            }
+            await Giveaway.findByIdAndDelete(req.params.id);
+        }
+        req.session.success = 'Sorteo eliminado correctamente.';
+        res.redirect('/admin/sorteos');
+    } catch (err) {
+        req.session.error = `Error al eliminar: ${err.message}`;
+        res.redirect('/admin/sorteos');
+    }
+});
+
 
 // =============================================
 // GESTIÓN DE CATEGORÍAS (ADMIN)
@@ -1034,6 +1203,127 @@ app.post('/admin/regalos/verify', requireAdmin, async (req, res, next) => {
     } catch (err) {
         req.session.error = `Error: ${err.message}`;
         res.redirect('/admin/regalos');
+    }
+});
+
+
+
+// =============================================
+// GESTIÓN DE CAJA Y FINANZAS (ADMIN)
+// =============================================
+
+// Ver la caja del mes actual
+app.get('/admin/caja', requireAdmin, async (req, res, next) => {
+    try {
+        // Por defecto, mostrar el mes actual
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+        const transactions = await Transaction.find({
+            date: { $gte: startOfMonth, $lte: endOfMonth }
+        }).sort({ date: -1 });
+
+        // Traer productos para el formulario de "Registrar Venta"
+        const products = await Product.find().select('name price costPrice stock hasVariants variants');
+
+        let totalIngresos = 0;
+        let totalCostos = 0;
+        let totalEgresos = 0;
+
+        transactions.forEach(t => {
+            if (t.type === 'ingreso') {
+                totalIngresos += t.amount;
+                totalCostos += t.cost;
+            } else if (t.type === 'egreso') {
+                totalEgresos += t.amount;
+            }
+        });
+
+        // Ganancia Neta = Lo que entró - Lo que costó comprar los productos - Los gastos extra (bolsitas, etc)
+        const gananciaNeta = totalIngresos - totalCostos - totalEgresos;
+
+        res.render('admin/caja', {
+            pageTitle: 'Caja y Finanzas',
+            transactions,
+            products,
+            stats: { totalIngresos, totalCostos, totalEgresos, gananciaNeta },
+            mesActual: now.toLocaleString('es-PY', { month: 'long', year: 'numeric' }).toUpperCase(),
+            success: req.session.success,
+            error: req.session.error
+        });
+        delete req.session.success;
+        delete req.session.error;
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Registrar un Gasto (Egreso)
+app.post('/admin/caja/gasto', requireAdmin, async (req, res, next) => {
+    try {
+        const { description, amount } = req.body;
+        const newTx = new Transaction({
+            type: 'egreso',
+            description: purify.sanitize(description),
+            amount: parseInt(amount.toString().replace(/\./g, ''))
+        });
+        await newTx.save();
+        req.session.success = 'Gasto registrado correctamente.';
+        res.redirect('/admin/caja');
+    } catch (err) {
+        req.session.error = `Error al registrar gasto: ${err.message}`;
+        res.redirect('/admin/caja');
+    }
+});
+
+// Registrar una Venta Manual (Ingreso)
+app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
+    try {
+        const { productId, variantName, sellPrice, quantity } = req.body;
+        const qty = parseInt(quantity) || 1;
+        
+        const product = await Product.findById(productId);
+        if (!product) throw new Error('Producto no encontrado.');
+
+        const price = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
+        const cost = (product.costPrice || 0) * qty;
+        
+        let desc = `Venta: ${product.name} (x${qty})`;
+        if (variantName) desc = `Venta: ${product.name} - ${variantName} (x${qty})`;
+
+        // 1. Guardar la transacción
+        const newTx = new Transaction({ type: 'ingreso', description: desc, amount: price, cost: cost });
+        await newTx.save();
+
+        // 2. Descontar el Stock automáticamente
+        if (product.hasVariants && variantName) {
+            const variantIndex = product.variants.findIndex(v => v.name === variantName);
+            if (variantIndex > -1 && product.variants[variantIndex].stock >= qty) {
+                product.variants[variantIndex].stock -= qty;
+            }
+        } else {
+            if (product.stock >= qty) product.stock -= qty;
+        }
+        await product.save();
+
+        req.session.success = 'Venta registrada y stock descontado.';
+        res.redirect('/admin/caja');
+    } catch (err) {
+        req.session.error = `Error al registrar venta: ${err.message}`;
+        res.redirect('/admin/caja');
+    }
+});
+
+// Eliminar Transacción
+app.post('/admin/caja/delete/:id', requireAdmin, async (req, res, next) => {
+    try {
+        await Transaction.findByIdAndDelete(req.params.id);
+        req.session.success = 'Registro eliminado de la caja.';
+        res.redirect('/admin/caja');
+    } catch (err) {
+        req.session.error = `Error: ${err.message}`;
+        res.redirect('/admin/caja');
     }
 });
 

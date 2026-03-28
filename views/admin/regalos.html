@@ -3,406 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestión Premium de Regalos - FERUMI Admin</title>
-    
+    <title>Regalos Online - Panel FERUMI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin.css">
     
     <style>
-        /* ==========================================================================
-           VARIABLES GLOBALES Y RESETEO
-           ========================================================================== */
-        :root {
-            --admin-bg: #f4f7fa;
-            --admin-surface: #ffffff;
-            --admin-primary: #d81b60; /* Color FERUMI */
-            --admin-primary-hover: #c2185b;
-            --admin-secondary: #ffb74d;
-            --admin-text-main: #2d3748;
-            --admin-text-muted: #718096;
-            --admin-border: #e2e8f0;
-            --admin-success: #10b981;
-            --admin-warning: #f59e0b;
-            --admin-info: #3b82f6;
-            --sidebar-width: 260px;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
-            --radius-md: 12px;
-            --radius-lg: 20px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--admin-bg);
-            color: var(--admin-text-main);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* ==========================================================================
-           LAYOUT PRINCIPAL Y SIDEBAR (MEJORADO PARA MÓVIL)
-           ========================================================================== */
-        .admin-wrapper {
-            display: flex;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--admin-surface);
-            border-right: 1px solid var(--admin-border);
-            position: fixed;
-            height: 100vh;
-            z-index: 1000;
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: var(--shadow-md);
-        }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--admin-primary);
-            text-align: center;
-            border-bottom: 1px solid var(--admin-border);
-            letter-spacing: 1px;
-        }
-
-        .sidebar-content {
-            flex-grow: 1;
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-
-        .nav-link {
-            color: var(--admin-text-muted);
-            padding: 12px 25px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-left: 4px solid transparent;
-        }
-
-        .nav-link:hover {
-            color: var(--admin-primary);
-            background: rgba(216, 27, 96, 0.05);
-        }
-
-        .nav-link.active {
-            color: var(--admin-primary);
-            background: rgba(216, 27, 96, 0.08);
-            border-left-color: var(--admin-primary);
-            font-weight: 600;
-        }
-
-        .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid var(--admin-border);
-        }
-
-        .main-content-wrapper {
-            flex-grow: 1;
-            margin-left: var(--sidebar-width);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            width: calc(100% - var(--sidebar-width));
-            transition: margin 0.4s, width 0.4s;
-        }
-
-        .admin-header {
-            background: var(--admin-surface);
-            padding: 15px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 900;
-        }
-
-        .menu-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--admin-text-main);
-            cursor: pointer;
-            display: none; /* Oculto en PC por defecto */
-            transition: color 0.3s;
-        }
-
-        .menu-toggle:hover { color: var(--admin-primary); }
-
-        .main-content {
-            padding: 30px;
-            flex-grow: 1;
-        }
-
-        /* ==========================================================================
-           CONTROLES SUPERIORES (BUSCADOR Y CANJEO)
-           ========================================================================== */
-        .control-panel {
-            background: var(--admin-surface);
-            border-radius: var(--radius-lg);
-            padding: 25px;
-            box-shadow: var(--shadow-md);
-            margin-bottom: 30px;
-            border: 1px solid var(--admin-border);
-            animation: fadeInDown 0.6s ease-out;
-        }
-
-        .control-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--admin-text-main);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .premium-input {
-            border: 2px solid var(--admin-border);
-            border-radius: 10px;
-            padding: 12px 20px;
-            font-size: 1rem;
-            transition: all 0.3s;
-            width: 100%;
-            background: #f8fafc;
-        }
-
-        .premium-input:focus {
-            border-color: var(--admin-primary);
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(216, 27, 96, 0.1);
-            outline: none;
-        }
-
-        .btn-premium {
-            background: var(--admin-primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-premium:hover {
-            background: var(--admin-primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(216, 27, 96, 0.4);
-            color: white;
-        }
-
-        /* ==========================================================================
-           LA MAGIA DE LA TABLA RESPONSIVE (TRANSFORMACIÓN A CARDS EN MÓVIL)
-           ========================================================================== */
-        .table-container {
-            background: var(--admin-surface);
-            border-radius: var(--radius-lg);
-            padding: 25px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--admin-border);
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .table {
-            margin-bottom: 0;
-            border-collapse: separate;
-            border-spacing: 0 10px; /* Espacio entre filas en PC */
-        }
-
-        .table thead th {
-            border: none;
-            color: var(--admin-text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            padding-bottom: 15px;
-        }
-
-        .table tbody tr {
-            box-shadow: var(--shadow-sm);
-            border-radius: var(--radius-md);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .table tbody tr:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .table tbody td {
-            background: #fff;
-            vertical-align: middle;
-            border-top: 1px solid var(--admin-border);
-            border-bottom: 1px solid var(--admin-border);
-            padding: 15px;
-            color: var(--admin-text-main);
-        }
-
-        /* Bordes redondeados solo en los extremos de las filas en PC */
-        .table tbody td:first-child { border-left: 1px solid var(--admin-border); border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
-        .table tbody td:last-child { border-right: 1px solid var(--admin-border); border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
-
-        /* Estilos de Insignias y Textos */
-        .text-strong { font-weight: 700; color: var(--admin-text-main); display: block; }
-        .text-light { font-size: 0.85rem; color: var(--admin-text-muted); display: block; margin-top: 4px; }
+        /* Estilos App Móvil */
+        body { background-color: #f8f9fc; }
+        .app-card { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-title { font-weight: 800; color: var(--admin-primary-dark); margin: 0; font-size: 1.2rem; }
         
-        .code-box {
-            background: #f1f5f9;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-weight: 700;
-            color: var(--admin-info);
-            border: 1px dashed #cbd5e1;
-            display: inline-block;
-        }
-
-        .status-badge {
-            padding: 8px 15px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .status-pending { background: #fef3c7; color: #d97706; }
-        .status-active { background: #d1fae5; color: #059669; }
-        .status-redeemed { background: #f1f5f9; color: #475569; }
-
-        /* Botones de Acción */
-        .action-btn {
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-        .btn-approve { background: var(--admin-success); color: white; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
-        .btn-approve:hover { background: #059669; color: white; transform: scale(1.05); }
-        .btn-view { background: var(--admin-info); color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
-        .btn-view:hover { background: #2563eb; color: white; transform: scale(1.05); }
-
-        /* ==========================================================================
-           MODO MÓVIL EXTREMO: AQUÍ OCURRE LA MAGIA
-           ========================================================================== */
-        @media (max-width: 991px) {
-            /* Sidebar colapsable */
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            
-            .main-content-wrapper {
-                margin-left: 0;
-                width: 100%;
-            }
-            .menu-toggle { display: block; }
-            .main-content { padding: 15px; }
-
-            /* Destrucción de la tabla y creación de Cards */
-            .table-responsive { border: none; }
-            .table, .table tbody, .table tr, .table td {
-                display: block;
-                width: 100%;
-            }
-            .table thead { display: none; } /* Ocultamos los títulos de las columnas */
-            
-            .table tbody tr {
-                background: var(--admin-surface);
-                border: 1px solid var(--admin-border);
-                border-radius: var(--radius-lg);
-                margin-bottom: 20px;
-                padding: 15px;
-                box-shadow: var(--shadow-md);
-                position: relative;
-            }
-
-            .table tbody td {
-                border: none;
-                border-bottom: 1px dashed var(--admin-border);
-                padding: 12px 0;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                text-align: right;
-            }
-            .table tbody td:last-child {
-                border-bottom: none;
-                padding-bottom: 0;
-                justify-content: center; /* Centrar botones de acción */
-                margin-top: 10px;
-            }
-
-            /* Inyectamos el título de la columna usando el atributo data-label */
-            .table tbody td::before {
-                content: attr(data-label);
-                float: left;
-                font-weight: 700;
-                color: var(--admin-text-muted);
-                text-transform: uppercase;
-                font-size: 0.8rem;
-                letter-spacing: 0.5px;
-                text-align: left;
-                padding-right: 15px;
-            }
-
-            /* Ajustes específicos para las celdas en móvil */
-            .td-content-right { text-align: right; }
-            .action-btn { width: 100%; justify-content: center; padding: 12px; font-size: 1rem; }
-            
-            .control-panel { padding: 15px; }
-            .row.g-3 > div { width: 100%; }
-        }
-
-        /* ==========================================================================
-           ANIMACIONES
-           ========================================================================== */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .btn-app-action { border-radius: 12px; font-weight: bold; transition: 0.2s; }
+        .btn-app-action:active { transform: scale(0.95); }
+        
+        @media (min-width: 768px) { .admin-header { display: none; } }
+        
+        /* Controles Superiores */
+        .search-input { border-radius: 15px; border: 2px solid #eef2f7; padding: 12px 20px; background: #f8fafc; font-weight: 500; transition: 0.3s; }
+        .search-input:focus { background: #fff; border-color: var(--admin-primary); box-shadow: none; outline: none; }
+        
+        .code-box { background: #f8fafc; padding: 8px 15px; border-radius: 10px; font-family: monospace; font-weight: bold; color: var(--admin-primary-dark); border: 1px dashed #cbd5e1; display: inline-block; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-
-<div class="sidebar-overlay" id="sidebar-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:999;"></div>
 
 <div class="admin-wrapper">
     
     <aside class="sidebar" id="admin-sidebar">
         <div class="sidebar-header">
-            <i class="fas fa-crown" style="font-size: 1.2rem; color: #ffb74d;"></i> FERUMI
+            <i class="fas fa-crown"></i> FERUMI
         </div>
-        <div class="sidebar-content">
+        <div class="sidebar-content mt-3">
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a href="/admin/dashboard" class="nav-link">
-                        <i class="fa-solid fa-chart-pie fa-fw"></i> Dashboard
+                        <i class="fa-solid fa-house fa-fw"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/caja" class="nav-link">
+                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
                     </a>
                 </li>
                 <li class="nav-item">
@@ -417,175 +59,164 @@
                 </li>
                 <li class="nav-item">
                     <a href="/admin/regalos" class="nav-link active">
-                        <i class="fa-solid fa-gift fa-fw"></i> Regalos y Cartas
+                        <i class="fas fa-gift fa-fw"></i> Regalos Online
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="/admin/sorteos" class="nav-link">
+                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
                     <a href="/admin/configuracion" class="nav-link">
-                        <i class="fa-solid fa-cog fa-fw"></i> Configuración
+                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes
                     </a>
                 </li>
             </ul>
         </div>
         <div class="sidebar-footer">
             <a href="/" target="_blank" class="nav-link">
-                <i class="fa-solid fa-arrow-left fa-fw"></i> Ir a la Tienda
+                <i class="fa-solid fa-globe fa-fw"></i> Ver Tienda
             </a>
-            <a href="/admin/logout" class="nav-link text-danger" style="margin-top: 10px;">
+            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
                 <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
             </a>
         </div>
     </aside>
+    
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <div class="main-content-wrapper">
-        <header class="admin-header">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
-                <h5 class="m-0 fw-bold">Centro de Regalos</h5>
-            </div>
-            <div class="user-profile" style="width: 40px; height: 40px; background: var(--admin-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: var(--shadow-md);">
-                A
-            </div>
+        
+        <header class="admin-header bg-white px-3 py-3 sticky-top">
+            <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="header-title">Regalos y Cartas</h1>
+            <div style="width: 24px;"></div>
         </header>
 
-        <main class="main-content">
+        <main class="main-content p-3 p-md-4">
             
-            <% if (success) { %>
-                <div class="alert alert-success alert-dismissible fade show shadow-sm" style="border-radius: 12px; border: none; border-left: 5px solid #10b981;" role="alert">
-                    <i class="fas fa-check-circle me-2"></i> <%= success %>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <div class="d-none d-md-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark mb-0">Centro de Regalos</h2>
+            </div>
+
+            <% if (locals.success) { %>
+                <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             <% } %>
-            <% if (error) { %>
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm" style="border-radius: 12px; border: none; border-left: 5px solid #ef4444;" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i> <%= error %>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <% if (locals.error) { %>
+                <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm"><i class="fas fa-exclamation-triangle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             <% } %>
 
-            <div class="row g-4 mb-4">
-                <div class="col-lg-6">
-                    <div class="control-panel h-100 m-0">
-                        <div class="control-title">
-                            <i class="fas fa-search" style="color: var(--admin-info);"></i> Buscar Regalo
-                        </div>
-                        <p class="text-muted small mb-3">Pega el ID del WhatsApp o busca por nombre del cliente.</p>
-                        <input type="text" id="searchInput" class="premium-input" placeholder="Ej: regalo-00a1 o María...">
+            <div class="row g-3 mb-4">
+                
+                <div class="col-12 col-lg-6">
+                    <div class="card app-card p-4 h-100 border-start border-4 border-info">
+                        <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-search text-info me-2"></i> Buscar Envío</h6>
+                        <p class="text-muted small mb-3">Busca por nombre del destinatario, remitente o ID.</p>
+                        <input type="text" id="searchInput" class="form-control search-input" placeholder="Ej: María, regalo-00a1...">
                     </div>
                 </div>
 
-                <div class="col-lg-6">
-                    <div class="control-panel h-100 m-0">
-                        <div class="control-title">
-                            <i class="fas fa-cash-register" style="color: var(--admin-primary);"></i> Canjear Gift Card
-                        </div>
-                        <p class="text-muted small mb-3">Si el cliente te pagó por fuera usando el código, ingrésalo aquí.</p>
-                        <form action="/admin/regalos/verify" method="POST" class="d-flex gap-2" style="flex-wrap: wrap;">
-                            <input type="text" id="code" name="code" class="premium-input" style="flex: 1; min-width: 200px;" placeholder="Ej: FERUMI-A1B2" required>
-                            <button type="submit" class="btn-premium" style="flex-shrink: 0;">
-                                <i class="fas fa-check"></i> Validar
+                <div class="col-12 col-lg-6">
+                    <div class="card app-card p-4 h-100 border-start border-4 border-warning">
+                        <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-cash-register text-warning me-2"></i> Validar Gift Card</h6>
+                        <p class="text-muted small mb-3">Ingresa el código si el cliente pagó presencialmente.</p>
+                        <form action="/admin/regalos/verify" method="POST" class="d-flex gap-2">
+                            <input type="text" id="code" name="code" class="form-control search-input flex-grow-1" placeholder="Ej: FERUMI-A1B2" required>
+                            <button type="submit" class="btn fw-bold px-4 rounded-4" style="background: var(--admin-primary); color: white;">
+                                <i class="fas fa-check"></i>
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <div class="table-container">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 class="m-0 font-weight-bold" style="font-size: 1.2rem;"><i class="fas fa-list-ul me-2 text-primary"></i> Historial de Envíos</h6>
+            <div class="card app-card overflow-hidden mb-5">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list-ul me-2 text-primary"></i> Historial de Envíos</h6>
+                    <span class="badge bg-primary rounded-pill"><%= gifts ? gifts.length : 0 %></span>
                 </div>
                 
-                <div class="table-responsive" style="overflow-x: hidden;"> <table class="table" id="giftsTable">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Cliente / Destino</th>
-                                <th>Monto Card</th>
-                                <th>Estado</th>
-                                <th>Identificador</th>
-                                <th class="text-center">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (gifts && gifts.length > 0) { %>
-                                <% gifts.forEach(gift => { %>
-                                    <tr>
-                                        <td data-label="Fecha">
-                                            <div class="td-content-right">
-                                                <i class="far fa-calendar-alt text-muted me-1"></i> 
-                                                <%= new Date(gift.createdAt).toLocaleDateString() %>
-                                            </div>
-                                        </td>
-                                        
-                                        <td data-label="Destinatario">
-                                            <div class="td-content-right">
-                                                <span class="text-strong"><%= gift.recipientName %></span>
-                                                <span class="text-light">De: <%= gift.senderName %></span>
-                                            </div>
-                                        </td>
-                                        
-                                        <td data-label="Monto GiftCard">
-                                            <div class="td-content-right">
-                                                <span class="text-strong" style="color: var(--admin-success);">
-                                                    <%= formatPrice(gift.giftCardAmount) %> Gs.
-                                                </span>
-                                            </div>
-                                        </td>
-                                        
-                                        <td data-label="Estado Actual">
-                                            <div class="td-content-right">
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="margin: 0; padding: 10px;">
+                        <table class="table table-hover align-middle mb-0" id="giftsTable" style="font-size: 0.95rem;">
+                            <thead class="table-light d-none d-md-table-header-group">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cliente / Destino</th>
+                                    <th>Monto</th>
+                                    <th>Estado / Código</th>
+                                    <th class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (gifts && gifts.length > 0) { %>
+                                    <% gifts.forEach(gift => { %>
+                                        <tr>
+                                            <td data-label="Fecha" class="text-muted pb-0 pb-md-2">
+                                                <i class="far fa-calendar-alt me-1"></i> <%= new Date(gift.createdAt).toLocaleDateString('es-PY') %>
+                                            </td>
+                                            
+                                            <td data-label="Detalles" class="pb-0 pb-md-2">
+                                                <div class="fw-bold text-dark fs-6"><i class="fas fa-gift text-primary me-1"></i> Para: <%= gift.recipientName %></div>
+                                                <div class="text-muted small"><i class="fas fa-user text-secondary me-1"></i> De: <%= gift.senderName %></div>
+                                            </td>
+                                            
+                                            <td data-label="Monto" class="fw-bold text-success pb-0 pb-md-2">
+                                                Gs. <%= formatPrice(gift.giftCardAmount) %>
+                                            </td>
+                                            
+                                            <td data-label="Estado" class="pb-2 pb-md-2">
+                                                <div class="d-flex flex-column align-items-end align-items-md-start gap-2">
+                                                    <% if (gift.status === 'pendiente') { %>
+                                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="fas fa-clock"></i> Esperando Pago</span>
+                                                    <% } else if (gift.isRedeemed) { %>
+                                                        <span class="badge bg-secondary rounded-pill px-3 py-2"><i class="fas fa-check-double"></i> Ya Utilizado</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-check-circle"></i> Activo / Pagado</span>
+                                                    <% } %>
+                                                    
+                                                    <% if (gift.giftCardCode) { %>
+                                                        <span class="code-box"><i class="fas fa-ticket-alt text-muted"></i> <%= gift.giftCardCode %></span>
+                                                    <% } else { %>
+                                                        <span class="text-muted small font-monospace">ID: <%= gift.uniqueId || gift._id %></span>
+                                                    <% } %>
+                                                </div>
+                                            </td>
+                                            
+                                            <td data-label="Acciones" class="text-md-end border-bottom-0 mt-2 mt-md-0">
                                                 <% if (gift.status === 'pendiente') { %>
-                                                    <span class="status-badge status-pending"><i class="fas fa-clock"></i> Pendiente</span>
-                                                <% } else if (gift.isRedeemed) { %>
-                                                    <span class="status-badge status-redeemed"><i class="fas fa-check-double"></i> Usado</span>
-                                                <% } else { %>
-                                                    <span class="status-badge status-active"><i class="fas fa-check-circle"></i> Activo</span>
-                                                <% } %>
-                                            </div>
-                                        </td>
-                                        
-                                        <td data-label="Código / ID">
-                                            <div class="td-content-right">
-                                                <% if (gift.giftCardCode) { %>
-                                                    <div class="code-box" title="Código de Descuento"><%= gift.giftCardCode %></div>
-                                                <% } else { %>
-                                                    <div class="text-light" style="font-family: monospace; font-size: 0.8rem; background: #f8fafc; padding: 4px; border-radius: 4px;">
-                                                        ID: <%= gift.uniqueId || gift._id %>
-                                                    </div>
-                                                <% } %>
-                                            </div>
-                                        </td>
-                                        
-                                        <td data-label="Acción">
-                                            <div class="td-content-right">
-                                                <% if (gift.status === 'pendiente') { %>
-                                                    <form action="/admin/regalos/approve/<%= gift._id %>" method="POST" style="margin: 0;" onsubmit="return confirm('¿Confirmas que la transferencia ha llegado? Esto activará la carta y el saldo para el cliente.');">
-                                                        <button type="submit" class="action-btn btn-approve">
+                                                    <form action="/admin/regalos/approve/<%= gift._id %>" method="POST" class="m-0 w-100" onsubmit="return confirm('¿Confirmas que recibiste la transferencia? Esto activará la carta y el saldo para el cliente.');">
+                                                        <button type="submit" class="btn btn-success w-100 btn-app-action shadow-sm py-2">
                                                             <i class="fas fa-check-circle"></i> Aprobar Pago
                                                         </button>
                                                     </form>
                                                 <% } else { %>
-                                                    <a href="/ver-regalo/<%= gift.uniqueId || gift._id %>" target="_blank" class="action-btn btn-view">
+                                                    <a href="/ver-regalo/<%= gift.uniqueId || gift._id %>" target="_blank" class="btn btn-info text-white w-100 btn-app-action shadow-sm py-2">
                                                         <i class="fas fa-eye"></i> Ver Carta
                                                     </a>
                                                 <% } %>
-                                            </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-envelope-open-text fa-4x mb-3 opacity-25"></i>
+                                            <h6 class="fw-bold">No hay regalos registrados</h6>
+                                            <p class="mb-0 small">Cuando un cliente compre una carta, aparecerá aquí.</p>
                                         </td>
                                     </tr>
-                                <% }); %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px; border: none;">
-                                        <i class="fas fa-box-open" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 15px;"></i>
-                                        <h5 style="color: var(--admin-text-muted);">Sin regalos por el momento</h5>
-                                        <p style="font-size: 0.9rem; color: #94a3b8;">Cuando un cliente compre una carta, aparecerá aquí.</p>
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
+            <div style="height: 40px;"></div>
 
         </main>
     </div>
@@ -593,38 +224,29 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // 1. Control del Sidebar para Móviles
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('admin-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-
-    function toggleMenu() {
-        sidebar.classList.toggle('active');
-        if(sidebar.classList.contains('active')) {
-            overlay.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scrollear el fondo
-        } else {
-            overlay.style.display = 'none';
-            document.body.style.overflow = '';
+    // 1. Menú Lateral
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
         }
-    }
+        
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    });
 
-    menuToggle.addEventListener('click', toggleMenu);
-    overlay.addEventListener('click', toggleMenu); // Cerrar al tocar lo oscuro
-
-    // 2. Buscador en Tiempo Real de Alta Velocidad
+    // 2. Buscador en Tiempo Real
     document.getElementById('searchInput').addEventListener('keyup', function() {
         let filter = this.value.toLowerCase();
         let rows = document.querySelectorAll('#giftsTable tbody tr');
         
         rows.forEach(row => {
-            // Lee todo el texto de la fila (incluido Nombres, Códigos, IDs ocultos)
             let text = row.textContent.toLowerCase();
-            if(text.includes(filter)) {
-                row.style.display = ''; // Muestra
-            } else {
-                row.style.display = 'none'; // Oculta
-            }
+            row.style.display = text.includes(filter) ? '' : 'none';
         });
     });
 </script>

@@ -48,28 +48,57 @@
 
                 <h1><%= product.name %></h1>
 
-                <div class="price">
+               <div class="price">
                     <%= formatPrice(product.price) %>
                 </div>
 
-                <% 
-                    // Link de WhatsApp
-                    const productUrl = `${baseUrl}/producto/${product._id}`;
-                    const fullMessage = `${siteConfig.whatsappMessage} ${product.name}. \n\nPuedes verlo aquí: ${productUrl}`;
-                    const whatsappLink = `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(fullMessage)}`;
-                %>
-                
-                <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 12px;">
-                    
-<button data-id="<%= product._id %>" data-name="<%= product.name %>" data-price="<%= product.price %>" data-image="<%= product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price, this.dataset.image)" class="btn btn-primary btn-block" style="padding: 1rem; font-size: 1.1rem; display: flex; justify-content: center; gap: 10px; align-items: center; cursor: pointer; border: none; border-radius: 8px; font-weight: bold;">
-    <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-</button>
-
-                    <a href="<%= whatsappLink %>" target="_blank" class="btn btn-whatsapp btn-block" style="padding: 1rem; font-size: 1.1rem; background-color: #25D366; color: white; display: flex; justify-content: center; gap: 10px; align-items: center; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
-                    </a>
-                    
+                <div class="product-options" style="margin-top: 1rem;">
+                    <% if (product.hasVariants && product.variants && product.variants.length > 0) { %>
+                        <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">Opciones disponibles:</label>
+                        <div class="variants-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+                            <% product.variants.forEach((variant, index) => { %>
+                                <button type="button" 
+                                        class="btn-variant <%= index === 0 ? 'selected' : '' %>" 
+                                        data-name="<%= variant.name %>" 
+                                        data-stock="<%= variant.stock %>"
+                                        onclick="selectVariant(this)"
+                                        style="padding: 8px 15px; border: 2px solid <%= index === 0 ? '#333' : '#ddd' %>; background: <%= index === 0 ? '#f8f9fa' : '#fff' %>; border-radius: 5px; cursor: pointer; transition: 0.2s;">
+                                    <%= variant.name %>
+                                </button>
+                            <% }); %>
+                        </div>
+                        <p id="stockDisplay" style="color: <%= product.variants[0].stock > 0 ? '#198754' : '#dc3545' %>; font-weight: bold; margin-bottom: 1rem;">
+                            <i class="fas <%= product.variants[0].stock > 0 ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
+                            <%= product.variants[0].stock > 0 ? `Disponible: ${product.variants[0].stock} en stock` : 'Agotado' %>
+                        </p>
+                        <input type="hidden" id="selectedVariant" value="<%= product.variants[0].name %>">
+                        <input type="hidden" id="currentStock" value="<%= product.variants[0].stock %>">
+                    <% } else { %>
+                        <p id="stockDisplay" style="color: <%= product.stock > 0 ? '#198754' : '#dc3545' %>; font-weight: bold; margin-bottom: 1rem;">
+                            <i class="fas <%= product.stock > 0 ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
+                            <%= product.stock > 0 ? `Disponible: ${product.stock} en stock` : 'Agotado' %>
+                        </p>
+                        <input type="hidden" id="selectedVariant" value="">
+                        <input type="hidden" id="currentStock" value="<%= product.stock %>">
+                    <% } %>
                 </div>
+                <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 12px;">
+                    <button id="btnAddToCart" 
+                            data-id="<%= product._id %>" 
+                            data-name="<%= product.name %>" 
+                            data-price="<%= product.price %>" 
+                            data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
+                            onclick="handleAddToCart(this)" 
+                            class="btn btn-primary btn-block" 
+                            style="padding: 1rem; font-size: 1.1rem; display: flex; justify-content: center; gap: 10px; align-items: center; cursor: pointer; border: none; border-radius: 8px; font-weight: bold;">
+                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                    </button>
+
+                    <button onclick="handleWhatsApp()" class="btn btn-whatsapp btn-block" style="padding: 1rem; font-size: 1.1rem; background-color: #25D366; color: white; display: flex; justify-content: center; gap: 10px; align-items: center; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+                    </button>
+                </div>
+
 
                 <div class="description" style="margin-top: 2rem; line-height: 1.8;">
                     <h3 style="font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;">Descripción</h3>
@@ -102,9 +131,9 @@
 <%- include('../partials/footer.html') %>
 
 <script>
+    // Cambiar la imagen principal (Galería)
     function changeMainImage(newSrc) {
         document.getElementById('mainProductImage').src = newSrc;
-        
         const thumbnails = document.querySelectorAll('.product-thumbnails img');
         thumbnails.forEach(img => {
             if (newSrc.includes(img.src.split('/upload/')[1].split('/')[1])) { 
@@ -113,6 +142,81 @@
                 img.classList.remove('active');
             }
         });
+    }
+
+    // --- NUEVAS FUNCIONES PARA VARIANTES Y COMPRA ---
+    const productUrl = "<%= baseUrl %>/producto/<%= product._id %>";
+    const baseWhatsappMsg = "<%= siteConfig.whatsappMessage %> <%= product.name %>";
+    const whatsappNumber = "<%= siteConfig.whatsappNumber %>";
+
+    function selectVariant(btn) {
+        // Reiniciar diseño de todos los botones
+        document.querySelectorAll('.btn-variant').forEach(b => {
+            b.style.borderColor = '#ddd';
+            b.style.background = '#fff';
+            b.classList.remove('selected');
+        });
+        
+        // Resaltar el seleccionado
+        btn.style.borderColor = '#333';
+        btn.style.background = '#f8f9fa';
+        btn.classList.add('selected');
+
+        // Actualizar datos ocultos
+        const variantName = btn.getAttribute('data-name');
+        const stock = parseInt(btn.getAttribute('data-stock'));
+        
+        document.getElementById('selectedVariant').value = variantName;
+        document.getElementById('currentStock').value = stock;
+
+        // Actualizar texto de Stock
+        const stockDisplay = document.getElementById('stockDisplay');
+        if (stock > 0) {
+            stockDisplay.style.color = '#198754';
+            stockDisplay.innerHTML = `<i class="fas fa-check-circle"></i> Disponible: ${stock} en stock`;
+        } else {
+            stockDisplay.style.color = '#dc3545';
+            stockDisplay.innerHTML = `<i class="fas fa-times-circle"></i> Agotado`;
+        }
+    }
+
+    function handleAddToCart(btn) {
+        const stock = parseInt(document.getElementById('currentStock').value);
+        if (stock <= 0) {
+            alert("⚠️ Lo sentimos, esta opción está agotada actualmente.");
+            return;
+        }
+
+        const baseId = btn.getAttribute('data-id');
+        const baseName = btn.getAttribute('data-name');
+        const price = btn.getAttribute('data-price');
+        const image = btn.getAttribute('data-image');
+        
+        const selectedVariant = document.getElementById('selectedVariant') ? document.getElementById('selectedVariant').value : '';
+        
+        // Si hay variante, la sumamos al nombre y al ID para que en el carrito aparezcan separados
+        const finalId = selectedVariant ? `${baseId}-${selectedVariant}` : baseId;
+        const finalName = selectedVariant ? `${baseName} - ${selectedVariant}` : baseName;
+
+        // Llamamos a la función global del carrito de FERUMI
+        if(typeof addToCart === 'function') {
+            addToCart(finalId, finalName, price, image);
+        } else {
+            alert("Error: El carrito no está cargado.");
+        }
+    }
+
+    function handleWhatsApp() {
+        const selectedVariant = document.getElementById('selectedVariant') ? document.getElementById('selectedVariant').value : '';
+        let finalMsg = baseWhatsappMsg;
+        
+        if (selectedVariant) {
+            finalMsg += ` (Opción elegida: ${selectedVariant})`;
+        }
+        finalMsg += `.\n\nPuedes verlo aquí: ${productUrl}`;
+        
+        const link = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalMsg)}`;
+        window.open(link, '_blank');
     }
 </script>
 

@@ -2,173 +2,209 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionar Productos - Admin FERUMI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Productos - Panel FERUMI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        /* Estilos App Móvil */
+        body { background-color: #f8f9fc; }
+        .app-card { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-title { font-weight: 800; color: var(--admin-primary-dark); margin: 0; font-size: 1.2rem; }
+        
+        .product-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; }
+        .btn-app-action { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        
+        @media (min-width: 768px) { .admin-header { display: none; } }
+        
+        /* Ocultar scrollbar en contenedor de variantes */
+        .variants-scroll { max-height: 250px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+    </style>
 </head>
 <body>
 
 <div class="admin-wrapper">
+    
     <aside class="sidebar" id="admin-sidebar">
-        <div class="sidebar-header">FERUMI ADMIN</div>
-        <div class="sidebar-content">
+        <div class="sidebar-header">
+            <i class="fas fa-crown"></i> FERUMI
+        </div>
+        <div class="sidebar-content mt-3">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a href="/admin/dashboard" class="nav-link <%= path.includes('/dashboard') ? 'active' : '' %>">
-                        <i class="fa-solid fa-tachometer-alt fa-fw"></i> Dashboard
+                    <a href="/admin/dashboard" class="nav-link">
+                        <i class="fa-solid fa-house fa-fw"></i> Inicio
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/admin/productos" class="nav-link <%= path.includes('/producto') ? 'active' : '' %>">
+                    <a href="/admin/caja" class="nav-link">
+                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/productos" class="nav-link active">
                         <i class="fa-solid fa-box-open fa-fw"></i> Productos
                     </a>
                 </li>
-                                </li>
                 <li class="nav-item">
-    <a href="/admin/regalos" class="nav-link">
-        <i class="fas fa-gift fa-fw"></i> Regalos Online
-    </a>
-</li>
-                <li class="nav-item">
-                    <a href="/admin/categorias" class="nav-link <%= path.includes('/categoria') ? 'active' : '' %>">
+                    <a href="/admin/categorias" class="nav-link">
                         <i class="fa-solid fa-tags fa-fw"></i> Categorías
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/admin/configuracion" class="nav-link <%= path.includes('/configuracion') ? 'active' : '' %>">
-                        <i class="fa-solid fa-cog fa-fw"></i> Configuración
+                    <a href="/admin/regalos" class="nav-link">
+                        <i class="fas fa-gift fa-fw"></i> Regalos Online
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/sorteos" class="nav-link">
+                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a href="/admin/configuracion" class="nav-link">
+                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes
                     </a>
                 </li>
             </ul>
         </div>
         <div class="sidebar-footer">
             <a href="/" target="_blank" class="nav-link">
-                <i class="fa-solid fa-arrow-left fa-fw"></i> Volver al Sitio
+                <i class="fa-solid fa-globe fa-fw"></i> Ver Tienda
             </a>
-            <a href="/admin/logout" class="nav-link text-danger">
-                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Cerrar Sesión
+            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
+                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
             </a>
         </div>
     </aside>
+    
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <div class="main-content-wrapper">
-        <header class="admin-header">
-            <button class="menu-toggle" id="menu-toggle">
+        
+        <header class="admin-header bg-white px-3 py-3 sticky-top">
+            <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);">
                 <i class="fas fa-bars"></i>
             </button>
+            <h1 class="header-title">Productos</h1>
+            <div style="width: 24px;"></div>
         </header>
 
-        <main class="main-content">
-            <div class="container-fluid">
-                
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                    <h1 class="h3 mb-0 text-gray-800">Gestión de Productos</h1>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                        <i class="fas fa-plus fa-sm"></i> Añadir Nuevo Producto
-                    </button>
+        <main class="main-content p-3 p-md-4">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4 d-none d-md-flex">
+                <h2 class="fw-bold text-dark mb-0">Gestión de Inventario</h2>
+            </div>
+
+            <button class="btn btn-primary w-100 py-3 mb-4 rounded-4 shadow-sm fw-bold fs-5" data-bs-toggle="modal" data-bs-target="#addProductModal" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;">
+                <i class="fas fa-plus-circle me-2"></i> Añadir Nuevo Producto
+            </button>
+
+            <% if (locals.success) { %>
+                <div class="alert alert-success alert-dismissible fade show rounded-4"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <% } %>
+            <% if (locals.error) { %>
+                <div class="alert alert-danger alert-dismissible fade show rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <% } %>
+
+            <div class="card app-card overflow-hidden mb-5">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-boxes me-2 text-primary"></i> Catálogo de Tienda</h6>
+                    <span class="badge bg-primary rounded-pill"><%= products ? products.length : 0 %></span>
                 </div>
-
-                <% if (locals.success) { %>
-                    <div class="alert alert-success"><%= success %></div>
-                <% } %>
-                <% if (locals.error) { %>
-                    <div class="alert alert-danger"><%= error %></div>
-                <% } %>
-
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Todos los Productos</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Foto</th>
-                                        <th>Nombre</th>
-                                        <th>Precio</th>
-                                        <th>Categoría</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% if (products && products.length > 0) { %>
-                                        <% products.forEach(product => { %>
-                                            <tr>
-                                                <td data-label="Foto">
-                                                    <% if (product.photos && product.photos.length > 0) { %>
-                                                        <img src="<%= product.photos[0].replace('/upload/', '/upload/w_100,h_100,c_fill/') %>" alt="<%= product.name %>" class="img-preview">
-                                                    <% } %>
-                                                </td>
-                                                <td data-label="Nombre">
-                                                    <strong><%= product.name %></strong>
-                                                </td>
-                                                <td data-label="Precio"><%= formatPrice(product.price) %></td>
-                                                <td data-label="Categoría"><%= product.category ? product.category.name : 'N/A' %></td>
-                                                <td data-label="Estado">
-                                                    <% if (product.isFeatured) { %>
-                                                        <span class="badge bg-warning text-dark">Destacado</span>
-                                                    <% } else { %>
-                                                        <span class="badge bg-secondary">Normal</span>
-                                                    <% } %>
-                                                </td>
-                                                <td data-label="Acciones">
-                                                    <div class="d-flex gap-1 justify-content-end">
-                                                        <a href="/admin/producto/edit/<%= product._id %>" class="btn btn-sm btn-warning" title="Editar">
-                                                            <i class="fas fa-pen"></i>
-                                                        </a>
-                                                        <form action="/admin/producto/delete/<%= product._id %>" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer.');" class="d-inline">
-                                                            <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <% }); %>
+                
+                <div class="list-group list-group-flush">
+                    <% if (products && products.length > 0) { %>
+                        <% products.forEach(product => { %>
+                            <div class="list-group-item border-0 border-bottom p-3">
+                                <div class="d-flex align-items-center">
+                                    
+                                    <% if (product.photos && product.photos.length > 0) { %>
+                                        <img src="<%= product.photos[0].replace('/upload/', '/upload/w_120,h_120,c_fill/') %>" alt="Foto" class="product-img shadow-sm me-3">
                                     <% } else { %>
-                                        <tr><td colspan="6" class="text-center">No hay productos cargados. ¡Añade el primero!</td></tr>
+                                        <div class="product-img shadow-sm me-3 bg-light d-flex align-items-center justify-content-center text-muted">
+                                            <i class="fas fa-image"></i>
+                                        </div>
                                     <% } %>
-                                </tbody>
-                            </table>
+                                    
+                                    <div class="flex-grow-1 min-width-0">
+                                        <h6 class="mb-1 fw-bold text-truncate text-dark" style="font-size: 1.05rem;"><%= product.name %></h6>
+                                        <div class="text-primary fw-bold mb-1"><%= formatPrice(product.price) %></div>
+                                        
+                                        <% if (product.hasVariants) { %>
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-2">
+                                                <i class="fas fa-layer-group"></i> Varias Opciones
+                                            </span>
+                                        <% } else { %>
+                                            <% if (product.stock > 0) { %>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2"><i class="fas fa-check"></i> Stock: <%= product.stock %></span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2"><i class="fas fa-times"></i> Agotado</span>
+                                            <% } %>
+                                        <% } %>
+                                    </div>
+                                    
+                                    <div class="d-flex flex-column gap-2 ms-2">
+                                        <a href="/admin/producto/edit/<%= product._id %>" class="btn btn-light btn-app-action text-warning shadow-sm border">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <form action="/admin/producto/delete/<%= product._id %>" method="POST" onsubmit="return confirm('¿Eliminar producto?');" class="m-0">
+                                            <button type="submit" class="btn btn-light btn-app-action text-danger shadow-sm border">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="p-5 text-center text-muted">
+                            <i class="fas fa-box-open fa-4x mb-3 opacity-50"></i>
+                            <h5 class="fw-bold">Tu tienda está vacía</h5>
+                            <p class="mb-0">Añade tu primer producto para empezar a vender.</p>
                         </div>
-                    </div>
+                    <% } %>
                 </div>
             </div>
+
         </main>
     </div>
 </div>
 
-<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-fullscreen-md-down">
+        <div class="modal-content border-0 rounded-4">
+            
             <form action="/admin/productos/add" method="POST" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addProductModalLabel">Añadir Nuevo Producto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                
+                <div class="modal-header bg-white border-bottom shadow-sm z-1 sticky-top rounded-top-4">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fas fa-box-open text-primary me-2"></i> Nuevo Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Nombre del Producto</label>
-                        <input type="text" id="name" name="name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Descripción</label>
-                        <textarea id="description" name="description" rows="5" class="form-control"></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="price" class="form-label">Precio (Gs.)</label>
-                            <input type="number" id="price" name="price" class="form-control" required min="0" value="0">
+                
+                <div class="modal-body bg-light p-3 p-md-4">
+                    
+                    <div class="card app-card mb-4 p-3 p-md-4">
+                        <h6 class="fw-bold mb-3 text-muted border-bottom pb-2">Información Principal</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Nombre del Producto</label>
+                            <input type="text" name="name" class="form-control form-control-lg bg-light" placeholder="Ej: Pestañas Navina" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="category" class="form-label">Categoría</label>
-                            <select id="category" name="category" class="form-control" required>
-                                <option value="">-- Selecciona una categoría --</option>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Descripción</label>
+                            <textarea name="description" rows="3" class="form-control bg-light" placeholder="Detalles del producto..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Categoría</label>
+                            <select name="category" class="form-select form-select-lg bg-light" required>
+                                <option value="">Selecciona...</option>
                                 <% if (locals.categories) { %>
                                     <% categories.forEach(cat => { %>
                                         <option value="<%= cat._id %>"><%= cat.name %></option>
@@ -176,24 +212,84 @@
                                 <% } %>
                             </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="photos" class="form-label">Fotos (hasta 5)</label>
-                        <input type="file" id="photos" name="photos" class="form-control" multiple required accept="image/*">
-                    </div>
-                    <hr>
-                    <div class="d-flex gap-4">
-                        <input type="hidden" name="isForSale" value="on">
                         
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="isFeatured" id="isFeatured">
-                            <label class="form-check-label" for="isFeatured">Marcar como Destacado</label>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold text-dark">Fotos (Selecciona hasta 5)</label>
+                            <input type="file" name="photos" class="form-control" multiple required accept="image/*">
                         </div>
                     </div>
+
+                    <div class="card app-card mb-4 p-3 p-md-4 border-start border-4 border-success">
+                        <h6 class="fw-bold mb-3 text-muted border-bottom pb-2">Finanzas (Precios)</h6>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-danger"><i class="fas fa-arrow-down"></i> Costo (Compra)</label>
+                                <input type="number" name="costPrice" class="form-control form-control-lg bg-light" placeholder="0" min="0">
+                                <small class="text-muted" style="font-size:0.75rem;">Para calcular ganancia</small>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-success"><i class="fas fa-arrow-up"></i> Precio Venta</label>
+                                <input type="number" name="price" class="form-control form-control-lg bg-light" placeholder="0" required min="0">
+                                <small class="text-muted" style="font-size:0.75rem;">Lo que paga el cliente</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card app-card mb-4 p-3 p-md-4 border-start border-4 border-primary">
+                        <h6 class="fw-bold mb-3 text-muted border-bottom pb-2"><i class="fas fa-boxes"></i> Control de Stock</h6>
+                        
+                        <div class="form-check form-switch mb-3 p-3 bg-primary bg-opacity-10 rounded-3">
+                            <input class="form-check-input ms-0 me-2 mt-1" type="checkbox" name="hasVariants" id="hasVariants" onchange="toggleVariants()" style="transform: scale(1.3);">
+                            <label class="form-check-label fw-bold text-primary" for="hasVariants">El producto tiene opciones</label>
+                            <div class="text-muted small mt-1">Activa esto si hay opciones como "30D", "40D" o "Tonos".</div>
+                        </div>
+
+                        <div id="generalStockDiv" class="mb-2">
+                            <label class="form-label fw-bold text-dark">Stock Disponible</label>
+                            <input type="number" name="stock" class="form-control form-control-lg bg-light" value="0" min="0">
+                        </div>
+
+                        <div id="variantsDiv" style="display: none;" class="mb-2">
+                            <label class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
+                                Opciones de Compra
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill" onclick="addVariantRow()">
+                                    <i class="fas fa-plus"></i> Añadir
+                                </button>
+                            </label>
+                            
+                            <div id="variantsContainer" class="variants-scroll pe-2">
+                                <div class="row g-2 mb-2 variant-row align-items-center bg-white p-2 rounded-3 border">
+                                    <div class="col-7">
+                                        <input type="text" name="variantNames[]" class="form-control" placeholder="Ej: 30D">
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="number" name="variantStocks[]" class="form-control" placeholder="Stock" min="0">
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <button type="button" class="btn btn-light text-danger rounded-circle" onclick="if(document.querySelectorAll('.variant-row').length > 1) this.closest('.variant-row').remove()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card app-card mb-2 p-3 p-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input mt-1" type="checkbox" name="isFeatured" id="isFeatured" style="transform: scale(1.2);">
+                            <label class="form-check-label ms-2 fw-bold text-warning" for="isFeatured"><i class="fas fa-star"></i> Producto Destacado</label>
+                        </div>
+                        <input type="hidden" name="isForSale" value="on">
+                    </div>
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                
+                <div class="modal-footer bg-white border-top shadow-sm sticky-bottom p-3">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;">
+                        <i class="fas fa-save me-1"></i> Publicar
+                    </button>
                 </div>
             </form>
         </div>
@@ -202,7 +298,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Script para el toggle del sidebar
+    // Toggle de Menú Lateral
     document.addEventListener('DOMContentLoaded', function() {
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('admin-sidebar');
@@ -216,6 +312,36 @@
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (overlay) overlay.addEventListener('click', toggleSidebar);
     });
+
+    // Lógica para Variantes (30D, 40D, etc)
+    function toggleVariants() {
+        const hasVariants = document.getElementById('hasVariants').checked;
+        document.getElementById('generalStockDiv').style.display = hasVariants ? 'none' : 'block';
+        document.getElementById('variantsDiv').style.display = hasVariants ? 'block' : 'none';
+    }
+
+    function addVariantRow() {
+        const container = document.getElementById('variantsContainer');
+        const html = `
+            <div class="row g-2 mb-2 variant-row align-items-center bg-white p-2 rounded-3 border">
+                <div class="col-7">
+                    <input type="text" name="variantNames[]" class="form-control" placeholder="Ej: 40D">
+                </div>
+                <div class="col-3">
+                    <input type="number" name="variantStocks[]" class="form-control" placeholder="Stock" min="0">
+                </div>
+                <div class="col-2 text-center">
+                    <button type="button" class="btn btn-light text-danger rounded-circle" onclick="this.closest('.variant-row').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        
+        // Hacer scroll automático hacia abajo si se añaden muchas variantes
+        container.scrollTop = container.scrollHeight;
+    }
 </script>
 </body>
 </html>

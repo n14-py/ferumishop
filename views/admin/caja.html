@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caja y Finanzas - Panel FERUMI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        /* Estilos App Móvil para Caja */
+        body { background-color: #f8f9fc; }
+        .app-card { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+        .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 5px; }
+        
+        .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-title { font-weight: 800; color: var(--admin-primary-dark); margin: 0; font-size: 1.2rem; }
+        
+        .btn-app { border-radius: 15px; padding: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-app:active { transform: scale(0.95); }
+
+        @media (min-width: 768px) { .admin-header { display: none; } }
+
+        /* MAGIA PARA EL PDF (Solo aplica al imprimir o exportar) */
+        @media print {
+            body { background-color: #fff; }
+            .no-print { display: none !important; }
+            .app-card { border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; }
+            .badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
+            .main-content { padding: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    
+    <aside class="sidebar no-print" id="admin-sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-crown"></i> FERUMI
+        </div>
+        <div class="sidebar-content mt-3">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/dashboard" class="nav-link">
+                        <i class="fa-solid fa-house fa-fw"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/caja" class="nav-link active">
+                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/productos" class="nav-link">
+                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/categorias" class="nav-link">
+                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/regalos" class="nav-link">
+                        <i class="fas fa-gift fa-fw"></i> Regalos Online
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/sorteos" class="nav-link">
+                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a href="/admin/configuracion" class="nav-link">
+                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes de Tienda
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="/" target="_blank" class="nav-link">
+                <i class="fa-solid fa-globe fa-fw"></i> Ver mi Tienda
+            </a>
+            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
+                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
+            </a>
+        </div>
+    </aside>
+    
+    <div class="sidebar-overlay no-print" id="sidebar-overlay"></div>
+
+    <div class="main-content-wrapper">
+        
+        <header class="admin-header bg-white px-3 py-3 sticky-top no-print">
+            <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="header-title">Mi Caja</h1>
+            <button class="btn btn-light btn-sm rounded-circle" onclick="window.print()" style="width: 35px; height: 35px;">
+                <i class="fas fa-file-pdf text-danger"></i>
+            </button>
+        </header>
+
+        <main class="main-content p-3 p-md-4">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4 d-none d-md-flex no-print">
+                <div>
+                    <h2 class="fw-bold text-dark mb-0">Reporte Financiero</h2>
+                    <p class="text-muted mb-0">Mes: <strong><%= mesActual %></strong></p>
+                </div>
+                <button class="btn btn-outline-dark btn-app" onclick="window.print()">
+                    <i class="fas fa-file-pdf text-danger"></i> Exportar a PDF
+                </button>
+            </div>
+
+            <div class="d-md-none mb-3 no-print">
+                <p class="text-muted mb-0">Mes: <strong><%= mesActual %></strong></p>
+            </div>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert alert-success alert-dismissible fade show rounded-4 no-print"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <% } %>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger alert-dismissible fade show rounded-4 no-print"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+            <% } %>
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-success">
+                        <div class="stat-label text-success"><i class="fas fa-arrow-up"></i> Ingresos</div>
+                        <div class="stat-value text-dark">Gs.<br><%= stats.totalIngresos.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-warning">
+                        <div class="stat-label text-warning"><i class="fas fa-box"></i> Costo Mercadería</div>
+                        <div class="stat-value text-dark">Gs.<br><%= stats.totalCostos.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-danger">
+                        <div class="stat-label text-danger"><i class="fas fa-arrow-down"></i> Gastos Extra</div>
+                        <div class="stat-value text-dark">Gs.<br><%= stats.totalEgresos.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card app-card h-100 p-3 text-white" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));">
+                        <div class="stat-label text-white opacity-75"><i class="fas fa-wallet"></i> Ganancia Neta</div>
+                        <div class="stat-value">Gs.<br><%= stats.gananciaNeta.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-4 no-print">
+                <div class="col-6">
+                    <button class="btn btn-success w-100 btn-app shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVenta">
+                        <i class="fas fa-plus-circle fs-5"></i> Venta
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-danger w-100 btn-app shadow-sm" data-bs-toggle="modal" data-bs-target="#modalGasto">
+                        <i class="fas fa-minus-circle fs-5"></i> Gasto
+                    </button>
+                </div>
+            </div>
+
+            <div class="card app-card overflow-hidden mb-5">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list-ul me-2"></i> Movimientos del Mes</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="margin: 0; padding: 10px;">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
+                            <thead class="table-light d-none d-md-table-header-group">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Descripción</th>
+                                    <th>Monto</th>
+                                    <th class="no-print text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (transactions && transactions.length > 0) { %>
+                                    <% transactions.forEach(t => { %>
+                                        <tr>
+                                            <td data-label="Fecha" class="text-muted"><%= new Date(t.date).toLocaleDateString('es-PY', {day: '2-digit', month: '2-digit'}) %></td>
+                                            <td data-label="Tipo">
+                                                <% if (t.type === 'ingreso') { %>
+                                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Venta</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3">Gasto</span>
+                                                <% } %>
+                                            </td>
+                                            <td data-label="Descripción" class="fw-bold"><%= t.description %></td>
+                                            <td data-label="Monto">
+                                                <% if (t.type === 'ingreso') { %>
+                                                    <span class="text-success fw-bold">+ Gs. <%= t.amount.toLocaleString('es-PY') %></span>
+                                                <% } else { %>
+                                                    <span class="text-danger fw-bold">- Gs. <%= t.amount.toLocaleString('es-PY') %></span>
+                                                <% } %>
+                                            </td>
+                                            <td data-label="Acción" class="no-print text-md-end">
+                                                <form action="/admin/caja/delete/<%= t._id %>" method="POST" onsubmit="return confirm('¿Eliminar este registro?');" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle"><i class="fas fa-trash"></i></button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fas fa-receipt fa-3x mb-3 opacity-50"></i>
+                                            <p class="mb-0">No hay movimientos registrados este mes.</p>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<div class="modal fade no-print" id="modalVenta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header bg-success text-white rounded-top-4 border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-cart-plus"></i> Nueva Venta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/caja/venta" method="POST">
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-4"><i class="fas fa-info-circle"></i> Se descontará el stock y se calculará la ganancia usando tu precio de costo guardado.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">¿Qué vendiste?</label>
+                        <select name="productId" class="form-select form-select-lg" required>
+                            <option value="">Selecciona el producto...</option>
+                            <% products.forEach(p => { %>
+                                <option value="<%= p._id %>"><%= p.name %> (Disp: <%= p.stock %>)</option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Opción (Ej: 30D, Tono claro)</label>
+                        <input type="text" name="variantName" class="form-control form-control-lg" placeholder="Déjalo en blanco si no tiene opciones">
+                    </div>
+                    <div class="row">
+                        <div class="col-4 mb-3">
+                            <label class="form-label fw-bold text-dark">Cant.</label>
+                            <input type="number" name="quantity" class="form-control form-control-lg text-center" value="1" min="1" required>
+                        </div>
+                        <div class="col-8 mb-3">
+                            <label class="form-label fw-bold text-dark">Total cobrado (Gs.)</label>
+                            <input type="number" name="sellPrice" class="form-control form-control-lg" placeholder="0" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-pill">Guardar Venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade no-print" id="modalGasto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header bg-danger text-white rounded-top-4 border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-minus-circle"></i> Nuevo Gasto Extra</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/caja/gasto" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">¿En qué gastaste?</label>
+                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Compra de 100 bolsitas, pasaje..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Monto gastado (Gs.)</label>
+                        <input type="number" name="amount" class="form-control form-control-lg" placeholder="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold px-4 rounded-pill">Guardar Gasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    });
+</script>
+</body>
+</html>
