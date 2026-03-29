@@ -1371,6 +1371,64 @@ app.post('/admin/caja/delete/:id', requireAdmin, async (req, res, next) => {
     }
 });
 
+// =============================================
+// SITEMAP AUTOMÁTICO (Para Google Search Console)
+// =============================================
+app.get('/sitemap.xml', async (req, res, next) => {
+    try {
+        // Obtenemos todos los productos activos
+        const products = await Product.find({ isForSale: true }).select('_id updatedAt');
+        
+        // Tu dominio principal
+        const baseUrl = 'https://ferumi.shop'; 
+
+        // Empezamos a armar el XML
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+        xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+        
+        // 1. Páginas Principales (Estáticas)
+        const staticPages = [
+            { url: '', priority: '1.0' },
+            { url: '/tienda', priority: '0.9' },
+            { url: '/sorteos', priority: '0.8' },
+            { url: '/regalos/crear', priority: '0.8' },
+            { url: '/sobre-nosotros', priority: '0.6' },
+            { url: '/contacto', priority: '0.6' }
+        ];
+
+        staticPages.forEach(page => {
+            xml += `  <url>\n`;
+            xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
+            xml += `    <changefreq>weekly</changefreq>\n`;
+            xml += `    <priority>${page.priority}</priority>\n`;
+            xml += `  </url>\n`;
+        });
+
+        // 2. Páginas de Productos (Dinámicas)
+        products.forEach(product => {
+            // Usamos la fecha de la última modificación si existe, si no, la fecha actual
+            const lastMod = product.updatedAt ? product.updatedAt.toISOString() : new Date().toISOString();
+            
+            xml += `  <url>\n`;
+            xml += `    <loc>${baseUrl}/producto/${product._id}</loc>\n`;
+            xml += `    <lastmod>${lastMod}</lastmod>\n`;
+            xml += `    <changefreq>daily</changefreq>\n`;
+            xml += `    <priority>0.8</priority>\n`;
+            xml += `  </url>\n`;
+        });
+
+        xml += `</urlset>`;
+
+        // Le decimos al navegador/Google que este archivo es un XML
+        res.header('Content-Type', 'application/xml');
+        res.send(xml);
+
+    } catch (err) {
+        console.error("Error generando sitemap:", err);
+        next(err);
+    }
+});
+
 
 // =============================================
 // MANEJADORES DE ERROR Y ARRANQUE
