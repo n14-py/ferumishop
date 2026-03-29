@@ -3,222 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <title><%= product.name %> - FERUMI</title>
-    <meta name="description" content="<%= product.description.replace(/<[^>]*>?/gm, '').substring(0, 150) %>...">
-    
-    <meta property="og:title" content="<%= product.name %>">
-    <meta property="og:description" content="<%= product.description.replace(/<[^>]*>?/gm, '').substring(0, 150) %>...">
-    <meta property="og:image" content="<%= product.photos[0].replace('/upload/', '/upload/w_600,h_315,c_fill,g_auto/') %>">
-    <meta property="og:url" content="<%= baseUrl %>/producto/<%= product._id %>">
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* Estilos específicos para la página del producto para asegurar el responsive */
+        .product-detail-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; flex-wrap: wrap; gap: 40px; }
+        .product-images-section { flex: 1; min-width: 300px; }
+        .product-info-section { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
+        
+        /* Galería */
+        .main-image-container { width: 100%; border-radius: 15px; overflow: hidden; background: #f9f9f9; text-align: center; margin-bottom: 15px; border: 1px solid #eee; }
+        .main-image-container img { width: 100%; max-height: 500px; object-fit: contain; transition: opacity 0.3s ease; }
+        
+        .thumbnails-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .thumbnail { width: 80px; height: 80px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; object-fit: cover; transition: 0.2s; }
+        .thumbnail:hover, .thumbnail.active { border-color: var(--primary-color, #ff4757); transform: scale(1.05); }
+
+        /* Información */
+        .product-title { font-size: 2.2rem; font-weight: bold; color: #333; margin-bottom: 10px; line-height: 1.2; }
+        .product-price { font-size: 2rem; font-weight: bold; color: var(--primary-color, #ff4757); margin-bottom: 20px; }
+        .product-description { font-size: 1.1rem; color: #555; line-height: 1.6; margin-bottom: 30px; }
+        
+        /* Variantes (Botones Efectos/Tonos) */
+        .variants-box { margin-bottom: 25px; padding: 20px; background: #fdfdfd; border-radius: 15px; border: 1px solid #eee; }
+        .variants-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; color: #333; display: block; }
+        .variants-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        
+        .btn-variant { padding: 10px 20px; border: 2px solid #ddd; background: #fff; border-radius: 50px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.2s ease; font-size: 1rem; }
+        .btn-variant:hover { border-color: #aaa; }
+        .btn-variant.selected { border-color: var(--primary-color, #ff4757); background: var(--primary-color, #ff4757); color: white; box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3); }
+        .btn-variant.disabled { opacity: 0.5; cursor: not-allowed; text-decoration: line-through; }
+        
+        .stock-status { font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .stock-ok { color: #198754; }
+        .stock-out { color: #dc3545; }
+
+        /* Botones de Acción */
+        .action-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+        .btn-cart, .btn-whatsapp { width: 100%; padding: 16px; border-radius: 50px; font-size: 1.2rem; font-weight: bold; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; color: white; text-decoration: none; }
+        .btn-cart { background: #333; }
+        .btn-cart:hover { background: #000; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-whatsapp { background: #25D366; }
+        .btn-whatsapp:hover { background: #128C7E; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3); }
+
+        @media (max-width: 768px) {
+            .product-detail-container { padding: 0 15px; margin: 20px auto; }
+            .product-title { font-size: 1.8rem; }
+            .btn-cart, .btn-whatsapp { font-size: 1.1rem; padding: 14px; }
+        }
+    </style>
 </head>
 
 <body>
 
-<%- include('../partials/header.html') %>
+    <%- include('../partials/header.html') %>
 
-<main class="container">
-    <% if (locals.product) { %>
-        <div class="product-detail-layout">
-            
-            <div class="product-gallery">
-                <div class="main-image-container">
-                    <img src="<%= product.photos[0].replace('/upload/', '/upload/w_800,h_800,c_limit/') %>" id="mainProductImage" alt="Foto principal: <%= product.name %>">
-                </div>
-                
-                <% if (product.photos.length > 1) { %>
-                    <div class="product-thumbnails">
-                        <% product.photos.forEach((photoUrl, index) => { %>
-                            <img src="<%= photoUrl.replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" 
-                                 alt="Miniatura <%= index + 1 %>"
-                                 class="thumbnail <%= index === 0 ? 'active' : '' %>"
-                                 onclick="changeMainImage('<%= photoUrl.replace('/upload/', '/upload/w_800,h_800,c_limit/') %>')">
-                        <% }); %>
-                    </div>
+    <main class="product-detail-container">
+        
+        <section class="product-images-section">
+            <div class="main-image-container">
+                <% if (product.photos && product.photos.length > 0) { %>
+                    <img id="mainProductImage" src="<%= product.photos[0] %>" alt="<%= product.name %>">
+                <% } else { %>
+                    <img id="mainProductImage" src="/img/placeholder.png" alt="Sin foto">
                 <% } %>
             </div>
 
-            <div class="product-info">
-                <span class="card-category" style="display: block; margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.8rem; color: #666;">
-                    <a href="/categoria/<%= product.category.name %>" style="color: inherit;"><%= product.category.name %></a>
-                </span>
-
-                <h1><%= product.name %></h1>
-
-               <div class="price">
-                    <%= formatPrice(product.price) %>
-                </div>
-
-                <div class="product-options" style="margin-top: 1rem;">
-                    <% if (product.hasVariants && product.variants && product.variants.length > 0) { %>
-                        <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">Opciones disponibles:</label>
-                        <div class="variants-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
-                            <% product.variants.forEach((variant, index) => { %>
-                                <button type="button" 
-                                        class="btn-variant <%= index === 0 ? 'selected' : '' %>" 
-                                        data-name="<%= variant.name %>" 
-                                        data-stock="<%= variant.stock %>"
-                                        onclick="selectVariant(this)"
-                                        style="padding: 8px 15px; border: 2px solid <%= index === 0 ? '#333' : '#ddd' %>; background: <%= index === 0 ? '#f8f9fa' : '#fff' %>; border-radius: 5px; cursor: pointer; transition: 0.2s;">
-                                    <%= variant.name %>
-                                </button>
-                            <% }); %>
-                        </div>
-                        <p id="stockDisplay" style="color: <%= product.variants[0].stock > 0 ? '#198754' : '#dc3545' %>; font-weight: bold; margin-bottom: 1rem;">
-                            <i class="fas <%= product.variants[0].stock > 0 ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
-                            <%= product.variants[0].stock > 0 ? `Disponible: ${product.variants[0].stock} en stock` : 'Agotado' %>
-                        </p>
-                        <input type="hidden" id="selectedVariant" value="<%= product.variants[0].name %>">
-                        <input type="hidden" id="currentStock" value="<%= product.variants[0].stock %>">
-                    <% } else { %>
-                        <p id="stockDisplay" style="color: <%= product.stock > 0 ? '#198754' : '#dc3545' %>; font-weight: bold; margin-bottom: 1rem;">
-                            <i class="fas <%= product.stock > 0 ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
-                            <%= product.stock > 0 ? `Disponible: ${product.stock} en stock` : 'Agotado' %>
-                        </p>
-                        <input type="hidden" id="selectedVariant" value="">
-                        <input type="hidden" id="currentStock" value="<%= product.stock %>">
-                    <% } %>
-                </div>
-                <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 12px;">
-                    <button id="btnAddToCart" 
-                            data-id="<%= product._id %>" 
-                            data-name="<%= product.name %>" 
-                            data-price="<%= product.price %>" 
-                            data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
-                            onclick="handleAddToCart(this)" 
-                            class="btn btn-primary btn-block" 
-                            style="padding: 1rem; font-size: 1.1rem; display: flex; justify-content: center; gap: 10px; align-items: center; cursor: pointer; border: none; border-radius: 8px; font-weight: bold;">
-                        <i class="fas fa-shopping-cart"></i> Añadir al Carrito
-                    </button>
-
-                    <button onclick="handleWhatsApp()" class="btn btn-whatsapp btn-block" style="padding: 1rem; font-size: 1.1rem; background-color: #25D366; color: white; display: flex; justify-content: center; gap: 10px; align-items: center; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
-                    </button>
-                </div>
-
-
-                <div class="description" style="margin-top: 2rem; line-height: 1.8;">
-                    <h3 style="font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;">Descripción</h3>
-                    <%- product.description %>
-                </div>
-            </div>
-        </div>
-
-        <% if (recommendedProducts && recommendedProducts.length > 0) { %>
-            <div class="recommended-section">
-                <hr>
-                <h2 class="section-title">También te podría gustar</h2>
-                <div class="product-grid">
-                    <% recommendedProducts.forEach(recProduct => { %>
-                        <%- include('../partials/product-card.html', { product: recProduct }) %>
+            <% if (product.photos && product.photos.length > 1) { %>
+                <div class="thumbnails-container">
+                    <% product.photos.forEach((photo, index) => { %>
+                        <img src="<%= photo.replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" 
+                             class="thumbnail <%= index === 0 ? 'active' : '' %>" 
+                             onclick="changeMainImage(this, '<%= photo %>')" 
+                             alt="Miniatura">
                     <% }); %>
                 </div>
+            <% } %>
+        </section>
+
+
+        <section class="product-info-section">
+            
+            <h1 class="product-title"><%= product.name %></h1>
+            <div class="product-price"><%= formatPrice(product.price) %></div>
+            
+            <div class="product-description">
+                <%- product.description %>
             </div>
-        <% } %>
 
-    <% } else { %>
-        <div class="no-results-card">
-            <h2>Producto no encontrado</h2>
-            <p>El producto que buscas no existe o ha sido eliminado.</p>
-            <a href="/tienda" class="btn btn-primary">Volver a la Tienda</a>
-        </div>
-    <% } %>
-</main>
+            <% if (product.hasVariants && product.variants && product.variants.length > 0) { %>
+                <div class="variants-box">
+                    <span class="variants-title">Selecciona una opción:</span>
+                    <div class="variants-grid">
+                        <% product.variants.forEach((variant, index) => { %>
+                            <button type="button" 
+                                    class="btn-variant <%= index === 0 ? 'selected' : '' %> <%= variant.stock <= 0 ? 'disabled' : '' %>" 
+                                    data-name="<%= variant.name %>" 
+                                    data-stock="<%= variant.stock %>"
+                                    data-photo="<%= variant.photoUrl ? variant.photoUrl : '' %>"
+                                    onclick="selectVariant(this)">
+                                <%= variant.name %>
+                            </button>
+                        <% }); %>
+                    </div>
+                    
+                    <div id="stockDisplay" class="stock-status <%= product.variants[0].stock > 0 ? 'stock-ok' : 'stock-out' %>">
+                        <i class="fas <%= product.variants[0].stock > 0 ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
+                        <%= product.variants[0].stock > 0 ? `Disponible (${product.variants[0].stock})` : 'Agotado temporalmente' %>
+                    </div>
+                    
+                    <input type="hidden" id="selectedVariantName" value="<%= product.variants[0].name %>">
+                    <input type="hidden" id="currentStock" value="<%= product.variants[0].stock %>">
+                </div>
+            <% } else { %>
+                <div class="variants-box">
+                    <div id="stockDisplay" class="stock-status <%= product.stock > 0 ? 'stock-ok' : 'stock-out' %>">
+                        <i class="fas <%= product.stock > 0 ? 'fa-check-circle' : 'fa-times-circle' %>"></i> 
+                        <%= product.stock > 0 ? `Stock Disponible (${product.stock})` : 'Agotado temporalmente' %>
+                    </div>
+                    <input type="hidden" id="selectedVariantName" value="">
+                    <input type="hidden" id="currentStock" value="<%= product.stock %>">
+                </div>
+            <% } %>
 
-<%- include('../partials/footer.html') %>
+            <div class="action-buttons">
+                <button id="btnAddToCart" 
+                        data-id="<%= product._id %>" 
+                        data-name="<%= product.name %>" 
+                        data-price="<%= product.price %>" 
+                        data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
+                        onclick="handleAddToCart()" 
+                        class="btn-cart">
+                    <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                </button>
 
-<script>
-    // Cambiar la imagen principal (Galería)
-    function changeMainImage(newSrc) {
-        document.getElementById('mainProductImage').src = newSrc;
-        const thumbnails = document.querySelectorAll('.product-thumbnails img');
-        thumbnails.forEach(img => {
-            if (newSrc.includes(img.src.split('/upload/')[1].split('/')[1])) { 
-                img.classList.add('active');
+                <button onclick="handleWhatsApp()" class="btn-whatsapp">
+                    <i class="fab fa-whatsapp fa-lg"></i> Consultar por WhatsApp
+                </button>
+            </div>
+
+        </section>
+    </main>
+
+    <%- include('../partials/footer.html') %>
+
+    <script>
+        // 1. Guardar la imagen original por si la variante no tiene foto
+        const originalMainImageSrc = "<%= product.photos && product.photos.length > 0 ? product.photos[0] : '' %>";
+        const originalCartImageSrc = "<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>";
+        const mainProductImageElement = document.getElementById('mainProductImage');
+        const btnAddToCartElement = document.getElementById('btnAddToCart');
+
+        // 2. Cambiar foto al tocar miniatura
+        function changeMainImage(thumbElement, newSrc) {
+            mainProductImageElement.style.opacity = 0; // Efecto suave
+            setTimeout(() => {
+                mainProductImageElement.src = newSrc;
+                mainProductImageElement.style.opacity = 1;
+            }, 150);
+            
+            // Quitar clase active a todas las miniaturas y ponérsela a la tocada
+            document.querySelectorAll('.thumbnail').forEach(img => img.classList.remove('active'));
+            if(thumbElement) thumbElement.classList.add('active');
+        }
+
+        // 3. Lógica cuando se elige "Efecto Anime", "Efecto B", etc.
+        function selectVariant(btn) {
+            // Quitar diseño seleccionado a todos
+            document.querySelectorAll('.btn-variant').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected'); // Resaltar el tocado
+
+            // Leer datos del botón
+            const variantName = btn.getAttribute('data-name');
+            const stock = parseInt(btn.getAttribute('data-stock'));
+            const variantPhoto = btn.getAttribute('data-photo');
+
+            // Actualizar datos ocultos
+            document.getElementById('selectedVariantName').value = variantName;
+            document.getElementById('currentStock').value = stock;
+
+            // Actualizar texto de Stock
+            const stockDisplay = document.getElementById('stockDisplay');
+            if (stock > 0) {
+                stockDisplay.className = 'stock-status stock-ok';
+                stockDisplay.innerHTML = `<i class="fas fa-check-circle"></i> Disponible (${stock})`;
             } else {
-                img.classList.remove('active');
+                stockDisplay.className = 'stock-status stock-out';
+                stockDisplay.innerHTML = `<i class="fas fa-times-circle"></i> Agotado temporalmente`;
             }
-        });
-    }
 
-    // --- NUEVAS FUNCIONES PARA VARIANTES Y COMPRA ---
-    const productUrl = "<%= baseUrl %>/producto/<%= product._id %>";
-    const baseWhatsappMsg = "<%= siteConfig.whatsappMessage %> <%= product.name %>";
-    const whatsappNumber = "<%= siteConfig.whatsappNumber %>";
-
-    function selectVariant(btn) {
-        // Reiniciar diseño de todos los botones
-        document.querySelectorAll('.btn-variant').forEach(b => {
-            b.style.borderColor = '#ddd';
-            b.style.background = '#fff';
-            b.classList.remove('selected');
-        });
-        
-        // Resaltar el seleccionado
-        btn.style.borderColor = '#333';
-        btn.style.background = '#f8f9fa';
-        btn.classList.add('selected');
-
-        // Actualizar datos ocultos
-        const variantName = btn.getAttribute('data-name');
-        const stock = parseInt(btn.getAttribute('data-stock'));
-        
-        document.getElementById('selectedVariant').value = variantName;
-        document.getElementById('currentStock').value = stock;
-
-        // Actualizar texto de Stock
-        const stockDisplay = document.getElementById('stockDisplay');
-        if (stock > 0) {
-            stockDisplay.style.color = '#198754';
-            stockDisplay.innerHTML = `<i class="fas fa-check-circle"></i> Disponible: ${stock} en stock`;
-        } else {
-            stockDisplay.style.color = '#dc3545';
-            stockDisplay.innerHTML = `<i class="fas fa-times-circle"></i> Agotado`;
-        }
-    }
-
-    function handleAddToCart(btn) {
-        const stock = parseInt(document.getElementById('currentStock').value);
-        if (stock <= 0) {
-            alert("⚠️ Lo sentimos, esta opción está agotada actualmente.");
-            return;
+            // --- LA MAGIA DE LA FOTO ---
+            if (variantPhoto && variantPhoto !== '') {
+                // Si la variante tiene su propia foto, la mostramos en grande
+                changeMainImage(null, variantPhoto);
+                // Le pasamos esa misma foto en chiquito al botón del carrito
+                btnAddToCartElement.setAttribute('data-image', variantPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
+            } else {
+                // Si la variante NO tiene foto, volvemos a la original del producto
+                changeMainImage(null, originalMainImageSrc);
+                btnAddToCartElement.setAttribute('data-image', originalCartImageSrc);
+            }
         }
 
-        const baseId = btn.getAttribute('data-id');
-        const baseName = btn.getAttribute('data-name');
-        const price = btn.getAttribute('data-price');
-        const image = btn.getAttribute('data-image');
-        
-        const selectedVariant = document.getElementById('selectedVariant') ? document.getElementById('selectedVariant').value : '';
-        
-        // Si hay variante, la sumamos al nombre y al ID para que en el carrito aparezcan separados
-        const finalId = selectedVariant ? `${baseId}-${selectedVariant}` : baseId;
-        const finalName = selectedVariant ? `${baseName} - ${selectedVariant}` : baseName;
+        // 4. Añadir al carrito global
+        function handleAddToCart() {
+            const stock = parseInt(document.getElementById('currentStock').value);
+            if (stock <= 0) {
+                alert("⚠️ Lo sentimos, el modelo seleccionado está agotado actualmente.");
+                return;
+            }
 
-        // Llamamos a la función global del carrito de FERUMI
-        if(typeof addToCart === 'function') {
-            addToCart(finalId, finalName, price, image);
-        } else {
-            alert("Error: El carrito no está cargado.");
+            const baseId = btnAddToCartElement.getAttribute('data-id');
+            const baseName = btnAddToCartElement.getAttribute('data-name');
+            const price = btnAddToCartElement.getAttribute('data-price');
+            const currentImage = btnAddToCartElement.getAttribute('data-image'); // Atrapa la foto actual
+            
+            const selectedVariant = document.getElementById('selectedVariantName').value;
+            
+            // Si eligió una variante, se lo sumamos al nombre para el carrito
+            const finalId = selectedVariant ? `${baseId}-${selectedVariant.replace(/\s+/g, '')}` : baseId;
+            const finalName = selectedVariant ? `${baseName} - ${selectedVariant}` : baseName;
+
+            // Función de tu carrito.js
+            if(typeof addToCart === 'function') {
+                addToCart(finalId, finalName, price, currentImage);
+            } else {
+                alert("Error: El carrito no está cargado.");
+            }
         }
-    }
 
-    function handleWhatsApp() {
-        const selectedVariant = document.getElementById('selectedVariant') ? document.getElementById('selectedVariant').value : '';
-        let finalMsg = baseWhatsappMsg;
-        
-        if (selectedVariant) {
-            finalMsg += ` (Opción elegida: ${selectedVariant})`;
+        // 5. Botón de WhatsApp
+        function handleWhatsApp() {
+            const productUrl = "<%= baseUrl %>/producto/<%= product._id %>";
+            const baseWhatsappMsg = "<%= siteConfig.whatsappMessage %> <%= product.name %>";
+            const whatsappNumber = "<%= siteConfig.whatsappNumber %>";
+            
+            const selectedVariant = document.getElementById('selectedVariantName').value;
+            let finalMsg = baseWhatsappMsg;
+            
+            if (selectedVariant) {
+                finalMsg += ` (Quiero la opción: ${selectedVariant})`;
+            }
+            finalMsg += `.\n\nPuedes verlo aquí: ${productUrl}`;
+            
+            const link = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalMsg)}`;
+            window.open(link, '_blank');
         }
-        finalMsg += `.\n\nPuedes verlo aquí: ${productUrl}`;
-        
-        const link = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(finalMsg)}`;
-        window.open(link, '_blank');
-    }
-</script>
 
+        // Al cargar la página, si la primera variante tiene foto, mostrarla
+        window.onload = () => {
+            const firstVariantBtn = document.querySelector('.btn-variant.selected');
+            if (firstVariantBtn) {
+                const initialPhoto = firstVariantBtn.getAttribute('data-photo');
+                if (initialPhoto && initialPhoto !== '') {
+                    changeMainImage(null, initialPhoto);
+                    btnAddToCartElement.setAttribute('data-image', initialPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
+                }
+            }
+        };
+    </script>
 </body>
 </html>

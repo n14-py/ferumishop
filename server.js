@@ -733,36 +733,42 @@ app.get('/admin/productos', requireAdmin, async (req, res, next) => {
 
 // --- Añadir nuevo producto ---
 // --- Añadir nuevo producto ---
-app.post('/admin/productos/add', requireAdmin, upload.array('photos', 5), async (req, res, next) => {
+// --- Añadir nuevo producto ---
+app.post('/admin/productos/add', requireAdmin, upload.any(), async (req, res, next) => {
     try {
         const { name, description, costPrice, price, stock, category, isForRent, isForSale, isFeatured, hasVariants, variantNames, variantStocks } = req.body;
         
-        if (!req.files || req.files.length === 0) {
-            throw new Error('Debes subir al menos una foto del producto.');
+        // 1. Filtrar las fotos generales (ahora SIN LÍMITE)
+        const mainPhotos = req.files ? req.files.filter(f => f.fieldname === 'photos').map(f => f.path) : [];
+        
+        if (mainPhotos.length === 0) {
+            throw new Error('Debes subir al menos una foto general del producto.');
         }
 
-        // Construir el array de variantes si el producto las tiene
+        // 2. Construir las opciones (Variantes) y atrapar la foto de cada una
         let variantsArray = [];
         let totalVariantStock = 0;
 
         if (hasVariants === 'on' && variantNames) {
-            // Asegurarnos de que sea un array (por si solo envían una variante)
             const names = Array.isArray(variantNames) ? variantNames : [variantNames];
             const stocks = Array.isArray(variantStocks) ? variantStocks : [variantStocks];
 
             for (let i = 0; i < names.length; i++) {
                 if (names[i].trim() !== '') {
                     const vStock = parseInt(stocks[i]) || 0;
+                    // Buscar si subiste una foto específica para esta pestaña/tono
+                    const variantFile = req.files.find(f => f.fieldname === `variantPhoto_${i}`);
+                    
                     variantsArray.push({
                         name: purify.sanitize(names[i]),
-                        stock: vStock
+                        stock: vStock,
+                        photoUrl: variantFile ? variantFile.path : '' // Guarda la foto del "Efecto Anime", etc.
                     });
                     totalVariantStock += vStock;
                 }
             }
         }
 
-        // El stock final: si tiene variantes, es la suma de los stocks de las variantes. Si no, es el stock general.
         const finalStock = (hasVariants === 'on') ? totalVariantStock : (parseInt(stock) || 0);
 
         const newProduct = new Product({
@@ -774,7 +780,7 @@ app.post('/admin/productos/add', requireAdmin, upload.array('photos', 5), async 
             hasVariants: hasVariants === 'on',
             variants: variantsArray,
             category,
-            photos: req.files.map(f => f.path),
+            photos: mainPhotos,
             isForRent: isForRent === 'on',
             isForSale: isForSale === 'on',
             isFeatured: isFeatured === 'on'
@@ -810,14 +816,15 @@ app.get('/admin/producto/edit/:id', requireAdmin, async (req, res, next) => {
 });
 
 // --- Actualizar un producto (POST) ---
-app.post('/admin/producto/edit/:id', requireAdmin, upload.array('new_photos', 5), async (req, res, next) => {
+// --- Actualizar un producto (POST) ---
+app.post('/admin/producto/edit/:id', requireAdmin, upload.any(), async (req, res, next) => {
     try {
-        const { name, description, price, category, isForRent, isForSale, isFeatured, existing_photos } = req.body;
+        const { name, description, costPrice, price, stock, category, isForRent, isForSale, isFeatured, existing_photos, hasVariants, variantNames, variantStocks, existingVariantPhotos } = req.body;
         const product = await Product.findById(req.params.id);
         if (!product) throw new Error('Producto no encontrado.');
 
-        // 1. Eliminar fotos que el admin desmarcó
-        const photosToKeep = existing_photos ? [].concat(existing_photos) : [];
+        // 1. Eliminar fotos principales que el admin desmarcó de la galería
+        const photosToKeep = existing_photos ? (Array.isArray(existing_photos) ? existing_photos : [existing_photos]) : [];
         const photosToDelete = product.photos.filter(url => !photosToKeep.includes(url));
         
         for (const url of photosToDelete) {
@@ -825,16 +832,53 @@ app.post('/admin/producto/edit/:id', requireAdmin, upload.array('new_photos', 5)
             if (publicId) await cloudinary.uploader.destroy(publicId);
         }
         
-        // 2. Añadir nuevas fotos
-        let newPhotos = req.files ? req.files.map(f => f.path) : [];
+        // 2. Añadir nuevas fotos principales (SIN LÍMITE)
+        const newMainPhotos = req.files ? req.files.filter(f => f.fieldname === 'new_photos').map(f => f.path) : [];
         
-// 3. Actualizar el producto
+        // 3. Procesar las opciones (Efecto Anime, Efecto B) y sus fotos específicas
+        let variantsArray = [];
+        let totalVariantStock = 0;
+
+        if (hasVariants === 'on' && variantNames) {
+            const names = Array.isArray(variantNames) ? variantNames : [variantNames];
+            const stocks = Array.isArray(variantStocks) ? variantStocks : [variantStocks];
+            const oldVariantPhotos = existingVariantPhotos ? (Array.isArray(existingVariantPhotos) ? existingVariantPhotos : [existingVariantPhotos]) : [];
+
+            for (let i = 0; i < names.length; i++) {
+                if (names[i].trim() !== '') {
+                    const vStock = parseInt(stocks[i]) || 0;
+                    // Buscar si se subió una foto nueva exclusivamente para esta pestaña
+                    const newVariantFile = req.files.find(f => f.fieldname === `variantPhoto_${i}`);
+                    
+                    let finalPhotoUrl = '';
+                    if (newVariantFile) {
+                        finalPhotoUrl = newVariantFile.path; // Se subió una foto nueva para el Efecto
+                    } else if (oldVariantPhotos[i]) {
+                        finalPhotoUrl = oldVariantPhotos[i]; // Conservar la foto que ya tenía
+                    }
+
+                    variantsArray.push({
+                        name: purify.sanitize(names[i]),
+                        stock: vStock,
+                        photoUrl: finalPhotoUrl // Guardamos la foto en la base de datos
+                    });
+                    totalVariantStock += vStock;
+                }
+            }
+        }
+
+        const finalStock = (hasVariants === 'on') ? totalVariantStock : (parseInt(stock) || 0);
+
+        // 4. Actualizar todo el producto
         product.name = purify.sanitize(name);
         product.description = purify.sanitize(description, { USE_PROFILES: { html: true } });
-        // Ignoramos los puntos que ponga el usuario al editar
-        product.price = parseInt(price.toString().replace(/\./g, '')) || 0;
+        product.costPrice = parseInt(costPrice?.toString().replace(/\./g, '')) || 0;
+        product.price = parseInt(price?.toString().replace(/\./g, '')) || 0;
+        product.stock = finalStock;
+        product.hasVariants = hasVariants === 'on';
+        product.variants = variantsArray;
         product.category = category;
-        product.photos = [...photosToKeep, ...newPhotos];
+        product.photos = [...photosToKeep, ...newMainPhotos]; // Guarda todas las fotos ilimitadas
         product.isForRent = isForRent === 'on';
         product.isForSale = isForSale === 'on';
         product.isFeatured = isFeatured === 'on';

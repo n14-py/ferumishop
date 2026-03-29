@@ -21,7 +21,12 @@
         @media (min-width: 768px) { .admin-header { display: none; } }
         
         /* Ocultar scrollbar en contenedor de variantes */
-        .variants-scroll { max-height: 250px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+        .variants-scroll { max-height: 350px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+        
+        /* Ajuste para el input de archivo de la variante */
+        .file-input-variant::-webkit-file-upload-button {
+            background: #e9ecef; border: none; border-radius: 5px; padding: 5px 10px; font-weight: bold; color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -29,55 +34,21 @@
 <div class="admin-wrapper">
     
     <aside class="sidebar" id="admin-sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-crown"></i> FERUMI
-        </div>
+        <div class="sidebar-header"><i class="fas fa-crown"></i> FERUMI</div>
         <div class="sidebar-content mt-3">
             <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a href="/admin/dashboard" class="nav-link">
-                        <i class="fa-solid fa-house fa-fw"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/caja" class="nav-link">
-                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/productos" class="nav-link active">
-                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/categorias" class="nav-link">
-                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/regalos" class="nav-link">
-                        <i class="fas fa-gift fa-fw"></i> Regalos Online
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/sorteos" class="nav-link">
-                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
-                    </a>
-                </li>
-                <li class="nav-item mt-4">
-                    <a href="/admin/configuracion" class="nav-link">
-                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes
-                    </a>
-                </li>
+                <li class="nav-item"><a href="/admin/dashboard" class="nav-link"><i class="fa-solid fa-house fa-fw"></i> Inicio</a></li>
+                <li class="nav-item"><a href="/admin/caja" class="nav-link"><i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas</a></li>
+                <li class="nav-item"><a href="/admin/productos" class="nav-link active"><i class="fa-solid fa-box-open fa-fw"></i> Productos</a></li>
+                <li class="nav-item"><a href="/admin/categorias" class="nav-link"><i class="fa-solid fa-tags fa-fw"></i> Categorías</a></li>
+                <li class="nav-item"><a href="/admin/regalos" class="nav-link"><i class="fas fa-gift fa-fw"></i> Regalos Online</a></li>
+                <li class="nav-item"><a href="/admin/sorteos" class="nav-link"><i class="fas fa-ticket-alt fa-fw"></i> Sorteos</a></li>
+                <li class="nav-item mt-4"><a href="/admin/configuracion" class="nav-link"><i class="fa-solid fa-cog fa-fw"></i> Ajustes</a></li>
             </ul>
         </div>
         <div class="sidebar-footer">
-            <a href="/" target="_blank" class="nav-link">
-                <i class="fa-solid fa-globe fa-fw"></i> Ver Tienda
-            </a>
-            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
-                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
-            </a>
+            <a href="/" target="_blank" class="nav-link"><i class="fa-solid fa-globe fa-fw"></i> Ver Tienda</a>
+            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;"><i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir</a>
         </div>
     </aside>
     
@@ -86,9 +57,7 @@
     <div class="main-content-wrapper">
         
         <header class="admin-header bg-white px-3 py-3 sticky-top">
-            <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);">
-                <i class="fas fa-bars"></i>
-            </button>
+            <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);"><i class="fas fa-bars"></i></button>
             <h1 class="header-title">Productos</h1>
             <div style="width: 24px;"></div>
         </header>
@@ -103,12 +72,8 @@
                 <i class="fas fa-plus-circle me-2"></i> Añadir Nuevo Producto
             </button>
 
-            <% if (locals.success) { %>
-                <div class="alert alert-success alert-dismissible fade show rounded-4"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-            <% } %>
-            <% if (locals.error) { %>
-                <div class="alert alert-danger alert-dismissible fade show rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-            <% } %>
+            <% if (locals.success) { %><div class="alert alert-success alert-dismissible fade show rounded-4"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
+            <% if (locals.error) { %><div class="alert alert-danger alert-dismissible fade show rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
 
             <div class="card app-card overflow-hidden mb-5">
                 <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
@@ -125,9 +90,7 @@
                                     <% if (product.photos && product.photos.length > 0) { %>
                                         <img src="<%= product.photos[0].replace('/upload/', '/upload/w_120,h_120,c_fill/') %>" alt="Foto" class="product-img shadow-sm me-3">
                                     <% } else { %>
-                                        <div class="product-img shadow-sm me-3 bg-light d-flex align-items-center justify-content-center text-muted">
-                                            <i class="fas fa-image"></i>
-                                        </div>
+                                        <div class="product-img shadow-sm me-3 bg-light d-flex align-items-center justify-content-center text-muted"><i class="fas fa-image"></i></div>
                                     <% } %>
                                     
                                     <div class="flex-grow-1 min-width-0">
@@ -135,9 +98,7 @@
                                         <div class="text-primary fw-bold mb-1"><%= formatPrice(product.price) %></div>
                                         
                                         <% if (product.hasVariants) { %>
-                                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-2">
-                                                <i class="fas fa-layer-group"></i> Varias Opciones
-                                            </span>
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-2"><i class="fas fa-layer-group"></i> Opciones (Anime, etc)</span>
                                         <% } else { %>
                                             <% if (product.stock > 0) { %>
                                                 <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2"><i class="fas fa-check"></i> Stock: <%= product.stock %></span>
@@ -148,13 +109,9 @@
                                     </div>
                                     
                                     <div class="d-flex flex-column gap-2 ms-2">
-                                        <a href="/admin/producto/edit/<%= product._id %>" class="btn btn-light btn-app-action text-warning shadow-sm border">
-                                            <i class="fas fa-pen"></i>
-                                        </a>
+                                        <a href="/admin/producto/edit/<%= product._id %>" class="btn btn-light btn-app-action text-warning shadow-sm border"><i class="fas fa-pen"></i></a>
                                         <form action="/admin/producto/delete/<%= product._id %>" method="POST" onsubmit="return confirm('¿Eliminar producto?');" class="m-0">
-                                            <button type="submit" class="btn btn-light btn-app-action text-danger shadow-sm border">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <button type="submit" class="btn btn-light btn-app-action text-danger shadow-sm border"><i class="fas fa-trash"></i></button>
                                         </form>
                                     </div>
 
@@ -193,7 +150,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold text-dark">Nombre del Producto</label>
-                            <input type="text" name="name" class="form-control form-control-lg bg-light" placeholder="Ej: Pestañas Navina" required>
+                            <input type="text" name="name" class="form-control form-control-lg bg-light" placeholder="Ej: Pestañas Navina DYH" required>
                         </div>
                         
                         <div class="mb-3">
@@ -214,8 +171,9 @@
                         </div>
                         
                         <div class="mb-2">
-                            <label class="form-label fw-bold text-dark">Fotos (Selecciona hasta 5)</label>
+                            <label class="form-label fw-bold text-dark"><i class="fas fa-images text-primary"></i> Fotos Generales (Ilimitadas)</label>
                             <input type="file" name="photos" class="form-control" multiple required accept="image/*">
+                            <small class="text-muted d-block mt-1">Sube todas las fotos generales aquí. Si el producto tiene variantes (Anime, Efecto B), abajo podrás subirle una foto específica a cada uno.</small>
                         </div>
                     </div>
 
@@ -225,50 +183,53 @@
                             <div class="col-6">
                                 <label class="form-label fw-bold text-danger"><i class="fas fa-arrow-down"></i> Costo (Compra)</label>
                                 <input type="number" name="costPrice" class="form-control form-control-lg bg-light" placeholder="0" min="0">
-                                <small class="text-muted" style="font-size:0.75rem;">Para calcular ganancia</small>
                             </div>
                             <div class="col-6">
                                 <label class="form-label fw-bold text-success"><i class="fas fa-arrow-up"></i> Precio Venta</label>
                                 <input type="number" name="price" class="form-control form-control-lg bg-light" placeholder="0" required min="0">
-                                <small class="text-muted" style="font-size:0.75rem;">Lo que paga el cliente</small>
                             </div>
                         </div>
                     </div>
 
                     <div class="card app-card mb-4 p-3 p-md-4 border-start border-4 border-primary">
-                        <h6 class="fw-bold mb-3 text-muted border-bottom pb-2"><i class="fas fa-boxes"></i> Control de Stock</h6>
+                        <h6 class="fw-bold mb-3 text-muted border-bottom pb-2"><i class="fas fa-boxes"></i> Opciones y Modelos</h6>
                         
                         <div class="form-check form-switch mb-3 p-3 bg-primary bg-opacity-10 rounded-3">
                             <input class="form-check-input ms-0 me-2 mt-1" type="checkbox" name="hasVariants" id="hasVariants" onchange="toggleVariants()" style="transform: scale(1.3);">
-                            <label class="form-check-label fw-bold text-primary" for="hasVariants">El producto tiene opciones</label>
-                            <div class="text-muted small mt-1">Activa esto si hay opciones como "30D", "40D" o "Tonos".</div>
+                            <label class="form-check-label fw-bold text-primary" for="hasVariants">El producto tiene modelos distintos</label>
+                            <div class="text-muted small mt-1">Activa esto si tienes "Efecto Anime", "Efecto B", etc.</div>
                         </div>
 
                         <div id="generalStockDiv" class="mb-2">
-                            <label class="form-label fw-bold text-dark">Stock Disponible</label>
+                            <label class="form-label fw-bold text-dark">Stock Disponible General</label>
                             <input type="number" name="stock" class="form-control form-control-lg bg-light" value="0" min="0">
                         </div>
 
                         <div id="variantsDiv" style="display: none;" class="mb-2">
                             <label class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
-                                Opciones de Compra
+                                Modelos Disponibles
                                 <button type="button" class="btn btn-sm btn-dark rounded-pill" onclick="addVariantRow()">
-                                    <i class="fas fa-plus"></i> Añadir
+                                    <i class="fas fa-plus"></i> Añadir Modelo
                                 </button>
                             </label>
                             
                             <div id="variantsContainer" class="variants-scroll pe-2">
-                                <div class="row g-2 mb-2 variant-row align-items-center bg-white p-2 rounded-3 border">
-                                    <div class="col-7">
-                                        <input type="text" name="variantNames[]" class="form-control" placeholder="Ej: 30D">
+                                <div class="row g-2 mb-3 variant-row bg-white p-3 rounded-3 border position-relative">
+                                    <div class="col-12 col-md-6">
+                                        <label class="small fw-bold text-muted">Nombre del modelo</label>
+                                        <input type="text" name="variantNames[]" class="form-control fw-bold text-primary" placeholder="Ej: Efecto Anime">
                                     </div>
-                                    <div class="col-3">
-                                        <input type="number" name="variantStocks[]" class="form-control" placeholder="Stock" min="0">
+                                    <div class="col-8 col-md-4">
+                                        <label class="small fw-bold text-muted">Stock</label>
+                                        <input type="number" name="variantStocks[]" class="form-control" placeholder="Cantidad" min="0">
                                     </div>
-                                    <div class="col-2 text-center">
-                                        <button type="button" class="btn btn-light text-danger rounded-circle" onclick="if(document.querySelectorAll('.variant-row').length > 1) this.closest('.variant-row').remove()">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                                    <div class="col-4 col-md-2 d-flex align-items-end justify-content-end">
+                                        <button type="button" class="btn btn-light text-danger rounded-circle shadow-sm" onclick="if(document.querySelectorAll('.variant-row').length > 1) this.closest('.variant-row').remove()"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    
+                                    <div class="col-12 mt-2 pt-2 border-top">
+                                        <label class="small fw-bold text-muted mb-1"><i class="fas fa-camera text-info"></i> Foto exclusiva de este modelo (Opcional)</label>
+                                        <input type="file" name="variantPhoto_0" class="form-control form-control-sm file-input-variant bg-light" accept="image/*">
                                     </div>
                                 </div>
                             </div>
@@ -303,43 +264,45 @@
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('admin-sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-        
+        function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (overlay) overlay.addEventListener('click', toggleSidebar);
     });
 
-    // Lógica para Variantes (30D, 40D, etc)
+    // Lógica para Variantes (Efecto Anime, etc)
     function toggleVariants() {
         const hasVariants = document.getElementById('hasVariants').checked;
         document.getElementById('generalStockDiv').style.display = hasVariants ? 'none' : 'block';
         document.getElementById('variantsDiv').style.display = hasVariants ? 'block' : 'none';
     }
 
+    // Contador para asignar un número único al input de archivo (variantPhoto_1, variantPhoto_2...)
+    let variantCount = 1; 
+
     function addVariantRow() {
         const container = document.getElementById('variantsContainer');
         const html = `
-            <div class="row g-2 mb-2 variant-row align-items-center bg-white p-2 rounded-3 border">
-                <div class="col-7">
-                    <input type="text" name="variantNames[]" class="form-control" placeholder="Ej: 40D">
+            <div class="row g-2 mb-3 variant-row bg-white p-3 rounded-3 border position-relative">
+                <div class="col-12 col-md-6">
+                    <label class="small fw-bold text-muted">Nombre del modelo</label>
+                    <input type="text" name="variantNames[]" class="form-control fw-bold text-primary" placeholder="Ej: Efecto B">
                 </div>
-                <div class="col-3">
-                    <input type="number" name="variantStocks[]" class="form-control" placeholder="Stock" min="0">
+                <div class="col-8 col-md-4">
+                    <label class="small fw-bold text-muted">Stock</label>
+                    <input type="number" name="variantStocks[]" class="form-control" placeholder="Cantidad" min="0">
                 </div>
-                <div class="col-2 text-center">
-                    <button type="button" class="btn btn-light text-danger rounded-circle" onclick="this.closest('.variant-row').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="col-4 col-md-2 d-flex align-items-end justify-content-end">
+                    <button type="button" class="btn btn-light text-danger rounded-circle shadow-sm" onclick="this.closest('.variant-row').remove()"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <div class="col-12 mt-2 pt-2 border-top">
+                    <label class="small fw-bold text-muted mb-1"><i class="fas fa-camera text-info"></i> Foto exclusiva de este modelo (Opcional)</label>
+                    <input type="file" name="variantPhoto_${variantCount}" class="form-control form-control-sm file-input-variant bg-light" accept="image/*">
                 </div>
             </div>
         `;
         container.insertAdjacentHTML('beforeend', html);
-        
-        // Hacer scroll automático hacia abajo si se añaden muchas variantes
+        variantCount++;
         container.scrollTop = container.scrollHeight;
     }
 </script>
