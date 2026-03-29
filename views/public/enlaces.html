@@ -177,6 +177,10 @@
         .btn-store:hover { border-color: var(--ferumi-dark); color: var(--ferumi-dark); }
         .btn-store .icon-left { color: var(--ferumi-dark); }
         
+        /* NUEVO: Color para el sorteo (Morado llamativo) */
+        .btn-sorteo:hover { border-color: #be2edd; color: #9b59b6; }
+        .btn-sorteo .icon-left { color: #be2edd; }
+
         .btn-gifts:hover { border-color: #f6ad55; color: #dd6b20; }
         .btn-gifts .icon-left { color: #f6ad55; }
 
@@ -189,15 +193,17 @@
         .btn-tk:hover { border-color: #000000; color: #000000; }
         .btn-tk .icon-left { color: #000000; }
 
-        /* Efecto de destello en el botón principal (Tienda) */
-        .btn-store::after {
+        /* Efectos de destello */
+        .btn-store::after, .btn-sorteo::after {
             content: '';
             position: absolute;
             top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255, 105, 180, 0.3) 50%, rgba(255,255,255,0) 100%);
             transform: skewX(-25deg);
-            animation: shine 4s infinite;
         }
+        
+        .btn-store::after { animation: shine 4s infinite; }
+        .btn-sorteo::after { animation: shine 4s infinite 2s; /* Se anima a destiempo para no chocar con el otro */ }
 
         /* Footer */
         .footer {
@@ -246,6 +252,11 @@
             <a href="https://ferumi.shop/" class="link-btn btn-store">
                 <i class="fas fa-shopping-bag icon-left"></i>
                 Ir a la Tienda Online
+            </a>
+
+            <a href="https://ferumi.shop/sorteos" class="link-btn btn-sorteo">
+                <i class="fas fa-ticket-alt icon-left"></i>
+                ¡Participa del Sorteo Mensual!
             </a>
 
             <a href="https://www.ferumi.shop/regalos/crear" class="link-btn btn-gifts">
