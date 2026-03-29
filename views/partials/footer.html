@@ -1,55 +1,376 @@
-<footer class="main-footer">
-    <div class="footer-container">
-        <div class="footer-section about">
-            <h3 class="footer-title">
-                FERUMI
-            </h3>
-            <p>
-                Tu destino favorito para el cuidado personal. Ofrecemos la mejor selección de insumos para uñas, maquillaje y accesorios de tendencia para realzar tu estilo.
-            </p>
+<footer class="site-footer" style="background-color: #111; color: #fff; padding: 50px 20px 20px; text-align: center; margin-top: 60px;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <h3 style="font-weight: 800; letter-spacing: 2px; margin-bottom: 15px;">FERUMI</h3>
+        <p style="color: #aaa; margin-bottom: 25px;">Belleza, Maquillaje y Regalos Inolvidables ✨</p>
+        
+        <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 30px;">
+            <a href="https://instagram.com/ferumishop" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-instagram"></i></a>
+            <a href="https://tiktok.com/@ferumishop" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-tiktok"></i></a>
+            <a href="https://wa.me/<%= typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591' %>" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-whatsapp"></i></a>
         </div>
-
-        <div class="footer-section links">
-            <h4 class="footer-title">Navegación</h4>
-            <ul>
-                <li><a href="/">Inicio</a></li>
-                <li><a href="/tienda">Tienda</a></li>
-                <li><a href="/sobre-nosotros">Sobre Nosotros</a></li>
-                <li><a href="/contacto">Contacto</a></li>
-                <a href="/regalos/crear" class="<%= path === '/regalos/crear' ? 'active' : '' %>" style="color: #f25aa4; font-weight: bold;">
-    <i class="fas fa-gift"></i> Regalos Online
-</a>
-            </ul>
+        
+        <div style="border-top: 1px solid #333; padding-top: 20px; color: #777; font-size: 0.9rem;">
+            <p>Hecho con <i class="fas fa-heart" style="color: #ff4757;"></i> en Paraguay | © 2026 FERUMI</p>
         </div>
-
-        <div class="footer-section contact">
-            <h4 class="footer-title">Contacto y Redes</h4>
-            <p>Síguenos en nuestras redes o escríbenos para más información.</p>
-            
-            <div class="social-links-footer">
-                
-                <a href="https://wa.me/<%= siteConfig.whatsappNumber %>" target="_blank" title="WhatsApp">
-                    <i class="fab fa-whatsapp"></i>
-                </a>
-
-
-
-                <a href="https://www.instagram.com/ferumishop" target="_blank" title="Instagram">
-                    <i class="fab fa-instagram"></i>
-                </a>
-
-                <a href="#" target="_blank" title="TikTok">
-                    <i class="fab fa-tiktok"></i>
-                </a>
-
-
-
-            </div>
-        </div>
-    </div>
-
-    <div class="footer-bottom">
-        © <%= new Date().getFullYear() %> FERUMI | 
-        Diseñado y desarrollado por <a href="https://www.lfaftech.com" target="_blank">LFAF Tech</a>.
     </div>
 </footer>
+
+<style>
+    /* Botón Flotante */
+    .floating-cart-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 65px;
+        height: 65px;
+        background: var(--primary-color, #ff4757);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+        cursor: pointer;
+        z-index: 999;
+        border: none;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .floating-cart-btn:hover { transform: scale(1.1); }
+    .cart-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #111;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: bold;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+
+    /* Fondo Oscuro al abrir el carrito */
+    .cart-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: 0.3s ease;
+        backdrop-filter: blur(3px);
+    }
+    .cart-overlay.active { opacity: 1; visibility: visible; }
+
+    /* Panel Lateral del Carrito */
+    .cart-sidebar {
+        position: fixed;
+        top: 0; right: -400px;
+        width: 100%;
+        max-width: 380px;
+        height: 100vh;
+        background: #fff;
+        z-index: 1001;
+        box-shadow: -5px 0 30px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .cart-sidebar.active { right: 0; }
+
+    /* Cabecera del Panel */
+    .cart-header {
+        padding: 20px;
+        background: #fdfdfd;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .cart-header h3 { margin: 0; font-size: 1.3rem; font-weight: 800; color: #111; }
+    .close-cart { background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer; transition: 0.2s; }
+    .close-cart:hover { color: #ff4757; transform: rotate(90deg); }
+
+    /* Lista de Items */
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+    .cart-empty-msg { text-align: center; color: #aaa; margin-top: 50px; }
+    .cart-empty-msg i { font-size: 4rem; margin-bottom: 15px; color: #eee; }
+    
+    .cart-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed #eee;
+        position: relative;
+    }
+    .cart-item-img {
+        width: 70px; height: 70px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid #eee;
+    }
+    .cart-item-info { flex: 1; }
+    .cart-item-title { font-weight: 700; font-size: 1rem; color: #333; margin-bottom: 5px; line-height: 1.2; }
+    .cart-item-price { color: var(--primary-color, #ff4757); font-weight: bold; }
+    
+    /* Controles de cantidad */
+    .qty-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ddd; background: #fff; color: #555; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .qty-btn:active { background: #eee; }
+    
+    .remove-item {
+        position: absolute;
+        top: 0; right: 0;
+        background: none; border: none;
+        color: #ccc; cursor: pointer; font-size: 1.1rem;
+    }
+    .remove-item:hover { color: #ff4757; }
+
+    /* Footer del Carrito (Total y Botón WhatsApp) */
+    .cart-footer {
+        padding: 25px 20px;
+        background: #fff;
+        border-top: 1px solid #eee;
+        box-shadow: 0 -10px 20px rgba(0,0,0,0.02);
+    }
+    .cart-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.4rem;
+        font-weight: 900;
+        margin-bottom: 20px;
+        color: #111;
+    }
+    .btn-checkout {
+        width: 100%;
+        padding: 18px;
+        background: #25D366;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        transition: 0.3s;
+        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+    }
+    .btn-checkout:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(37, 211, 102, 0.4); }
+    .btn-clear { width: 100%; background: none; border: none; color: #aaa; margin-top: 15px; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+    
+    /* Pequeña animación para cuando se añade un producto */
+    @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+    .pop-anim { animation: pop 0.4s ease; }
+</style>
+
+<div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
+<div id="cartSidebar" class="cart-sidebar">
+    <div class="cart-header">
+        <h3><i class="fas fa-shopping-bag text-primary"></i> Mi Carrito</h3>
+        <button class="close-cart" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItemsContainer">
+        </div>
+    <div class="cart-footer">
+        <div class="cart-total">
+            <span>Total:</span>
+            <span id="cartTotalPrice">Gs. 0</span>
+        </div>
+        <button class="btn-checkout" onclick="sendOrderWhatsApp()">
+            <i class="fab fa-whatsapp fa-lg"></i> Pedir por WhatsApp
+        </button>
+        <button class="btn-clear" onclick="clearCart()">Vaciar carrito</button>
+    </div>
+</div>
+
+<button id="floatingCartBtn" class="floating-cart-btn" onclick="toggleCart()">
+    <i class="fas fa-shopping-cart"></i>
+    <span id="cartBadge" class="cart-badge">0</span>
+</button>
+
+<script>
+    // 1. Inicializar el carrito desde LocalStorage
+    let shoppingCart = JSON.parse(localStorage.getItem('ferumiCart')) || [];
+    const whatsappNumber = "<%= typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591' %>";
+
+    // 2. Función para formatear moneda
+    function formatMoney(amount) {
+        return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(amount);
+    }
+
+    // 3. Abrir / Cerrar el panel
+    function toggleCart() {
+        document.getElementById('cartSidebar').classList.toggle('active');
+        document.getElementById('cartOverlay').classList.toggle('active');
+        renderCart();
+    }
+
+    // 4. Añadir un producto al carrito (Esta función la llama producto-detalle.html)
+    function addToCart(id, name, price, image) {
+        const existingItem = shoppingCart.find(item => item.id === id);
+        
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            shoppingCart.push({
+                id: id,
+                name: name,
+                price: parseInt(price),
+                image: image || '/img/placeholder.png',
+                quantity: 1
+            });
+        }
+        
+        saveCart();
+        updateBadge();
+        
+        // Animación del botón flotante para avisar que se añadió
+        const btn = document.getElementById('floatingCartBtn');
+        btn.classList.add('pop-anim');
+        setTimeout(() => btn.classList.remove('pop-anim'), 400);
+        
+        // Abrir el carrito automáticamente para que vea que se agregó
+        document.getElementById('cartSidebar').classList.add('active');
+        document.getElementById('cartOverlay').classList.add('active');
+        renderCart();
+    }
+
+    // 5. Cambiar cantidad de un producto (+ o -)
+    function changeQuantity(id, change) {
+        const item = shoppingCart.find(i => i.id === id);
+        if (item) {
+            item.quantity += change;
+            if (item.quantity <= 0) {
+                removeFromCart(id);
+            } else {
+                saveCart();
+                renderCart();
+                updateBadge();
+            }
+        }
+    }
+
+    // 6. Eliminar producto del carrito
+    function removeFromCart(id) {
+        shoppingCart = shoppingCart.filter(item => item.id !== id);
+        saveCart();
+        renderCart();
+        updateBadge();
+    }
+
+    // 7. Vaciar todo el carrito
+    function clearCart() {
+        if(confirm('¿Estás segura de vaciar tu carrito?')) {
+            shoppingCart = [];
+            saveCart();
+            renderCart();
+            updateBadge();
+        }
+    }
+
+    // 8. Guardar en la memoria del navegador
+    function saveCart() {
+        localStorage.setItem('ferumiCart', JSON.stringify(shoppingCart));
+    }
+
+    // 9. Actualizar el numerito rojo del botón flotante
+    function updateBadge() {
+        const totalItems = shoppingCart.reduce((sum, item) => sum + item.quantity, 0);
+        const badge = document.getElementById('cartBadge');
+        badge.innerText = totalItems;
+        // Ocultar el botón si el carrito está vacío (opcional, yo lo dejo visible siempre)
+        // document.getElementById('floatingCartBtn').style.display = totalItems > 0 ? 'flex' : 'none';
+    }
+
+    // 10. Dibujar el carrito en la pantalla (Renderizar)
+    function renderCart() {
+        const container = document.getElementById('cartItemsContainer');
+        const totalPriceEl = document.getElementById('cartTotalPrice');
+        let total = 0;
+
+        if (shoppingCart.length === 0) {
+            container.innerHTML = `
+                <div class="cart-empty-msg">
+                    <i class="fas fa-shopping-basket"></i>
+                    <h4>Tu carrito está vacío</h4>
+                    <p style="font-size: 0.9rem;">¡Anímate a agregar algunos productos!</p>
+                </div>`;
+            totalPriceEl.innerText = formatMoney(0);
+            return;
+        }
+
+        let html = '';
+        shoppingCart.forEach(item => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+            html += `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <div class="cart-item-info">
+                        <div class="cart-item-title">${item.name}</div>
+                        <div class="cart-item-price">${formatMoney(item.price)}</div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
+                            <span style="font-weight:bold; width: 20px; text-align:center;">${item.quantity}</span>
+                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="remove-item" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        totalPriceEl.innerText = formatMoney(total);
+    }
+
+    // 11. ENVIAR EL PEDIDO POR WHATSAPP
+    function sendOrderWhatsApp() {
+        if (shoppingCart.length === 0) {
+            alert('Agrega al menos un producto al carrito para hacer tu pedido.');
+            return;
+        }
+
+        let total = 0;
+        let message = "✨ *NUEVO PEDIDO FERUMI* ✨\n\nHola, quiero hacer el siguiente pedido:\n\n";
+
+        shoppingCart.forEach((item, index) => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+            message += `🛍️ *${item.quantity}x* ${item.name}\n`;
+            message += `   Subtotal: ${formatMoney(subtotal)}\n\n`;
+        });
+
+        message += `======================\n`;
+        message += `💰 *TOTAL A PAGAR: ${formatMoney(total)}*\n`;
+        message += `======================\n\n`;
+        message += `Espero confirmación de stock y métodos de pago. ¡Gracias! 💕`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const link = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+        
+        window.open(link, '_blank');
+    }
+
+    // Al cargar cualquier página, actualizar el numerito rojo
+    window.onload = function() {
+        updateBadge();
+        // Si tienes alguna otra función de onload en otras páginas (como en producto-detalle), asegúrate de no sobrescribirla.
+        // Lo ideal es usar event listeners.
+    };
+    document.addEventListener('DOMContentLoaded', updateBadge);
+</script>

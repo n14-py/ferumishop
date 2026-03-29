@@ -796,20 +796,25 @@ app.post('/admin/productos/add', requireAdmin, upload.any(), async (req, res, ne
 });
 
 // --- Página para editar un producto (GET) ---
+// --- Página para editar un producto (GET) ---
 app.get('/admin/producto/edit/:id', requireAdmin, async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product) {
             req.session.error = 'Producto no encontrado.';
-            return res.redirect('/admin/productos');
+            return req.session.save(() => res.redirect('/admin/productos'));
         }
         const categories = await Category.find();
         
         res.render('admin/edit-producto', {
             pageTitle: `Editar: ${product.name}`,
             product,
-            categories
+            categories,
+            success: req.session.success,
+            error: req.session.error
         });
+        delete req.session.success;
+        delete req.session.error;
     } catch (err) {
         next(err);
     }
@@ -885,10 +890,10 @@ app.post('/admin/producto/edit/:id', requireAdmin, upload.any(), async (req, res
         
         await product.save();
         req.session.success = '¡Producto actualizado con éxito!';
-        res.redirect('/admin/productos');
+        req.session.save(() => res.redirect('/admin/productos'));
     } catch (err) {
         req.session.error = `Error al actualizar: ${err.message}`;
-        res.redirect(`/admin/producto/edit/${req.params.id}`);
+        req.session.save(() => res.redirect(`/admin/producto/edit/${req.params.id}`));
     }
 });
 
