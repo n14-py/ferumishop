@@ -8,57 +8,309 @@
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-        <link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
     
     <style>
-        /* ESTILOS EXCLUSIVOS PARA LA PÁGINA DE SORTEOS */
-        .sorteos-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; font-family: inherit; }
-        .sorteos-title-box { text-align: center; margin-bottom: 40px; }
-        .sorteos-title-box h1 { color: #ff4757; font-size: 2.8rem; margin-bottom: 10px; font-weight: bold; }
-        .sorteos-title-box p { font-size: 1.2rem; color: #666; }
+        /* ===================================================
+           DISEÑO AMPLIO, ELEGANTE Y RESPONSIVO PARA SORTEOS
+           =================================================== */
         
-        .sorteo-card { display: flex; flex-direction: column; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #eee; }
-        @media (min-width: 768px) { .sorteo-card { flex-direction: row; } }
-        
-        .sorteo-img-side { flex: 1; background: #fdf2f4; display: flex; align-items: center; justify-content: center; min-height: 300px; }
-        .sorteo-img-side img { width: 100%; height: 100%; object-fit: cover; max-height: 500px; }
-        
-        .sorteo-info-side { flex: 1.2; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
-        .fecha-badge { background: #333; color: white; padding: 8px 16px; border-radius: 50px; font-size: 0.9rem; font-weight: bold; align-self: flex-start; margin-bottom: 20px; }
-        .fecha-badge i { color: #ff4757; margin-right: 8px; }
-        
-        .sorteo-info-side h2 { font-size: 2rem; color: #333; margin-bottom: 15px; line-height: 1.2; }
-        .sorteo-info-side .desc { font-size: 1.1rem; color: #555; line-height: 1.6; margin-bottom: 25px; }
-        
-        .pasos-caja { background: #fafafa; border-left: 5px solid #ff4757; padding: 20px; border-radius: 0 10px 10px 0; margin-bottom: 30px; }
-        .pasos-caja h4 { color: #ff4757; margin-top: 0; margin-bottom: 15px; font-size: 1.2rem; }
-        .pasos-caja ul { list-style: none; padding: 0; margin: 0; }
-        .pasos-caja li { margin-bottom: 10px; font-size: 1.05rem; color: #444; }
-        .pasos-caja li i { color: #ff4757; width: 20px; text-align: center; margin-right: 10px; }
-        
-        .btn-participar { display: block; text-align: center; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; padding: 15px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 1.1rem; transition: 0.3s; border: none; }
-        .btn-participar:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4); color: white; }
-        
-        .no-sorteo { text-align: center; padding: 60px 20px; background: white; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .no-sorteo i { font-size: 4rem; color: #ccc; margin-bottom: 20px; }
-        .no-sorteo h2 { color: #333; margin-bottom: 10px; }
-        .btn-tienda { display: inline-block; margin-top: 20px; padding: 12px 30px; background: #333; color: white; text-decoration: none; border-radius: 50px; font-weight: bold; transition: 0.2s; }
-        .btn-tienda:hover { background: #ff4757; }
+        /* Contenedor Principal con mucho respiro */
+        .page-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
 
-        /* NUEVO: ESTILOS DEL SALÓN DE LA FAMA (GANADORAS) */
-        .fama-section { margin-top: 70px; text-align: center; border-top: 2px dashed #eee; padding-top: 50px; }
-        .fama-title { color: #d4af37; font-size: 2.2rem; margin-bottom: 10px; font-weight: bold; }
-        .fama-subtitle { color: #666; margin-bottom: 40px; font-size: 1.1rem; }
+        /* Cabecera del Sorteo */
+        .sorteo-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .sorteo-header h1 {
+            font-size: 3rem;
+            color: var(--primary-color, #ff4757);
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+        .sorteo-header p {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Tarjeta del Sorteo Activo - Diseño Abierto */
+        .giveaway-showcase {
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+            overflow: hidden;
+            margin-bottom: 60px;
+        }
         
-        .ganadoras-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .ganadora-card { background: linear-gradient(to bottom, #fff, #fffbf0); border: 2px solid #f9e596; border-radius: 20px; padding: 30px 20px; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.15); transition: 0.3s; position: relative; overflow: hidden; }
-        .ganadora-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(212, 175, 55, 0.25); }
-        
-        .crown-icon { font-size: 3rem; color: #d4af37; margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .ganadora-mes { display: inline-block; background: #333; color: white; padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-        .ganadora-user { font-size: 1.5rem; font-weight: bold; color: #d4af37; margin-bottom: 10px; }
-        .ganadora-premio { font-size: 0.95rem; color: #555; line-height: 1.4; }
+        /* Cambia a lado a lado en pantallas grandes */
+        @media (min-width: 850px) {
+            .giveaway-showcase {
+                flex-direction: row;
+            }
+        }
+
+        /* Imagen del Premio */
+        .giveaway-image {
+            flex: 1;
+            min-height: 350px;
+            position: relative;
+            background: #fdf2f4;
+        }
+        .giveaway-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .no-photo-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 350px;
+            color: #ffb6c1;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Información del Sorteo */
+        .giveaway-content {
+            flex: 1.2;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .date-tag {
+            display: inline-flex;
+            align-items: center;
+            background: #111;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            align-self: flex-start;
+        }
+        .date-tag i {
+            color: #ff4757;
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        .giveaway-title {
+            font-size: 2.2rem;
+            line-height: 1.2;
+            color: #222;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .giveaway-desc {
+            font-size: 1.1rem;
+            color: #555;
+            line-height: 1.7;
+            margin-bottom: 35px;
+        }
+
+        /* Recuadro de Pasos Minimalista */
+        .steps-box {
+            background: #fafafa;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 35px;
+            border: 1px solid #eee;
+        }
+        .steps-box h4 {
+            color: #ff4757;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .steps-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .steps-list li {
+            margin-bottom: 12px;
+            color: #444;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .steps-list li:last-child { margin-bottom: 0; }
+        .steps-list i {
+            color: #ff4757;
+            margin-top: 4px;
+        }
+
+        /* Botón de Participar */
+        .btn-participate {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            color: white;
+            padding: 18px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(220, 39, 67, 0.3);
+            border: none;
+        }
+        .btn-participate:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(220, 39, 67, 0.4);
+            color: white;
+        }
+
+        /* Estado cuando no hay sorteo */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: #fff;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+        .empty-state i {
+            font-size: 5rem;
+            color: #e0e0e0;
+            margin-bottom: 25px;
+        }
+        .btn-shop-now {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 15px 40px;
+            background: #111;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-shop-now:hover { background: #ff4757; }
+
+        /* ===================================================
+           SALÓN DE LA FAMA (GANADORAS)
+           =================================================== */
+        .hall-of-fame {
+            margin-top: 80px;
+            text-align: center;
+        }
+        .hall-title {
+            color: #d4af37;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+        .hall-subtitle {
+            color: #888;
+            margin-bottom: 50px;
+            font-size: 1.1rem;
+        }
+
+        .winners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .winner-card {
+            background: #fff;
+            border-radius: 25px;
+            padding: 40px 20px;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .winner-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.2);
+            border-color: #d4af37;
+        }
+
+        .winner-crown {
+            font-size: 3.5rem;
+            color: #d4af37;
+            margin-bottom: 20px;
+        }
+        .winner-month {
+            display: inline-block;
+            background: #fdfaf0;
+            color: #b58c14;
+            padding: 6px 15px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border: 1px solid #f2e2a7;
+        }
+        .winner-username {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 15px;
+        }
+        .winner-prize {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.5;
+            padding: 0 10px;
+        }
+
+        /* ===================================================
+           AJUSTES PARA CELULARES (RESPONSIVE PERFECTO)
+           =================================================== */
+        @media (max-width: 768px) {
+            .page-wrapper {
+                padding: 30px 15px;
+            }
+            .sorteo-header h1 {
+                font-size: 2.2rem;
+            }
+            .giveaway-content {
+                padding: 30px 20px; /* Menos padding en celular para no asfixiar */
+            }
+            .giveaway-title {
+                font-size: 1.8rem;
+            }
+            .btn-participate {
+                padding: 15px 20px;
+                font-size: 1.1rem;
+            }
+            .hall-title {
+                font-size: 2rem;
+            }
+            .winner-card {
+                padding: 30px 15px;
+            }
+        }
     </style>
 </head>
 
@@ -66,86 +318,91 @@
 
     <%- include('../partials/header.html') %>
 
-    <main class="container">
-        <div class="sorteos-container">
-            
-            <div class="sorteos-title-box">
-                <h1>🎉 Sorteos Mensuales FERUMI 🎉</h1>
-                <p>Premiamos a nuestras clientas fieles todos los fines de mes.</p>
+    <main class="page-wrapper">
+        
+        <div class="sorteo-header">
+            <h1>🎉 Sorteos FERUMI 🎉</h1>
+            <p>Premiamos a nuestras clientas fieles todos los fines de mes. ¡Participa y conviértete en nuestra próxima ganadora!</p>
+        </div>
+
+        <% if (locals.giveaway && giveaway.isActive) { %>
+            <div class="giveaway-showcase">
+                
+                <div class="giveaway-image">
+                    <% if (giveaway.photos && giveaway.photos.length > 0) { %>
+                        <img src="<%= giveaway.photos[0] %>" alt="Premio">
+                    <% } else { %>
+                        <div class="no-photo-placeholder">
+                            <i class="fas fa-gift" style="font-size: 5rem; margin-bottom: 15px;"></i>
+                            <h2>Foto Revelación en Breve</h2>
+                        </div>
+                    <% } %>
+                </div>
+
+                <div class="giveaway-content">
+                    <div class="date-tag">
+                        <i class="fas fa-calendar-check"></i> 
+                        Se sortea el: <%= new Date(giveaway.drawDate).toLocaleDateString('es-PY', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+                    </div>
+                    
+                    <h2 class="giveaway-title"><%= giveaway.title %></h2>
+                    
+                    <div class="giveaway-desc">
+                        <%- giveaway.description %>
+                    </div>
+
+                    <div class="steps-box">
+                        <h4><i class="fas fa-magic"></i> Pasos para ganar:</h4>
+                        <ul class="steps-list">
+                            <li><i class="fas fa-heart"></i> <span>Dale <strong>Me Gusta</strong> a la publicación oficial.</span></li>
+                            <li><i class="fas fa-user-check"></i> <span><strong>Sigue</strong> la cuenta de FERUMI.</span></li>
+                            <li><i class="fas fa-comment-dots"></i> <span><strong>Etiqueta a 3 amigas</strong> (¡Más comentarios = Más chances!).</span></li>
+                        </ul>
+                    </div>
+
+                    <% if (giveaway.instagramUrl) { %>
+                        <a href="<%= giveaway.instagramUrl %>" target="_blank" class="btn-participate">
+                            <i class="fab fa-instagram fa-lg" style="margin-right: 10px;"></i> IR A PARTICIPAR AHORA
+                        </a>
+                    <% } %>
+                </div>
             </div>
 
-            <% if (locals.giveaway && giveaway.isActive) { %>
-                <div class="sorteo-card">
-                    <div class="sorteo-img-side">
-                        <% if (giveaway.photos && giveaway.photos.length > 0) { %>
-                            <img src="<%= giveaway.photos[0] %>" alt="Premio">
-                        <% } else { %>
-                            <div style="text-align: center; color: #aaa; padding: 40px;">
-                                <i class="fas fa-gift" style="font-size: 4rem; margin-bottom: 10px;"></i><br>Foto en breve
+        <% } else { %>
+            <div class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <h2 style="color: #333; margin-bottom: 10px;">Aún no revelamos el sorteo de este mes</h2>
+                <p style="color: #777; font-size: 1.1rem;">¡Mantente atenta a nuestras historias en Instagram para el próximo gran anuncio!</p>
+                <a href="/tienda" class="btn-shop-now">Ver Productos en Tienda</a>
+            </div>
+        <% } %>
+
+        <% if (locals.pastWinners && pastWinners.length > 0) { %>
+            <div class="hall-of-fame">
+                <h2 class="hall-title">👑 Salón de la Fama 👑</h2>
+                <p class="hall-subtitle">¡Ellas ya ganaron con FERUMI! Tú podrías ser la próxima afortunada.</p>
+                
+                <div class="winners-grid">
+                    <% pastWinners.forEach(w => { %>
+                        <div class="winner-card">
+                            <div class="winner-crown"><i class="fas fa-crown"></i></div>
+                            
+                            <div class="winner-month">
+                                <%= new Date(w.drawDate).toLocaleDateString('es-PY', { month: 'long', year: 'numeric' }) %>
                             </div>
-                        <% } %>
-                    </div>
-
-                    <div class="sorteo-info-side">
-                        <div class="fecha-badge">
-                            <i class="fas fa-calendar-alt"></i> Se sortea el: <%= new Date(giveaway.drawDate).toLocaleDateString('es-PY', { day: 'numeric', month: 'long', year: 'numeric' }) %>
-                        </div>
-                        
-                        <h2><%= giveaway.title %></h2>
-                        <div class="desc"><%- giveaway.description %></div>
-
-                        <div class="pasos-caja">
-                            <h4><i class="fas fa-magic"></i> Pasos para participar:</h4>
-                            <ul>
-                                <li><i class="fas fa-heart"></i> Dale <strong>Me Gusta</strong> a la publicación.</li>
-                                <li><i class="fas fa-user-check"></i> <strong>Sigue</strong> nuestra cuenta.</li>
-                                <li><i class="fas fa-comment-dots"></i> <strong>Etiqueta a 3 amigas</strong> (más comentarios = más chances).</li>
-                            </ul>
-                        </div>
-
-                        <% if (giveaway.instagramUrl) { %>
-                            <a href="<%= giveaway.instagramUrl %>" target="_blank" class="btn-participar">
-                                <i class="fab fa-instagram"></i> PARTICIPAR EN INSTAGRAM
-                            </a>
-                        <% } %>
-                    </div>
-                </div>
-            <% } else { %>
-                <div class="no-sorteo">
-                    <i class="fas fa-box-open"></i>
-                    <h2>Aún no revelamos el sorteo de este mes</h2>
-                    <p style="color: #666;">¡Mantente atenta a nuestras redes para el próximo gran anuncio!</p>
-                    <a href="/tienda" class="btn-tienda">Ir de Compras</a>
-                </div>
-            <% } %>
-
-            <% if (locals.pastWinners && pastWinners.length > 0) { %>
-                <div class="fama-section">
-                    <h2 class="fama-title">👑 Salón de la Fama 👑</h2>
-                    <p class="fama-subtitle">¡Ellas ya ganaron con FERUMI! Tú podrías ser la próxima.</p>
-                    
-                    <div class="ganadoras-grid">
-                        <% pastWinners.forEach(w => { %>
-                            <div class="ganadora-card">
-                                <div class="crown-icon"><i class="fas fa-crown"></i></div>
-                                
-                                <div class="ganadora-mes">
-                                    Sorteo de <%= new Date(w.drawDate).toLocaleDateString('es-PY', { month: 'long', year: 'numeric' }) %>
-                                </div>
-                                
-                                <div class="ganadora-user"><%= w.winner %></div>
-                                
-                                <div class="ganadora-premio">
-                                    <strong>Premio ganado:</strong><br>
-                                    <%= w.title %>
-                                </div>
+                            
+                            <div class="winner-username"><%= w.winner %></div>
+                            
+                            <div class="winner-prize">
+                                <strong>Ganadora de:</strong><br>
+                                <%= w.title %>
                             </div>
-                        <% }); %>
-                    </div>
+                        </div>
+                    <% }); %>
                 </div>
-            <% } %>
+            </div>
+        <% } %>
 
-        </div>
     </main>
 
     <%- include('../partials/footer.html') %>
