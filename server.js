@@ -177,14 +177,17 @@ const Giveaway = mongoose.model('Giveaway', giveawaySchema);
 
 
 // --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
+// --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
 const transactionSchema = new mongoose.Schema({
     type: { type: String, enum: ['ingreso', 'egreso'], required: true },
-    description: { type: String, required: true }, // Ej: "Venta: Pestañas 30D" o "Gasto: Bolsitas"
-    amount: { type: Number, required: true }, // Lo que pagó el cliente o lo que gastaste
-    cost: { type: Number, default: 0 }, // El precio de compra del producto (solo para ingresos)
+    description: { type: String, required: true }, 
+    amount: { type: Number, required: true }, // Total pagado por el cliente
+    cost: { type: Number, default: 0 }, // Costo de Reposición
+    reinvestment: { type: Number, default: 0 }, // Costo destinado a comprar producto extra
+    profitNando: { type: Number, default: 0 }, // Ganancia limpia Nando
+    profitMayu: { type: Number, default: 0 }, // Ganancia limpia Mayu
     date: { type: Date, default: Date.now }
 });
-
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
 // =============================================
@@ -1681,60 +1684,57 @@ app.post('/admin/caja/gasto', requireAdmin, async (req, res, next) => {
 // Registrar una Venta Manual (Ingreso)
 // Registrar una Venta Manual (Ingreso)
 // Registrar una Venta Manual (Ingreso) - VERSIÓN ULTRA MEJORADA
+// Registrar una Venta Manual (Ingreso)
 app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
     try {
-        // --- BLOQUEO ANTI DOBLE CLIC DESDE EL SERVIDOR ---
         const lastTxTime = req.session.lastSaleTime || 0;
         const nowTime = Date.now();
-        if (nowTime - lastTxTime < 2000) { 
-            return res.redirect('/admin/caja');
-        }
+        if (nowTime - lastTxTime < 3000) return res.redirect('/admin/caja');
         req.session.lastSaleTime = nowTime;
-        // ------------------------------------------------
 
-        const { productId, variantName, sellPrice, quantity, customCostPrice } = req.body;
+        const { productId, variantName, sellPrice, quantity } = req.body;
         const qty = parseInt(quantity) || 1;
         
         const product = await Product.findById(productId);
         if (!product) throw new Error('Producto no encontrado.');
 
-        // Monto total cobrado al cliente en la transacción
-        const totalAmount = parseInt(sellPrice.toString().replace(/\./g, ''));
+        // 1. Total cobrado al cliente
+        const totalAmount = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
         
-        // Determinar el costo unitario: priorizar el ingresado en el formulario por si en la BD está en 0
-        let unitCost = product.costPrice || 0;
-        if (customCostPrice && customCostPrice.trim() !== '') {
-            unitCost = parseInt(customCostPrice.toString().replace(/\./g, '')) || 0;
-        }
-        
+        // 2. Costo del producto desde la base de datos (Ej: 3000)
+        const unitCost = product.costPrice || 0;
         const costoReposicion = unitCost * qty;
         
-        // === MATEMÁTICA PREMIUM: DISTRIBUCIÓN INTEGRAL PORCENTUAL ===
+        // 3. Variables para repartir
         let reinversion = 0;
+        let gananciaRestante = 0;
         let gananciaNando = 0;
         let gananciaMayu = 0;
 
+        // Si cobramos más de lo que nos costó el producto, hay ganancia bruta
         if (totalAmount > costoReposicion) {
             const gananciaBruta = totalAmount - costoReposicion;
             
-            // 50% al fondo de duplicación de inventario
-            reinversion = Math.round(gananciaBruta * 0.50);
-            
-            // El otro 50% se divide equitativamente entre los dueños (25% y 25% del total)
-            const gananciaRestante = gananciaBruta - reinversion;
-            gananciaNando = Math.round(gananciaRestante / 2);
-            gananciaMayu = gananciaRestante - gananciaNando; // Absorbe cualquier residuo de redondeo
-        } else {
-            // Venta al costo o pérdida: no genera ganancias ni duplicación
-            reinversion = 0;
-            gananciaNando = 0;
-            gananciaMayu = 0;
+            // ¿Alcanza para duplicar el producto al 100% o sobra dinero?
+            if (gananciaBruta >= costoReposicion) {
+                reinversion = costoReposicion; // Separamos el costo exacto para comprar 1 extra
+                gananciaRestante = gananciaBruta - reinversion; // El sobrante es ganancia limpia
+            } else {
+                // Si la ganancia es bajita (Ej: solo sobran 300 Gs)
+                // Mitad para el fondo de duplicar, mitad para ustedes. Así SIEMPRE suman plata.
+                reinversion = Math.floor(gananciaBruta / 2);
+                gananciaRestante = gananciaBruta - reinversion;
+            }
+
+            // Dividir la ganancia restante 50/50
+            gananciaNando = Math.floor(gananciaRestante / 2);
+            gananciaMayu = gananciaRestante - gananciaNando;
         }
 
         let desc = `Venta: ${product.name} (x${qty})`;
         if (variantName) desc = `Venta: ${product.name} - ${variantName} (x${qty})`;
 
-        // Guardar desglose completo en la base de datos
+        // 4. Guardar TODO en la base de datos (ahora sí lo aceptará)
         const newTx = new Transaction({ 
             type: 'ingreso', 
             description: desc, 
@@ -1746,7 +1746,7 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         });
         await newTx.save();
 
-        // Descontar Stock
+        // 5. Descontar Stock
         if (product.hasVariants && variantName) {
             const variantIndex = product.variants.findIndex(v => v.name === variantName);
             if (variantIndex > -1 && product.variants[variantIndex].stock >= qty) {
@@ -1757,7 +1757,7 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         }
         await product.save();
 
-        req.session.success = 'Venta procesada. Matemática de ganancias y duplicación aplicada correctamente.';
+        req.session.success = 'Venta registrada con el nuevo cálculo.';
         res.redirect('/admin/caja');
     } catch (err) {
         req.session.error = `Error al registrar venta: ${err.message}`;

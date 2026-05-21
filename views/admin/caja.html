@@ -10,35 +10,44 @@
     
     <style>
         body { background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-        .app-card { border-radius: 20px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.02); transition: all 0.2s ease; }
+        
+        /* Contenedores de Tarjetas Profesionales */
+        .app-card { border-radius: 22px; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.02); transition: all 0.2s ease; background-color: #ffffff; }
         .app-card:active { transform: scale(0.98); }
         
-        .stat-value { font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin-top: 6px; letter-spacing: -0.5px; }
-        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 750; opacity: 0.85; }
+        .stat-value { font-size: 1.35rem; font-weight: 800; line-height: 1.2; margin-top: 5px; letter-spacing: -0.5px; }
+        .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 750; opacity: 0.85; }
         
-        /* Identificadores Visuales Premium */
+        /* Billeteras y Fondos con Degradados Premium */
         .bg-gradient-nando { background: linear-gradient(135deg, #0f172a, #1e293b); color: #f8fafc; }
         .bg-gradient-mayu { background: linear-gradient(135deg, #be185d, #f43f5e); color: #f8fafc; }
-        .bg-gradient-duplicar { background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: #f8fafc; }
-        .bg-gradient-reposicion { background: linear-gradient(135deg, #334155, #64748b); color: #f8fafc; }
+        .bg-gradient-duplicar { background: linear-gradient(135deg, #2563eb, #3b82f6); color: #f8fafc; }
+        .bg-gradient-reposicion { background: linear-gradient(135deg, #475569, #64748b); color: #f8fafc; }
+        .bg-gradient-disponible { background: linear-gradient(135deg, #047857, #10b981); color: #f8fafc; }
         
-        .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border-bottom: 1px solid #edf2f7; }
-        .header-title { font-weight: 800; color: #0f172a; margin: 0; font-size: 1.25rem; }
+        /* Barra superior para celular */
+        .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border-bottom: 1px solid #edf2f7; }
+        .header-title { font-weight: 800; color: #0f172a; margin: 0; font-size: 1.2rem; }
         
-        .btn-app { border-radius: 16px; padding: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; border: none; }
+        .btn-app { border-radius: 16px; padding: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; transition: all 0.2s; }
         .btn-app:active { transform: scale(0.96); }
 
-        .info-box { background-color: #eff6ff; border-left: 5px solid #3b82f6; border-radius: 12px; padding: 12px; font-size: 0.85rem; color: #1e3a8a; }
+        .info-panel { background-color: #f0fdf4; border-left: 5px solid #10b981; border-radius: 14px; padding: 12px; font-size: 0.85rem; color: #065f46; }
 
-        @media (min-width: 768px) { .admin-header { display: none; } .stat-value { font-size: 1.75rem; } }
+        /* LISTA COMPONENTES VISUALES DE PRODUCTOS (MODAL) */
+        .product-search-container { position: relative; }
+        .product-picker-list { max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 5px; }
+        
+        .product-item-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f1f5f9; }
+        .product-item-row:last-child { border-bottom: none; }
+        .product-item-row:hover, .product-item-row.selected { background-color: #f0f9ff; border-color: #bae6fd; }
+        
+        .product-item-img { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; background-color: #e2e8f0; border: 1px solid #cbd5e1; }
+        .product-item-info { flex: 1; min-width: 0; }
+        .product-item-name { font-weight: 700; font-size: 0.9rem; color: #1e293b; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-item-meta { font-size: 0.75rem; color: #64748b; margin: 0; }
 
-        @media print {
-            body { background-color: #fff; }
-            .no-print { display: none !important; }
-            .app-card { border: 1px solid #cbd5e1 !important; box-shadow: none !important; color: #000 !important; background: #fff !important;}
-            .bg-gradient-nando, .bg-gradient-mayu, .bg-gradient-duplicar, .bg-gradient-reposicion { color: #000 !important; background: #fff !important; border: 2px solid #94a3b8; }
-            .main-content { padding: 0 !important; }
-        }
+        @media (min-width: 768px) { .admin-header { display: none; } .stat-value { font-size: 1.6rem; } }
     </style>
 </head>
 <body>
@@ -74,7 +83,7 @@
             <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:#0f172a;">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1 class="header-title">Finanzas Inteligentes</h1>
+            <h1 class="header-title">Finanzas de Socios</h1>
             <button class="btn btn-light btn-sm rounded-circle" onclick="window.print()" style="width: 38px; height: 38px;">
                 <i class="fas fa-file-pdf text-danger"></i>
             </button>
@@ -84,16 +93,16 @@
             
             <div class="d-flex justify-content-between align-items-center mb-4 d-none d-md-flex no-print">
                 <div>
-                    <h2 class="fw-bold text-dark mb-0">Control de Inventario Duplicado</h2>
-                    <p class="text-muted mb-0">Periodo activo: <strong><%= mesActual %></strong></p>
+                    <h2 class="fw-bold text-dark mb-0">Sistema de Inventario Duplicado</h2>
+                    <p class="text-muted mb-0">Mes de análisis: <strong><%= mesActual %></strong></p>
                 </div>
                 <button class="btn btn-outline-dark btn-app bg-white border" onclick="window.print()">
-                    <i class="fas fa-file-pdf text-danger"></i> Exportar Informe
+                    <i class="fas fa-file-pdf text-danger"></i> Descargar Balance
                 </button>
             </div>
 
             <div class="d-md-none mb-3 no-print text-center">
-                <span class="badge bg-dark px-3 py-2 rounded-pill fs-7"><i class="far fa-calendar-alt me-1"></i> <%= mesActual %></span>
+                <span class="badge bg-dark px-3 py-2 rounded-pill font-monospace"><i class="far fa-calendar me-1"></i> <%= mesActual %></span>
             </div>
 
             <% if (typeof success !== 'undefined' && success) { %>
@@ -103,66 +112,77 @@
                 <div class="alert alert-danger alert-dismissible fade show rounded-4 no-print shadow-sm border-0"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             <% } %>
 
-            <div class="info-box mb-3 no-print shadow-sm">
-                <h6 class="fw-bold mb-1"><i class="fas fa-calculator me-1"></i> Regla de Distribución de Ferumi:</h6>
-                Se guarda el Costo para Reposición. De la ganancia líquida que queda: 50% va a comprar producto extra (Duplicación), 25% va a Mayu y 25% va a Nando. ¡Suma hasta el último guaraní!
+            <div class="info-panel mb-3 no-print shadow-sm">
+                <i class="fas fa-info-circle me-1"></i> <strong>Distribución Activa:</strong> Tus ingresos separan automáticamente el costo del producto para reponer stock. El remanente limpio se inyecta en un 50% al fondo de duplicación y el otro 50% va a los bolsillos de Mayu y Nando (25% cada uno).
             </div>
 
             <div class="row g-2 mb-4 no-print">
                 <div class="col-6">
-                    <button class="btn btn-success w-100 btn-app text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVenta" style="background: #10b981;">
-                        <i class="fas fa-plus-circle fs-5"></i> Cargar Venta
+                    <button class="btn btn-success w-100 btn-app text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVenta" style="background-color: #10b981;">
+                        <i class="fas fa-cart-plus fs-5"></i> Cargar Venta
                     </button>
                 </div>
                 <div class="col-6">
-                    <button class="btn btn-danger w-100 btn-app text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#modalGasto" style="background: #ef4444;">
-                        <i class="fas fa-minus-circle fs-5"></i> Cargar Gasto
+                    <button class="btn btn-danger w-100 btn-app text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#modalGasto" style="background-color: #ef4444;">
+                        <i class="fas fa-receipt fs-5"></i> Cargar Gasto
                     </button>
                 </div>
             </div>
 
-            <h6 class="fw-bold text-muted mb-3 text-uppercase font-monospace fs-7"><i class="fas fa-wallet me-1"></i> Estado de Cuentas</h6>
+            <h6 class="fw-bold text-muted mb-3 text-uppercase font-monospace fs-7"><i class="fas fa-chart-pie me-1"></i> Métricas Consolidadas</h6>
             <div class="row g-2 mb-4">
                 
+                <div class="col-12">
+                    <div class="card app-card p-3 bg-gradient-disponible shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-label text-white-50"><i class="fas fa-vault me-1"></i> Total Disponible Acumulado (Fondo General)</div>
+                                <div class="stat-value fs-2">Gs. <%= (stats.totalIngresos - stats.totalEgresosExtra).toLocaleString('es-PY') %></div>
+                            </div>
+                            <i class="fas fa-money-bill-wave fa-2x text-white opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-6 col-md-4">
                     <div class="card app-card h-100 p-3 bg-white border-start border-4 border-success">
-                        <div class="stat-label text-success"><i class="fas fa-chart-line"></i> Ingreso Bruto</div>
+                        <div class="stat-label text-success"><i class="fas fa-cash-register"></i> Ingresos Brutos</div>
                         <div class="stat-value text-dark">Gs.<br><%= stats.totalIngresos.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-4">
                     <div class="card app-card h-100 p-3 bg-white border-start border-4 border-danger">
-                        <div class="stat-label text-danger"><i class="fas fa-receipt"></i> Gastos Extra</div>
+                        <div class="stat-label text-danger"><i class="fas fa-arrow-down-long"></i> Gastos Extra</div>
                         <div class="stat-value text-dark">Gs.<br><%= stats.totalEgresosExtra.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-4">
                     <div class="card app-card h-100 p-3 bg-gradient-reposicion shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-boxes-stacked"></i> Reposición Stock</div>
-                        <div class="stat-value"><%= stats.totalCostosReposicion.toLocaleString('es-PY') %></div>
+                        <div class="stat-label text-white-50"><i class="fas fa-box-open"></i> Resguardo Reposición</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalCostosReposicion.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-4">
                     <div class="card app-card h-100 p-3 bg-gradient-duplicar shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-turn-down"></i> Fondo Duplicar</div>
-                        <div class="stat-value"><%= stats.totalReinversion.toLocaleString('es-PY') %></div>
+                        <div class="stat-label text-white-50"><i class="fas fa-layer-group"></i> Fondo Duplicación</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalReinversion.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-4">
                     <div class="card app-card h-100 p-3 bg-gradient-mayu shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-user-circle"></i> Wallet Mayu</div>
-                        <div class="stat-value"><%= stats.totalMayu.toLocaleString('es-PY') %></div>
+                        <div class="stat-label text-white-50"><i class="fas fa-wallet"></i> Billetera Mayu</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalMayu.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
                 <div class="col-6 col-md-4">
                     <div class="card app-card h-100 p-3 bg-gradient-nando shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-user-circle"></i> Wallet Nando</div>
-                        <div class="stat-value"><%= stats.totalNando.toLocaleString('es-PY') %></div>
+                        <div class="stat-label text-white-50"><i class="fas fa-wallet"></i> Billetera Nando</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalNando.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
@@ -170,7 +190,7 @@
 
             <div class="card app-card overflow-hidden border-0 mb-5">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-history me-2 text-primary"></i>Flujo de Caja Real</h6>
+                    <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-list me-2 text-primary"></i>Libro de Caja Diario</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive p-2">
@@ -178,17 +198,17 @@
                             <thead class="table-light d-none d-md-table-header-group">
                                 <tr>
                                     <th>Fecha</th>
-                                    <th>Concepto</th>
-                                    <th>Detalles Operación</th>
-                                    <th>Distribución Interna</th>
-                                    <th>Total General</th>
-                                    <th class="no-print text-end">Acciones</th>
+                                    <th>Operación</th>
+                                    <th>Detalle Producto / Concepto</th>
+                                    <th>Estructura Interna</th>
+                                    <th>Importe Absoluto</th>
+                                    <th class="no-print text-end">Eliminar</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <% if (transactions && transactions.length > 0) { %>
                                     <% transactions.forEach(t => { %>
-                                        <tr class="position-relative">
+                                        <tr>
                                             <td class="text-muted"><%= new Date(t.date).toLocaleDateString('es-PY', {day: '2-digit', month: '2-digit'}) %></td>
                                             <td>
                                                 <% if (t.type === 'ingreso') { %>
@@ -199,14 +219,14 @@
                                             </td>
                                             <td class="fw-bold text-dark"><%= t.description %></td>
                                             
-                                            <td class="text-secondary font-monospace" style="font-size: 0.78rem;">
+                                            <td class="font-monospace text-secondary" style="font-size: 0.78rem;">
                                                 <% if (t.type === 'ingreso') { %>
                                                     <span class="text-dark">Rep:</span> <%= (t.cost || 0).toLocaleString('es-PY') %> | 
                                                     <span class="text-primary">Dup:</span> <%= (t.reinvestment || 0).toLocaleString('es-PY') %> <br>
                                                     <span class="text-danger">M:</span> <%= (t.profitMayu || 0).toLocaleString('es-PY') %> | 
-                                                    <span class="text-slate">N:</span> <%= (t.profitNando || 0).toLocaleString('es-PY') %>
+                                                    <span class="text-dark">N:</span> <%= (t.profitNando || 0).toLocaleString('es-PY') %>
                                                 <% } else { %>
-                                                    <span class="text-muted">Gasto operativo</span>
+                                                    <span class="text-muted">Desembolso directo</span>
                                                 <% } %>
                                             </td>
 
@@ -218,8 +238,8 @@
                                                 <% } %>
                                             </td>
                                             <td class="no-print text-end">
-                                                <form action="/admin/caja/delete/<%= t._id %>" method="POST" onsubmit="return confirm('¿Eliminar este movimiento? Se recalcularán los saldos actuales.');" class="d-inline form-delete">
-                                                    <button type="submit" class="btn btn-sm btn-link text-danger border-0 p-1"><i class="fas fa-trash-alt"></i></button>
+                                                <form action="/admin/caja/delete/<%= t._id %>" method="POST" onsubmit="return confirm('¿Seguro de remover este registro? Se alterarán los fondos del mes.');" class="d-inline form-delete">
+                                                    <button type="submit" class="btn btn-sm text-danger border-0 p-1"><i class="fas fa-trash-alt"></i></button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -227,8 +247,8 @@
                                 <% } else { %>
                                     <tr>
                                         <td colspan="6" class="text-center py-5 text-muted">
-                                            <i class="fas fa-folder-open fa-3x mb-2 opacity-25"></i>
-                                            <p class="mb-0">Sin registros de caja en este mes.</p>
+                                            <i class="fas fa-receipt fa-3x mb-2 opacity-25"></i>
+                                            <p class="mb-0">No se detectaron transacciones en este periodo.</p>
                                         </td>
                                     </tr>
                                 <% } %>
@@ -244,43 +264,50 @@
 
 <div class="modal fade no-print" id="modalVenta" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header bg-success text-white rounded-top-4 border-0 py-3">
-                <h5 class="modal-title fw-bold"><i class="fas fa-check-double me-1"></i> Registrar Transacción</h5>
+                <h5 class="modal-title fw-bold"><i class="fas fa-camera me-1"></i> Nueva Transacción Visual</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="/admin/caja/venta" method="POST" class="form-safe-submit">
                 <div class="modal-body p-4">
                     
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Producto vendido</label>
-                        <select name="productId" class="form-select form-select-lg" required>
-                            <option value="">Seleccionar artículo...</option>
+                    <input type="hidden" name="productId" id="selectedProductId" required>
+
+                    <div class="mb-3 product-search-container">
+                        <label class="form-label fw-bold text-dark">Buscar Producto (Selección táctil con foto)</label>
+                        <input type="text" id="searchBarProduct" class="form-control mb-2 form-control-lg" placeholder="🔍 Escribe para buscar pestañas, uñas...">
+                        
+                        <div class="product-picker-list" id="pickerProductContainer">
                             <% products.forEach(p => { %>
-                                <option value="<%= p._id %>"><%= p.name %> (Stock: <%= p.stock %>) - Costo Base: <%= (p.costPrice || 0).toLocaleString('es-PY') %></option>
+                                <div class="product-item-row" data-id="<%= p._id %>" data-name="<%= p.name.toLowerCase() %>">
+                                    <img src="<%= (p.photos && p.photos.length > 0) ? p.photos[0] : '/images/placeholder.png' %>" class="product-item-img" alt="Foto">
+                                    <div class="product-item-info">
+                                        <p class="product-item-name"><%= p.name %></p>
+                                        <p class="product-item-meta">Stock: <%= p.stock %> | Costo: Gs. <%= (p.costPrice || 0).toLocaleString('es-PY') %></p>
+                                    </div>
+                                </div>
                             <% }) %>
-                        </select>
+                        </div>
+                        
+                        <div id="selectedVisualBadge" class="mt-2 d-none">
+                            <span class="badge bg-primary px-3 py-2 rounded-3 w-100 text-start text-wrap"><i class="fas fa-check-circle me-1"></i> Seleccionado: <strong id="selectedVisualName">Ninguno</strong></span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Variante / Detalle</label>
-                        <input type="text" name="variantName" class="form-control" placeholder="Ej: Tono, tamaño, color (opcional)">
-                    </div>
-
-                    <div class="mb-3 p-3 bg-light rounded-3 border">
-                        <label class="form-label fw-bold text-dark mb-1"><i class="fas fa-edit text-warning me-1"></i> Costo de Compra Unitario (Gs.)</label>
-                        <input type="number" name="customCostPrice" class="form-control" placeholder="Dejar vacío para usar costo de base de datos">
-                        <span class="text-muted" style="font-size: 0.75rem;">Úsalo si el producto figura con costo 0 o cambió el precio del proveedor.</span>
+                        <label class="form-label fw-bold text-dark">Variante / Opción</label>
+                        <input type="text" name="variantName" class="form-control" placeholder="Ej: 30D, Tono Claro, etc. (Opcional)">
                     </div>
 
                     <div class="row">
                         <div class="col-4 mb-3">
-                            <label class="form-label fw-bold text-dark">Cant.</label>
+                            <label class="form-label fw-bold text-dark">Cantidad</label>
                             <input type="number" name="quantity" class="form-control form-control-lg text-center" value="1" min="1" required>
                         </div>
                         <div class="col-8 mb-3">
-                            <label class="form-label fw-bold text-success">Precio Cobrado Total (Gs.)</label>
-                            <input type="number" name="sellPrice" class="form-control form-control-lg border-success fw-bold" placeholder="Monto total pagado" required>
+                            <label class="form-label fw-bold text-success">Precio Cobrado UNITARIO (Gs.)</label>
+                            <input type="number" name="sellPrice" class="form-control form-control-lg border-success fw-bold" placeholder="Monto unitario" required>
                         </div>
                     </div>
                 </div>
@@ -295,82 +322,16 @@
 
 <div class="modal fade no-print" id="modalGasto" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header bg-danger text-white rounded-top-4 border-0 py-3">
-                <h5 class="modal-title fw-bold"><i class="fas fa-minus-circle me-1"></i> Registrar Egreso</h5>
+                <h5 class="modal-title fw-bold"><i class="fas fa-minus-circle me-1"></i> Salida de Efectivo</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="/admin/caja/gasto" method="POST" class="form-safe-submit">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Descripción del Gasto</label>
-                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Delivery, Bolsas de regalo, Cinta..." required>
+                        <label class="form-label fw-bold text-dark">Concepto / Destino</label>
+                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Bolsitas, Cinta, Viático..." required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-danger">Monto Total Invertido (Gs.)</label>
-                        <input type="number" name="amount" class="form-control form-control-lg border-danger fw-bold" placeholder="0" required>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-danger fw-bold px-4 rounded-3 shadow-sm"><i class="fas fa-save me-1"></i> Registrar Gasto</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Desvanecer alertas de éxito o error
-    setTimeout(() => {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(a => {
-            a.classList.remove('show');
-            setTimeout(() => a.remove(), 300);
-        });
-    }, 4000);
-
-    // Sistema Anti-Doble Clic Robusto (Frontend)
-    document.querySelectorAll('.form-safe-submit').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                if (this.dataset.submitted) {
-                    e.preventDefault();
-                    return;
-                }
-                this.dataset.submitted = true;
-                
-                // Feedback visual inmediato para el celular
-                const origText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Procesando...';
-                submitBtn.style.opacity = '0.75';
-                submitBtn.style.pointerEvents = 'none';
-            }
-        });
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.getElementById('admin-sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        
-        if (menuToggle) {
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-            });
-        }
-        if (overlay) {
-            overlay.addEventListener('click', () => {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            });
-        }
-    });
-</script>
-</body>
-</html>
+                        <label class="form-label fw-bold text-danger">Importe Gastado
