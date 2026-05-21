@@ -1680,57 +1680,61 @@ app.post('/admin/caja/gasto', requireAdmin, async (req, res, next) => {
 
 // Registrar una Venta Manual (Ingreso)
 // Registrar una Venta Manual (Ingreso)
+// Registrar una Venta Manual (Ingreso) - VERSIÓN ULTRA MEJORADA
 app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
     try {
         // --- BLOQUEO ANTI DOBLE CLIC DESDE EL SERVIDOR ---
         const lastTxTime = req.session.lastSaleTime || 0;
         const nowTime = Date.now();
-        if (nowTime - lastTxTime < 3000) { 
-            // Si pasaron menos de 3 segundos, bloquea la petición
+        if (nowTime - lastTxTime < 2000) { 
             return res.redirect('/admin/caja');
         }
         req.session.lastSaleTime = nowTime;
         // ------------------------------------------------
 
-        const { productId, variantName, sellPrice, quantity } = req.body;
+        const { productId, variantName, sellPrice, quantity, customCostPrice } = req.body;
         const qty = parseInt(quantity) || 1;
         
         const product = await Product.findById(productId);
         if (!product) throw new Error('Producto no encontrado.');
 
-        // Precio final pagado por el cliente por TODA la cantidad
-        const totalAmount = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
+        // Monto total cobrado al cliente en la transacción
+        const totalAmount = parseInt(sellPrice.toString().replace(/\./g, ''));
         
-        // Costo del producto para reponerlo por TODA la cantidad
-        const costoReposicion = (product.costPrice || 0) * qty;
-        
-        // === MATEMÁTICA SISTEMA DUPLICAR INVENTARIO ===
-        let reinversion = 0;
-        let gananciaRestante = 0;
-
-        if (totalAmount >= (costoReposicion * 2)) {
-            // Alcanza perfecto para reponer y comprar otro extra
-            reinversion = costoReposicion;
-            gananciaRestante = totalAmount - costoReposicion - reinversion;
-        } else if (totalAmount > costoReposicion) {
-            // Hay ganancia pero no alcanza a duplicar al 100%
-            // Lo que sobra va al fondo de reinversión
-            reinversion = totalAmount - costoReposicion;
-            gananciaRestante = 0; 
-        } else {
-            // Se vendió al costo o bajo costo (error o liquidación)
-            reinversion = 0;
-            gananciaRestante = 0;
+        // Determinar el costo unitario: priorizar el ingresado en el formulario por si en la BD está en 0
+        let unitCost = product.costPrice || 0;
+        if (customCostPrice && customCostPrice.trim() !== '') {
+            unitCost = parseInt(customCostPrice.toString().replace(/\./g, '')) || 0;
         }
+        
+        const costoReposicion = unitCost * qty;
+        
+        // === MATEMÁTICA PREMIUM: DISTRIBUCIÓN INTEGRAL PORCENTUAL ===
+        let reinversion = 0;
+        let gananciaNando = 0;
+        let gananciaMayu = 0;
 
-        // Reparto de ganancias 50/50
-        const gananciaNando = gananciaRestante / 2;
-        const gananciaMayu = gananciaRestante / 2;
+        if (totalAmount > costoReposicion) {
+            const gananciaBruta = totalAmount - costoReposicion;
+            
+            // 50% al fondo de duplicación de inventario
+            reinversion = Math.round(gananciaBruta * 0.50);
+            
+            // El otro 50% se divide equitativamente entre los dueños (25% y 25% del total)
+            const gananciaRestante = gananciaBruta - reinversion;
+            gananciaNando = Math.round(gananciaRestante / 2);
+            gananciaMayu = gananciaRestante - gananciaNando; // Absorbe cualquier residuo de redondeo
+        } else {
+            // Venta al costo o pérdida: no genera ganancias ni duplicación
+            reinversion = 0;
+            gananciaNando = 0;
+            gananciaMayu = 0;
+        }
 
         let desc = `Venta: ${product.name} (x${qty})`;
         if (variantName) desc = `Venta: ${product.name} - ${variantName} (x${qty})`;
 
-        // 1. Guardar la transacción con todo el desglose
+        // Guardar desglose completo en la base de datos
         const newTx = new Transaction({ 
             type: 'ingreso', 
             description: desc, 
@@ -1742,7 +1746,7 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         });
         await newTx.save();
 
-        // 2. Descontar el Stock automáticamente
+        // Descontar Stock
         if (product.hasVariants && variantName) {
             const variantIndex = product.variants.findIndex(v => v.name === variantName);
             if (variantIndex > -1 && product.variants[variantIndex].stock >= qty) {
@@ -1753,7 +1757,7 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         }
         await product.save();
 
-        req.session.success = 'Venta registrada. Sistema de duplicación y comisiones aplicado.';
+        req.session.success = 'Venta procesada. Matemática de ganancias y duplicación aplicada correctamente.';
         res.redirect('/admin/caja');
     } catch (err) {
         req.session.error = `Error al registrar venta: ${err.message}`;
