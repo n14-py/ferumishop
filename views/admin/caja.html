@@ -334,4 +334,120 @@
                         <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Bolsitas, Cinta, Viático..." required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-danger">Importe Gastado
+                        <label class="form-label fw-bold text-danger">Importe Gastado Total (Gs.)</label>
+                        <input type="number" name="amount" class="form-control form-control-lg border-danger fw-bold" placeholder="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-danger fw-bold px-4 rounded-3 shadow-sm"><i class="fas fa-save me-1"></i> Registrar Gasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // LÓGICA DEL BUSCADOR INTEGRADO CON FOTOS
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBar = document.getElementById('searchBarProduct');
+        const rows = document.querySelectorAll('.product-item-row');
+        const hiddenInput = document.getElementById('selectedProductId');
+        const badgeContainer = document.getElementById('selectedVisualBadge');
+        const badgeName = document.getElementById('selectedVisualName');
+
+        // Filtrar productos al escribir en el celular
+        searchBar.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                if (name.includes(query)) {
+                    row.style.setProperty('display', 'flex', 'important');
+                } else {
+                    row.style.setProperty('display', 'none', 'important');
+                }
+            });
+        });
+
+        // Evento de selección táctil
+        rows.forEach(row => {
+            row.addEventListener('click', function() {
+                // Quitar selección previa
+                rows.forEach(r => r.classList.remove('selected'));
+                
+                // Marcar activo
+                this.classList.add('selected');
+                const id = this.getAttribute('data-id');
+                const name = this.querySelector('.product-item-name').innerText;
+                
+                // Asignar al formulario
+                hiddenInput.value = id;
+                
+                // Actualizar badge visual
+                badgeName.innerText = name;
+                badgeContainer.classList.remove('d-none');
+            });
+        });
+    });
+
+    // Desvanecer notificaciones automáticas
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(a => {
+            a.classList.remove('show');
+            setTimeout(() => a.remove(), 300);
+        });
+    }, 4000);
+
+    // Sistema Robusto de Protección Anti-Doble Clic
+    document.querySelectorAll('.form-safe-submit').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // Validar si realmente se seleccionó un producto en el buscador
+            if (this.id === 'modalVenta' || this.querySelector('#selectedProductId')) {
+                const prodId = document.getElementById('selectedProductId').value;
+                if (!prodId || prodId === "") {
+                    e.preventDefault();
+                    alert("⚠️ Por favor, selecciona un producto tocando su fila con foto antes de guardar.");
+                    return;
+                }
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                if (this.dataset.submitted) {
+                    e.preventDefault();
+                    return;
+                }
+                this.dataset.submitted = true;
+                
+                submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Procesando...';
+                submitBtn.style.opacity = '0.75';
+                submitBtn.style.pointerEvents = 'none';
+            }
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            });
+        }
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        }
+    });
+</script>
+</body>
+</html>
