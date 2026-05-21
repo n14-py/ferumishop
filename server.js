@@ -187,6 +187,63 @@ const transactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
+// =============================================
+// NUEVOS MODELOS: SISTEMA DE ASOCIADAS (IMPORTACIÓN B2B)
+// =============================================
+
+// --- 1. Modelo de Asociada (Revendedora / Lashista) ---
+const associateSchema = new mongoose.Schema({
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true }, // Contraseña generada o creada por ellas
+    phone: { type: String, required: true },
+    instagram: { type: String }, // Para que tú verifiques quién es antes de aprobar
+    status: { type: String, enum: ['pendiente', 'aprobada', 'rechazada'], default: 'pendiente' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// Encriptar contraseña de asociada por seguridad
+associateSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 12);
+    next();
+});
+
+const Associate = mongoose.model('Associate', associateSchema);
+
+// --- 2. Modelo de Producto de Importación (Catálogo Exclusivo) ---
+const importProductSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    description: { type: String },
+    costPrice: { type: Number, required: true }, // Lo que a ti te cuesta en China
+    wholesalePrice: { type: Number, required: true }, // A lo que le vendes a la asociada (ej: 50.000)
+    minQuantity: { type: Number, default: 1 }, // Por si le obligas a pedir de a 3, 5, etc.
+    photos: [{ type: String }],
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+    isActive: { type: Boolean, default: true } // Para ocultar productos si ya no los traes
+});
+
+const ImportProduct = mongoose.model('ImportProduct', importProductSchema);
+
+// --- 3. Modelo de Pedido de Importación ---
+const importOrderSchema = new mongoose.Schema({
+    associate: { type: mongoose.Schema.Types.ObjectId, ref: 'Associate', required: true },
+    items: [{
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'ImportProduct' },
+        name: String, 
+        quantity: Number,
+        price: Number // Precio mayorista al momento de comprar
+    }],
+    totalAmount: { type: Number, required: true },
+    paymentStatus: { type: String, enum: ['pendiente', 'pagado_adelantado'], default: 'pendiente' },
+    // El tracking o estado del envío detallado
+    shippingStatus: { type: String, enum: ['esperando_corte', 'comprado_en_origen', 'en_transito', 'en_aduana', 'listo_para_entregar', 'entregado'], default: 'esperando_corte' },
+    trackingNotes: { type: String, default: 'Pedido recibido. Esperando fecha de corte para procesar la compra.' }, 
+    createdAt: { type: Date, default: Date.now }
+});
+
+const ImportOrder = mongoose.model('ImportOrder', importOrderSchema);
+
 
 
 // =============================================
@@ -334,6 +391,206 @@ app.get('/', async (req, res, next) => {
         next(err);
     }
 });
+
+// =============================================
+// PORTAL PRIVADO: ASOCIADAS B2B
+// =============================================
+
+// --- Middleware de Seguridad para Asociadas ---
+// Verifica que la sesión exista y que la cuenta esté APROBADA
+const requireAssociate = async (req, res, next) => {
+    if (req.session.associateId) {
+        try {
+            const associate = await Associate.findById(req.session.associateId);
+            if (associate && associate.status === 'aprobada') {
+                req.associate = associate; // Guardamos los datos de la chica en la request
+                return next();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    req.session.error = 'Debes iniciar sesión y tu cuenta debe estar aprobada para ver el catálogo mayorista.';
+    res.redirect('/asociada/login');
+};
+
+// --- Página de Inicio de Sesión ---
+app.get('/asociada/login', (req, res) => {
+    if (req.session.associateId) return res.redirect('/asociada/panel');
+    res.render('public/asociada-login', {
+        pageTitle: 'Ingreso Asociadas | FERUMI',
+        error: req.session.error,
+        success: req.session.success
+    });
+    delete req.session.error;
+    delete req.session.success;
+});
+
+// --- Procesar el Inicio de Sesión ---
+app.post('/asociada/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        const associate = await Associate.findOne({ email: email.toLowerCase() });
+
+        if (!associate) {
+            req.session.error = 'El correo no está registrado.';
+            return res.redirect('/asociada/login');
+        }
+
+        if (associate.status === 'pendiente') {
+            req.session.error = 'Tu cuenta aún está en revisión. Te avisaremos cuando sea aprobada.';
+            return res.redirect('/asociada/login');
+        }
+
+        if (associate.status === 'rechazada') {
+            req.session.error = 'Tu solicitud fue rechazada por la administración.';
+            return res.redirect('/asociada/login');
+        }
+
+        const isMatch = await bcrypt.compare(password, associate.password);
+        if (!isMatch) {
+            req.session.error = 'Contraseña incorrecta.';
+            return res.redirect('/asociada/login');
+        }
+
+        // Si todo está bien, iniciamos su sesión
+        req.session.associateId = associate._id;
+        res.redirect('/asociada/panel');
+    } catch (err) {
+        req.session.error = `Error al iniciar sesión: ${err.message}`;
+        res.redirect('/asociada/login');
+    }
+});
+
+// --- Cerrar Sesión ---
+app.get('/asociada/logout', (req, res) => {
+    req.session.associateId = null;
+    res.redirect('/asociada/login');
+});
+
+// --- EL PANEL PRIVADO (Catálogo y Pedidos) ---
+app.get('/asociada/panel', requireAssociate, async (req, res, next) => {
+    try {
+        // Traemos los productos activos para importar
+        const products = await ImportProduct.find({ isActive: true }).sort({ createdAt: -1 });
+        // Traemos SOLO los pedidos de esta asociada
+        const orders = await ImportOrder.find({ associate: req.associate._id }).sort({ createdAt: -1 });
+
+        res.render('public/asociada-panel', {
+            pageTitle: 'Mi Portal Mayorista | FERUMI',
+            associate: req.associate,
+            products: products,
+            orders: orders,
+            success: req.session.success,
+            error: req.session.error
+        });
+        delete req.session.success;
+        delete req.session.error;
+    } catch (err) {
+        next(err);
+    }
+});
+
+// --- PROCESAR UN PEDIDO DE IMPORTACIÓN ---
+app.post('/asociada/pedir', requireAssociate, async (req, res, next) => {
+    try {
+        const { quantities } = req.body; // Será un objeto tipo: { 'id_producto': 'cantidad' }
+        let orderItems = [];
+        let total = 0;
+
+        // Revisar qué productos pidió y qué cantidad
+        for (const [productId, qtyStr] of Object.entries(quantities)) {
+            const qty = parseInt(qtyStr);
+            if (qty > 0) {
+                const product = await ImportProduct.findById(productId);
+                if (product && qty >= product.minQuantity) {
+                    orderItems.push({
+                        product: product._id,
+                        name: product.name,
+                        quantity: qty,
+                        price: product.wholesalePrice
+                    });
+                    total += (product.wholesalePrice * qty);
+                }
+            }
+        }
+
+        if (orderItems.length === 0) {
+            req.session.error = 'No seleccionaste ningún producto o no alcanzaste la cantidad mínima exigida por producto.';
+            return res.redirect('/asociada/panel');
+        }
+
+        // Crear el pedido en la base de datos
+        const newOrder = new ImportOrder({
+            associate: req.associate._id,
+            items: orderItems,
+            totalAmount: total,
+            paymentStatus: 'pendiente',
+            shippingStatus: 'esperando_corte',
+            trackingNotes: 'Pedido recibido. Por favor, realiza el pago adelantado para asegurar tu lugar en el próximo corte.'
+        });
+
+        await newOrder.save();
+        req.session.success = '¡Tu pedido de importación fue registrado con éxito! Escríbenos al WhatsApp para coordinar el pago adelantado y asegurar tu compra.';
+        res.redirect('/asociada/panel');
+    } catch (err) {
+        req.session.error = `Hubo un error al procesar tu pedido: ${err.message}`;
+        res.redirect('/asociada/panel');
+    }
+});
+
+
+// =============================================
+// RUTAS PÚBLICAS: CAPTACIÓN DE ASOCIADAS B2B
+// =============================================
+
+// --- Mostrar la página informativa y formulario ---
+app.get('/asociate', async (req, res, next) => {
+    try {
+        res.render('public/asociate', {
+            pageTitle: 'Asóciate con FERUMI | Precios Mayoristas',
+            cartCount: req.session.cart ? req.session.cart.length : 0,
+            success: req.session.success,
+            error: req.session.error
+        });
+        delete req.session.success;
+        delete req.session.error;
+    } catch (err) {
+        next(err);
+    }
+});
+
+// --- Procesar la solicitud del formulario ---
+app.post('/asociate/solicitar', async (req, res, next) => {
+    try {
+        const { fullName, email, phone, instagram, password } = req.body;
+        
+        // Verificar si el correo ya mandó solicitud antes
+        const existingAssociate = await Associate.findOne({ email: email.toLowerCase() });
+        if (existingAssociate) {
+            req.session.error = 'Este correo ya ha enviado una solicitud o ya está registrado.';
+            return res.redirect('/asociate');
+        }
+
+        // Crear la nueva solicitud (estado 'pendiente' por defecto)
+        const newAssociate = new Associate({
+            fullName: purify.sanitize(fullName),
+            email: purify.sanitize(email),
+            phone: purify.sanitize(phone),
+            instagram: purify.sanitize(instagram),
+            password: password // Se encriptará automáticamente por el modelo que hicimos en el PASO 1
+        });
+
+        await newAssociate.save();
+        
+        req.session.success = '¡Solicitud enviada con éxito! Revisaremos tu perfil y te contactaremos pronto.';
+        res.redirect('/asociate');
+    } catch (err) {
+        req.session.error = `Hubo un error al procesar tu solicitud: ${err.message}`;
+        res.redirect('/asociate');
+    }
+});
+
 
 // --- Página de Tienda (Galería de Productos) ---
 // Muestra todos los productos, con filtros
@@ -1255,6 +1512,85 @@ app.post('/admin/regalos/verify', requireAdmin, async (req, res, next) => {
     }
 });
 
+// =============================================
+// GESTIÓN DE SISTEMA B2B / ASOCIADAS (ADMIN) - UNIFICADO
+// =============================================
+
+// --- ÚNICA PANTALLA: Carga Asociadas, Productos y Pedidos ---
+app.get('/admin/b2b', requireAdmin, async (req, res, next) => {
+    try {
+        const associates = await Associate.find().sort({ createdAt: -1 });
+        const importProducts = await ImportProduct.find().populate('category').sort({ createdAt: -1 });
+        const orders = await ImportOrder.find().populate('associate').sort({ createdAt: -1 });
+        const categories = await Category.find();
+
+        res.render('admin/b2b', {
+            pageTitle: 'Centro Mayoristas B2B',
+            associates,
+            importProducts,
+            orders,
+            categories,
+            success: req.session.success,
+            error: req.session.error
+        });
+        delete req.session.success;
+        delete req.session.error;
+    } catch (err) {
+        next(err);
+    }
+});
+
+// --- POST: Aprobar/Rechazar Asociada ---
+app.post('/admin/asociadas/status/:id', requireAdmin, async (req, res, next) => {
+    try {
+        const { status } = req.body;
+        await Associate.findByIdAndUpdate(req.params.id, { status: status });
+        req.session.success = `Estado de la asociada actualizado a: ${status}`;
+        res.redirect('/admin/b2b'); // Volvemos al panel central
+    } catch (err) {
+        req.session.error = `Error al actualizar: ${err.message}`;
+        res.redirect('/admin/b2b');
+    }
+});
+
+// --- POST: Añadir Producto al Catálogo B2B ---
+app.post('/admin/importaciones/productos/add', requireAdmin, upload.array('photos', 5), async (req, res, next) => {
+    try {
+        const { name, description, costPrice, wholesalePrice, minQuantity, category } = req.body;
+        const newImportProduct = new ImportProduct({
+            name: purify.sanitize(name),
+            description: purify.sanitize(description, { USE_PROFILES: { html: true } }),
+            costPrice: parseInt(costPrice.toString().replace(/\./g, '')) || 0,
+            wholesalePrice: parseInt(wholesalePrice.toString().replace(/\./g, '')) || 0,
+            minQuantity: parseInt(minQuantity) || 1,
+            category: category ? category : null,
+            photos: req.files ? req.files.map(f => f.path) : []
+        });
+        await newImportProduct.save();
+        req.session.success = 'Producto añadido al catálogo mayorista.';
+        res.redirect('/admin/b2b');
+    } catch (err) {
+        req.session.error = `Error al añadir producto: ${err.message}`;
+        res.redirect('/admin/b2b');
+    }
+});
+
+// --- POST: Actualizar Tracking del Pedido ---
+app.post('/admin/importaciones/pedidos/status/:id', requireAdmin, async (req, res, next) => {
+    try {
+        const { shippingStatus, trackingNotes } = req.body;
+        await ImportOrder.findByIdAndUpdate(req.params.id, { 
+            shippingStatus: shippingStatus,
+            trackingNotes: purify.sanitize(trackingNotes)
+        });
+        req.session.success = 'Estado del envío actualizado correctamente.';
+        res.redirect('/admin/b2b');
+    } catch (err) {
+        req.session.error = `Error al actualizar: ${err.message}`;
+        res.redirect('/admin/b2b');
+    }
+});
+
 
 
 // =============================================
@@ -1262,41 +1598,50 @@ app.post('/admin/regalos/verify', requireAdmin, async (req, res, next) => {
 // =============================================
 
 // Ver la caja del mes actual
+// Ver la caja del mes actual
 app.get('/admin/caja', requireAdmin, async (req, res, next) => {
     try {
-        // Por defecto, mostrar el mes actual
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-        const transactions = await Transaction.find({
-            date: { $gte: startOfMonth, $lte: endOfMonth }
-        }).sort({ date: -1 });
-
-        // Traer productos para el formulario de "Registrar Venta"
+        const transactions = await Transaction.find({ date: { $gte: startOfMonth, $lte: endOfMonth } }).sort({ date: -1 });
         const products = await Product.find().select('name price costPrice stock hasVariants variants');
 
         let totalIngresos = 0;
-        let totalCostos = 0;
-        let totalEgresos = 0;
+        let totalCostosReposicion = 0;
+        let totalReinversion = 0;
+        let totalNando = 0;
+        let totalMayu = 0;
+        let totalEgresosExtra = 0;
 
         transactions.forEach(t => {
             if (t.type === 'ingreso') {
                 totalIngresos += t.amount;
-                totalCostos += t.cost;
+                totalCostosReposicion += t.cost || 0;
+                totalReinversion += t.reinvestment || 0;
+                totalNando += t.profitNando || 0;
+                totalMayu += t.profitMayu || 0;
             } else if (t.type === 'egreso') {
-                totalEgresos += t.amount;
+                totalEgresosExtra += t.amount;
             }
         });
 
-        // Ganancia Neta = Lo que entró - Lo que costó comprar los productos - Los gastos extra (bolsitas, etc)
-        const gananciaNeta = totalIngresos - totalCostos - totalEgresos;
+        const gananciaNeta = totalIngresos - totalCostosReposicion - totalEgresosExtra;
 
         res.render('admin/caja', {
             pageTitle: 'Caja y Finanzas',
             transactions,
             products,
-            stats: { totalIngresos, totalCostos, totalEgresos, gananciaNeta },
+            stats: { 
+                totalIngresos, 
+                totalCostosReposicion, 
+                totalReinversion,
+                totalNando,
+                totalMayu,
+                totalEgresosExtra, 
+                gananciaNeta 
+            },
             mesActual: now.toLocaleString('es-PY', { month: 'long', year: 'numeric' }).toUpperCase(),
             success: req.session.success,
             error: req.session.error
@@ -1311,6 +1656,13 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
 // Registrar un Gasto (Egreso)
 app.post('/admin/caja/gasto', requireAdmin, async (req, res, next) => {
     try {
+        // --- BLOQUEO ANTI DOBLE CLIC (GASTOS) ---
+        const lastExpTime = req.session.lastExpTime || 0;
+        const nowTime = Date.now();
+        if (nowTime - lastExpTime < 3000) return res.redirect('/admin/caja');
+        req.session.lastExpTime = nowTime;
+        // ---------------------------------------
+
         const { description, amount } = req.body;
         const newTx = new Transaction({
             type: 'egreso',
@@ -1327,22 +1679,67 @@ app.post('/admin/caja/gasto', requireAdmin, async (req, res, next) => {
 });
 
 // Registrar una Venta Manual (Ingreso)
+// Registrar una Venta Manual (Ingreso)
 app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
     try {
+        // --- BLOQUEO ANTI DOBLE CLIC DESDE EL SERVIDOR ---
+        const lastTxTime = req.session.lastSaleTime || 0;
+        const nowTime = Date.now();
+        if (nowTime - lastTxTime < 3000) { 
+            // Si pasaron menos de 3 segundos, bloquea la petición
+            return res.redirect('/admin/caja');
+        }
+        req.session.lastSaleTime = nowTime;
+        // ------------------------------------------------
+
         const { productId, variantName, sellPrice, quantity } = req.body;
         const qty = parseInt(quantity) || 1;
         
         const product = await Product.findById(productId);
         if (!product) throw new Error('Producto no encontrado.');
 
-        const price = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
-        const cost = (product.costPrice || 0) * qty;
+        // Precio final pagado por el cliente por TODA la cantidad
+        const totalAmount = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
         
+        // Costo del producto para reponerlo por TODA la cantidad
+        const costoReposicion = (product.costPrice || 0) * qty;
+        
+        // === MATEMÁTICA SISTEMA DUPLICAR INVENTARIO ===
+        let reinversion = 0;
+        let gananciaRestante = 0;
+
+        if (totalAmount >= (costoReposicion * 2)) {
+            // Alcanza perfecto para reponer y comprar otro extra
+            reinversion = costoReposicion;
+            gananciaRestante = totalAmount - costoReposicion - reinversion;
+        } else if (totalAmount > costoReposicion) {
+            // Hay ganancia pero no alcanza a duplicar al 100%
+            // Lo que sobra va al fondo de reinversión
+            reinversion = totalAmount - costoReposicion;
+            gananciaRestante = 0; 
+        } else {
+            // Se vendió al costo o bajo costo (error o liquidación)
+            reinversion = 0;
+            gananciaRestante = 0;
+        }
+
+        // Reparto de ganancias 50/50
+        const gananciaNando = gananciaRestante / 2;
+        const gananciaMayu = gananciaRestante / 2;
+
         let desc = `Venta: ${product.name} (x${qty})`;
         if (variantName) desc = `Venta: ${product.name} - ${variantName} (x${qty})`;
 
-        // 1. Guardar la transacción
-        const newTx = new Transaction({ type: 'ingreso', description: desc, amount: price, cost: cost });
+        // 1. Guardar la transacción con todo el desglose
+        const newTx = new Transaction({ 
+            type: 'ingreso', 
+            description: desc, 
+            amount: totalAmount, 
+            cost: costoReposicion,
+            reinvestment: reinversion,
+            profitNando: gananciaNando,
+            profitMayu: gananciaMayu
+        });
         await newTx.save();
 
         // 2. Descontar el Stock automáticamente
@@ -1356,7 +1753,7 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         }
         await product.save();
 
-        req.session.success = 'Venta registrada y stock descontado.';
+        req.session.success = 'Venta registrada. Sistema de duplicación y comisiones aplicado.';
         res.redirect('/admin/caja');
     } catch (err) {
         req.session.error = `Error al registrar venta: ${err.message}`;

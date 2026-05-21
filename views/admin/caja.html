@@ -9,11 +9,19 @@
     <link rel="stylesheet" href="/css/admin.css">
     
     <style>
-        /* Estilos App Móvil para Caja */
-        body { background-color: #f8f9fc; }
-        .app-card { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .stat-value { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
-        .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 5px; }
+        /* Estilos App Móvil para Caja - Rediseño Profesional */
+        body { background-color: #f4f6f9; }
+        .app-card { border-radius: 18px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: transform 0.2s; }
+        .app-card:active { transform: scale(0.98); }
+        
+        .stat-value { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin-top: 5px; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; opacity: 0.8; }
+        
+        /* Degradados Premium para las Billeteras */
+        .bg-gradient-nando { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; }
+        .bg-gradient-mayu { background: linear-gradient(135deg, #ec4899, #be185d); color: white; }
+        .bg-gradient-duplicar { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .bg-gradient-reposicion { background: linear-gradient(135deg, #64748b, #475569); color: white; }
         
         .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .header-title { font-weight: 800; color: var(--admin-primary-dark); margin: 0; font-size: 1.2rem; }
@@ -21,13 +29,14 @@
         .btn-app { border-radius: 15px; padding: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-app:active { transform: scale(0.95); }
 
-        @media (min-width: 768px) { .admin-header { display: none; } }
+        @media (min-width: 768px) { .admin-header { display: none; } .stat-value { font-size: 1.6rem; } }
 
-        /* MAGIA PARA EL PDF (Solo aplica al imprimir o exportar) */
+        /* MAGIA PARA EL PDF */
         @media print {
             body { background-color: #fff; }
             .no-print { display: none !important; }
-            .app-card { border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; }
+            .app-card { border: 1px solid #ddd !important; box-shadow: none !important; break-inside: avoid; color: black !important; background: white !important;}
+            .bg-gradient-nando, .bg-gradient-mayu, .bg-gradient-duplicar, .bg-gradient-reposicion { color: black !important; background: white !important; border: 2px solid #ccc; }
             .badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
             .main-content { padding: 0 !important; }
         }
@@ -43,50 +52,18 @@
         </div>
         <div class="sidebar-content mt-3">
             <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a href="/admin/dashboard" class="nav-link">
-                        <i class="fa-solid fa-house fa-fw"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/caja" class="nav-link active">
-                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/productos" class="nav-link">
-                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/categorias" class="nav-link">
-                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/regalos" class="nav-link">
-                        <i class="fas fa-gift fa-fw"></i> Regalos Online
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/sorteos" class="nav-link">
-                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
-                    </a>
-                </li>
-                <li class="nav-item mt-4">
-                    <a href="/admin/configuracion" class="nav-link">
-                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes de Tienda
-                    </a>
-                </li>
+                <li class="nav-item"><a href="/admin/dashboard" class="nav-link"><i class="fa-solid fa-house fa-fw"></i> Inicio</a></li>
+                <li class="nav-item"><a href="/admin/caja" class="nav-link active"><i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas</a></li>
+                <li class="nav-item"><a href="/admin/productos" class="nav-link"><i class="fa-solid fa-box-open fa-fw"></i> Productos</a></li>
+                <li class="nav-item"><a href="/admin/categorias" class="nav-link"><i class="fa-solid fa-tags fa-fw"></i> Categorías</a></li>
+                <li class="nav-item"><a href="/admin/regalos" class="nav-link"><i class="fas fa-gift fa-fw"></i> Regalos Online</a></li>
+                <li class="nav-item"><a href="/admin/sorteos" class="nav-link"><i class="fas fa-ticket-alt fa-fw"></i> Sorteos</a></li>
+                <li class="nav-item mt-4"><a href="/admin/configuracion" class="nav-link"><i class="fa-solid fa-cog fa-fw"></i> Ajustes de Tienda</a></li>
             </ul>
         </div>
         <div class="sidebar-footer">
-            <a href="/" target="_blank" class="nav-link">
-                <i class="fa-solid fa-globe fa-fw"></i> Ver mi Tienda
-            </a>
-            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
-                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
-            </a>
+            <a href="/" target="_blank" class="nav-link"><i class="fa-solid fa-globe fa-fw"></i> Ver mi Tienda</a>
+            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;"><i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir</a>
         </div>
     </aside>
     
@@ -98,7 +75,7 @@
             <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1 class="header-title">Mi Caja</h1>
+            <h1 class="header-title">Finanzas</h1>
             <button class="btn btn-light btn-sm rounded-circle" onclick="window.print()" style="width: 35px; height: 35px;">
                 <i class="fas fa-file-pdf text-danger"></i>
             </button>
@@ -108,7 +85,7 @@
             
             <div class="d-flex justify-content-between align-items-center mb-4 d-none d-md-flex no-print">
                 <div>
-                    <h2 class="fw-bold text-dark mb-0">Reporte Financiero</h2>
+                    <h2 class="fw-bold text-dark mb-0">Gestión de Inventario y Ganancias</h2>
                     <p class="text-muted mb-0">Mes: <strong><%= mesActual %></strong></p>
                 </div>
                 <button class="btn btn-outline-dark btn-app" onclick="window.print()">
@@ -116,70 +93,91 @@
                 </button>
             </div>
 
-            <div class="d-md-none mb-3 no-print">
-                <p class="text-muted mb-0">Mes: <strong><%= mesActual %></strong></p>
+            <div class="d-md-none mb-3 no-print text-center">
+                <span class="badge bg-dark px-3 py-2 rounded-pill"><i class="far fa-calendar-alt"></i> <%= mesActual %></span>
             </div>
 
             <% if (typeof success !== 'undefined' && success) { %>
-                <div class="alert alert-success alert-dismissible fade show rounded-4 no-print"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                <div class="alert alert-success alert-dismissible fade show rounded-4 no-print shadow-sm"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             <% } %>
             <% if (typeof error !== 'undefined' && error) { %>
-                <div class="alert alert-danger alert-dismissible fade show rounded-4 no-print"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                <div class="alert alert-danger alert-dismissible fade show rounded-4 no-print shadow-sm"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
             <% } %>
-
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-success">
-                        <div class="stat-label text-success"><i class="fas fa-arrow-up"></i> Ingresos</div>
-                        <div class="stat-value text-dark">Gs.<br><%= stats.totalIngresos.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-warning">
-                        <div class="stat-label text-warning"><i class="fas fa-box"></i> Costo Mercadería</div>
-                        <div class="stat-value text-dark">Gs.<br><%= stats.totalCostos.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-danger">
-                        <div class="stat-label text-danger"><i class="fas fa-arrow-down"></i> Gastos Extra</div>
-                        <div class="stat-value text-dark">Gs.<br><%= stats.totalEgresos.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="card app-card h-100 p-3 text-white" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));">
-                        <div class="stat-label text-white opacity-75"><i class="fas fa-wallet"></i> Ganancia Neta</div>
-                        <div class="stat-value">Gs.<br><%= stats.gananciaNeta.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-            </div>
 
             <div class="row g-2 mb-4 no-print">
                 <div class="col-6">
-                    <button class="btn btn-success w-100 btn-app shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVenta">
-                        <i class="fas fa-plus-circle fs-5"></i> Venta
+                    <button class="btn btn-success w-100 btn-app shadow-sm text-white" data-bs-toggle="modal" data-bs-target="#modalVenta" style="background-color: #10b981; border:none;">
+                        <i class="fas fa-hand-holding-usd fs-5"></i> Registrar Venta
                     </button>
                 </div>
                 <div class="col-6">
-                    <button class="btn btn-danger w-100 btn-app shadow-sm" data-bs-toggle="modal" data-bs-target="#modalGasto">
-                        <i class="fas fa-minus-circle fs-5"></i> Gasto
+                    <button class="btn btn-danger w-100 btn-app shadow-sm" data-bs-toggle="modal" data-bs-target="#modalGasto" style="background-color: #ef4444; border:none;">
+                        <i class="fas fa-file-invoice-dollar fs-5"></i> Registrar Gasto
                     </button>
                 </div>
             </div>
 
-            <div class="card app-card overflow-hidden mb-5">
+            <h6 class="fw-bold text-muted mb-3"><i class="fas fa-chart-pie"></i> Resumen del Mes</h6>
+            <div class="row g-2 mb-4">
+                
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-success">
+                        <div class="stat-label text-success"><i class="fas fa-cash-register"></i> Ingreso Bruto</div>
+                        <div class="stat-value text-dark">Gs.<br><%= stats.totalIngresos.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-white border-start border-4 border-danger">
+                        <div class="stat-label text-danger"><i class="fas fa-arrow-down"></i> Gastos Extra</div>
+                        <div class="stat-value text-dark">Gs.<br><%= stats.totalEgresosExtra.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-reposicion">
+                        <div class="stat-label"><i class="fas fa-box"></i> Fondo Reposición</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalCostosReposicion.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-duplicar">
+                        <div class="stat-label"><i class="fas fa-copy"></i> Fondo Duplicar Inv.</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalReinversion.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-mayu">
+                        <div class="stat-label"><i class="fas fa-wallet"></i> Billetera Mayu</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalMayu.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-nando">
+                        <div class="stat-label"><i class="fas fa-wallet"></i> Billetera Nando</div>
+                        <div class="stat-value">Gs.<br><%= stats.totalNando.toLocaleString('es-PY') %></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="card app-card overflow-hidden mb-5 border border-light">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-list-ul me-2"></i> Movimientos del Mes</h6>
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list-ul me-2"></i> Historial de Movimientos</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive" style="margin: 0; padding: 10px;">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.90rem;">
                             <thead class="table-light d-none d-md-table-header-group">
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Tipo</th>
                                     <th>Descripción</th>
-                                    <th>Monto</th>
+                                    <th>Desglose Interno</th>
+                                    <th>Monto Final</th>
                                     <th class="no-print text-end">Acción</th>
                                 </tr>
                             </thead>
@@ -196,7 +194,18 @@
                                                 <% } %>
                                             </td>
                                             <td data-label="Descripción" class="fw-bold"><%= t.description %></td>
-                                            <td data-label="Monto">
+                                            
+                                            <td data-label="Desglose" class="text-muted" style="font-size: 0.8rem;">
+                                                <% if (t.type === 'ingreso') { %>
+                                                    Rep: <%= (t.cost || 0).toLocaleString('es-PY') %> | 
+                                                    Dup: <%= (t.reinvestment || 0).toLocaleString('es-PY') %> <br>
+                                                    Gan: <%= ((t.profitNando || 0) + (t.profitMayu || 0)).toLocaleString('es-PY') %>
+                                                <% } else { %>
+                                                    -
+                                                <% } %>
+                                            </td>
+
+                                            <td data-label="Monto Final">
                                                 <% if (t.type === 'ingreso') { %>
                                                     <span class="text-success fw-bold">+ Gs. <%= t.amount.toLocaleString('es-PY') %></span>
                                                 <% } else { %>
@@ -204,7 +213,7 @@
                                                 <% } %>
                                             </td>
                                             <td data-label="Acción" class="no-print text-md-end">
-                                                <form action="/admin/caja/delete/<%= t._id %>" method="POST" onsubmit="return confirm('¿Eliminar este registro?');" class="d-inline">
+                                                <form action="/admin/caja/delete/<%= t._id %>" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar este registro? Esto afectará las estadísticas.');" class="d-inline form-delete">
                                                     <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle"><i class="fas fa-trash"></i></button>
                                                 </form>
                                             </td>
@@ -212,9 +221,9 @@
                                     <% }) %>
                                 <% } else { %>
                                     <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
+                                        <td colspan="6" class="text-center py-5 text-muted">
                                             <i class="fas fa-receipt fa-3x mb-3 opacity-50"></i>
-                                            <p class="mb-0">No hay movimientos registrados este mes.</p>
+                                            <p class="mb-0">Aún no hay ventas ni gastos este mes.</p>
                                         </td>
                                     </tr>
                                 <% } %>
@@ -230,27 +239,29 @@
 
 <div class="modal fade no-print" id="modalVenta" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header bg-success text-white rounded-top-4 border-0">
-                <h5 class="modal-title fw-bold"><i class="fas fa-cart-plus"></i> Nueva Venta</h5>
+                <h5 class="modal-title fw-bold"><i class="fas fa-cart-plus"></i> Registrar Venta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/admin/caja/venta" method="POST">
+            <form action="/admin/caja/venta" method="POST" class="form-safe-submit">
                 <div class="modal-body p-4">
-                    <p class="small text-muted mb-4"><i class="fas fa-info-circle"></i> Se descontará el stock y se calculará la ganancia usando tu precio de costo guardado.</p>
+                    <div class="alert alert-success bg-opacity-10 border-0 text-success small mb-4 rounded-3">
+                        <i class="fas fa-magic"></i> El sistema separará automáticamente la reposición, la duplicación y las ganancias.
+                    </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">¿Qué vendiste?</label>
+                        <label class="form-label fw-bold text-dark">¿Qué producto vendiste?</label>
                         <select name="productId" class="form-select form-select-lg" required>
                             <option value="">Selecciona el producto...</option>
                             <% products.forEach(p => { %>
-                                <option value="<%= p._id %>"><%= p.name %> (Disp: <%= p.stock %>)</option>
+                                <option value="<%= p._id %>"><%= p.name %> (Disp: <%= p.stock %>) - Costo: <%= (p.costPrice || 0).toLocaleString('es-PY') %></option>
                             <% }) %>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Opción (Ej: 30D, Tono claro)</label>
-                        <input type="text" name="variantName" class="form-control form-control-lg" placeholder="Déjalo en blanco si no tiene opciones">
+                        <input type="text" name="variantName" class="form-control form-control-lg" placeholder="Déjalo en blanco si no aplica">
                     </div>
                     <div class="row">
                         <div class="col-4 mb-3">
@@ -258,14 +269,15 @@
                             <input type="number" name="quantity" class="form-control form-control-lg text-center" value="1" min="1" required>
                         </div>
                         <div class="col-8 mb-3">
-                            <label class="form-label fw-bold text-dark">Total cobrado (Gs.)</label>
-                            <input type="number" name="sellPrice" class="form-control form-control-lg" placeholder="0" required>
+                            <label class="form-label fw-bold text-dark text-success">Monto Cobrado (Gs.)</label>
+                            <input type="number" name="sellPrice" class="form-control form-control-lg border-success" placeholder="0" required>
+                            <small class="text-muted">Por CADA unidad</small>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-pill">Guardar Venta</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-pill shadow-sm"><i class="fas fa-save"></i> Guardar Venta</button>
                 </div>
             </form>
         </div>
@@ -274,30 +286,62 @@
 
 <div class="modal fade no-print" id="modalGasto" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header bg-danger text-white rounded-top-4 border-0">
-                <h5 class="modal-title fw-bold"><i class="fas fa-minus-circle"></i> Nuevo Gasto Extra</h5>
+                <h5 class="modal-title fw-bold"><i class="fas fa-minus-circle"></i> Registrar Gasto Extra</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/admin/caja/gasto" method="POST">
+            <form action="/admin/caja/gasto" method="POST" class="form-safe-submit">
                 <div class="modal-body p-4">
                     <div class="mb-4">
-                        <label class="form-label fw-bold text-dark">¿En qué gastaste?</label>
-                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Compra de 100 bolsitas, pasaje..." required>
+                        <label class="form-label fw-bold text-dark">Motivo del gasto</label>
+                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Pasaje, Bolsitas, Envío..." required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Monto gastado (Gs.)</label>
-                        <input type="number" name="amount" class="form-control form-control-lg" placeholder="0" required>
+                        <label class="form-label fw-bold text-dark text-danger">Monto gastado (Gs.)</label>
+                        <input type="number" name="amount" class="form-control form-control-lg border-danger" placeholder="0" required>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger fw-bold px-4 rounded-pill">Guardar Gasto</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold px-4 rounded-pill shadow-sm"><i class="fas fa-save"></i> Guardar Gasto</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+
+<script>
+    // 1. DESAPARECER ALERTAS AUTOMÁTICAMENTE
+    setTimeout(() => {
+        const alertas = document.querySelectorAll('.alert');
+        alertas.forEach(alerta => {
+            alerta.classList.remove('show');
+            setTimeout(() => alerta.remove(), 300);
+        });
+    }, 3000);
+
+    // 2. PREVENIR DOBLE CLIC (FRONTEND SEGURO)
+    document.querySelectorAll('.form-safe-submit').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn) {
+                if (this.dataset.submitted) {
+                    e.preventDefault();
+                    return;
+                }
+                this.dataset.submitted = true;
+                
+                // Efecto visual de carga
+                const icon = btn.querySelector('i');
+                if(icon) icon.className = 'fas fa-spinner fa-spin';
+                btn.style.opacity = '0.8';
+                btn.style.pointerEvents = 'none'; 
+            }
+        });
+    });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>

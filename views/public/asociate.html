@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .hero-b2b {
+            background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%);
+            padding: 4rem 0;
+            border-bottom: 1px solid #ffd1d9;
+        }
+        .benefit-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        .benefit-card:hover { transform: translateY(-5px); }
+        .benefit-icon {
+            width: 70px;
+            height: 70px;
+            background: #ffe3e8;
+            color: #d81b60;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+        }
+        .form-b2b {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        }
+        .step-circle {
+            width: 40px; height: 40px;
+            background: #d81b60; color: white;
+            border-radius: 50%; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 15px; flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<%- include('../partials/header.html') %>
+
+    <section class="hero-b2b">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0 text-center text-lg-start">
+                    <span class="badge bg-danger mb-3 px-3 py-2 rounded-pill shadow-sm">Programa Exclusivo</span>
+                    <h1 class="display-5 fw-bold text-dark mb-3">¿Eres Lashista o Revendedora?</h1>
+                    <p class="lead text-muted mb-4">Importa con nosotros. Accede a precios de fábrica en productos de belleza, sin la complicación de hacer trámites aduaneros. Nos encargamos de todo.</p>
+                    <a href="#formulario" class="btn btn-danger btn-lg px-4 rounded-pill shadow">Solicitar Acceso Ahora <i class="fas fa-arrow-right ms-2"></i></a>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block text-center">
+                    <img src="/ferumi.logo.png" alt="FERUMI B2B" class="img-fluid" style="max-height: 300px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container mt-4">
+        <% if (typeof success !== 'undefined') { %>
+            <div class="alert alert-success shadow-sm rounded-3"><i class="fas fa-check-circle me-2"></i> <%= success %></div>
+        <% } %>
+        <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger shadow-sm rounded-3"><i class="fas fa-exclamation-triangle me-2"></i> <%= error %></div>
+        <% } %>
+    </div>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">¿Por qué asociarte con FERUMI?</h2>
+                <p class="text-muted">Unimos fuerzas para que tu negocio crezca con mayor margen de ganancia.</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <div class="benefit-icon"><i class="fas fa-tags"></i></div>
+                        <h4 class="fw-bold h5">Precios de Fábrica</h4>
+                        <p class="text-muted small mb-0">Compra a precios de costo directo desde Asia. Al unir pedidos, los costos de envío bajan drásticamente.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <div class="benefit-icon"><i class="fas fa-box-open"></i></div>
+                        <h4 class="fw-bold h5">Cero Trámites</h4>
+                        <p class="text-muted small mb-0">Tú solo eliges qué necesitas y nosotros nos encargamos de las compras, aduanas e impuestos.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <div class="benefit-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <h4 class="fw-bold h5">Seguimiento Real</h4>
+                        <p class="text-muted small mb-0">Desde tu panel privado podrás ver en todo momento dónde está tu pedido hasta que llegue a tus manos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row bg-white rounded-4 shadow-sm p-4 p-lg-5 align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <h3 class="fw-bold mb-4">¿Cómo funciona la co-importación?</h3>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="step-circle">1</div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Solicita tu cuenta</h5>
+                            <p class="text-muted small">Llena el formulario. Evaluaremos tu perfil de Instagram para asegurar que eres profesional del rubro.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="step-circle">2</div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Accede al Catálogo Oculto</h5>
+                            <p class="text-muted small">Una vez aprobada, inicia sesión para ver los productos de importación con precios mayoristas.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="step-circle">3</div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Pide y Paga por Adelantado</h5>
+                            <p class="text-muted small">Aseguras tu pedido abonando el monto. Cerramos pedidos cada 15 días.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="step-circle">4</div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Recibe en Paraguay</h5>
+                            <p class="text-muted small">Espera el tiempo de tránsito internacional y recibe tus productos listos para usar o revender.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6" id="formulario">
+                    <div class="form-b2b border">
+                        <h4 class="fw-bold text-center mb-4">Formulario de Solicitud</h4>
+                        <form action="/asociate/solicitar" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">Nombre Completo o Marca</label>
+                                <input type="text" name="fullName" class="form-control bg-light border-0" required placeholder="Ej: María López / Lashes by Mary">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">Correo Electrónico</label>
+                                <input type="email" name="email" class="form-control bg-light border-0" required placeholder="tu@correo.com">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted small fw-bold">WhatsApp</label>
+                                    <input type="text" name="phone" class="form-control bg-light border-0" required placeholder="09XX XXX XXX">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted small fw-bold">Usuario de Instagram</label>
+                                    <input type="text" name="instagram" class="form-control bg-light border-0" required placeholder="@tu_cuenta">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold">Crea una Contraseña</label>
+                                <input type="password" name="password" class="form-control bg-light border-0" required placeholder="La usarás para iniciar sesión">
+                                <small class="text-muted" style="font-size: 0.75rem;">Mínimo 6 caracteres.</small>
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold shadow-sm">Enviar Solicitud de Acceso</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<%- include('../partials/footer.html') %>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

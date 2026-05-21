@@ -207,5 +207,39 @@
         if (overlay) overlay.addEventListener('click', toggleSidebar);
     });
 </script>
+
+<script>
+    // 1. DESAPARECER ALERTAS A LOS 1.5 SEGUNDOS (1500 ms)
+    setTimeout(() => {
+        const alertas = document.querySelectorAll('.alert');
+        alertas.forEach(alerta => {
+            // Oculta la alerta suavemente
+            alerta.classList.remove('show');
+            // Elimina el elemento HTML después de la animación
+            setTimeout(() => alerta.remove(), 300);
+        });
+    }, 1500);
+
+    // 2. PREVENIR DOBLE CLIC EN LOS FORMULARIOS
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn) {
+                // Si el formulario ya se envió, bloqueamos el siguiente clic
+                if (this.dataset.submitted) {
+                    e.preventDefault();
+                    return;
+                }
+                this.dataset.submitted = true;
+                
+                // Cambiamos el texto del botón
+                const textoOriginal = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                btn.style.opacity = '0.7';
+                btn.style.pointerEvents = 'none';
+            }
+        });
+    });
+</script>
 </body>
 </html>

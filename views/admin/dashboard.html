@@ -65,6 +65,13 @@
                         <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
                     </a>
                 </li>
+
+                <li class="nav-item mt-2">
+                    <a href="/admin/b2b" class="nav-link">
+                        <i class="fas fa-handshake fa-fw"></i> Mayoristas B2B
+                    </a>
+                </li>
+
                 <li class="nav-item mt-4">
                     <a href="/admin/configuracion" class="nav-link">
                         <i class="fa-solid fa-cog fa-fw"></i> Ajustes de Tienda
@@ -210,6 +217,40 @@
     </div>
 </div>
 
+
+<script>
+    // 1. DESAPARECER ALERTAS A LOS 1.5 SEGUNDOS (1500 ms)
+    setTimeout(() => {
+        const alertas = document.querySelectorAll('.alert');
+        alertas.forEach(alerta => {
+            // Oculta la alerta suavemente
+            alerta.classList.remove('show');
+            // Elimina el elemento HTML después de la animación
+            setTimeout(() => alerta.remove(), 300);
+        });
+    }, 1500);
+
+    // 2. PREVENIR DOBLE CLIC EN LOS FORMULARIOS
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn) {
+                // Si el formulario ya se envió, bloqueamos el siguiente clic
+                if (this.dataset.submitted) {
+                    e.preventDefault();
+                    return;
+                }
+                this.dataset.submitted = true;
+                
+                // Cambiamos el texto del botón
+                const textoOriginal = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                btn.style.opacity = '0.7';
+                btn.style.pointerEvents = 'none';
+            }
+        });
+    });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Script para el menú lateral en móviles (Usando tus id's originales)
