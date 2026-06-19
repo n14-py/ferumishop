@@ -933,14 +933,14 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ success: false, message: 'El correo ya está registrado.' });
         }
 
-        // 2. Encriptamos la contraseña para que no se guarde en texto plano
+        // 2. Encriptamos la contraseña
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 3. Generar un código de referidos exclusivo para esta usuaria
-        let uniqueReferral = 'FER-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+        // 3. Generar un código de referidos (Usamos Math.random para evitar errores de librerías extra)
+        let uniqueReferral = 'FER-' + Math.random().toString(36).substring(2, 8).toUpperCase();
         let checkingCode = await AppUser.findOne({ referralCode: uniqueReferral });
         while (checkingCode) {
-            uniqueReferral = 'FER-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+            uniqueReferral = 'FER-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             checkingCode = await AppUser.findOne({ referralCode: uniqueReferral });
         }
 
@@ -952,12 +952,6 @@ app.post('/api/auth/register', async (req, res) => {
                 referredByUserId = referrer._id;
                 referrer.tickets += 5; // Premio para la anfitriona
                 await referrer.save();
-
-                await new TicketHistory({
-                    user: referrer._id,
-                    amount: 5,
-                    reason: `Invitó con éxito a una nueva usuaria (${email})`
-                }).save();
             }
         }
 
@@ -972,12 +966,6 @@ app.post('/api/auth/register', async (req, res) => {
         });
 
         await user.save();
-
-        await new TicketHistory({
-            user: user._id,
-            amount: 10,
-            reason: '¡Bono de bienvenida a Ferumi Shop!'
-        }).save();
 
         // 6. Emitir su "Llave" de sesión
         const token = jwt.sign(
