@@ -20,10 +20,20 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const crypto = require('crypto'); // NUEVO: Para generar IDs únicos y códigos de regalo
+const GoogleStrategy = require('passport-google-oauth20').Strategy; // APP: Login con Google
+const jwt = require('jsonwebtoken'); // APP: Autenticación de la app móvil
+const cors = require('cors'); // APP: Permite a Flutter conectarse a la API
+const crypto = require('crypto'); // Para generar IDs únicos y códigos de regalo
 
 // Inicialización de Express y DOMPurify (para seguridad)
 const app = express();
+
+// APP: Configuración de CORS para que la aplicación móvil no sea bloqueada
+app.use(cors({
+    origin: '*', // Permite conexiones desde la app
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 const PORT = process.env.PORT || 3000;
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
@@ -94,6 +104,33 @@ adminUserSchema.pre('save', async function(next) {
 });
 
 const AdminUser = mongoose.model('AdminUser', adminUserSchema);
+
+// =============================================
+// MODELOS PARA LA APP MÓVIL Y GAMIFICACIÓN
+// =============================================
+
+// --- Modelo de Usuario de la App ---
+const appUserSchema = new mongoose.Schema({
+    googleId: { type: String, unique: true, sparse: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    displayName: { type: String, required: true },
+    photoUrl: { type: String },
+    tickets: { type: Number, default: 0 }, // Los tickets para los sorteos mensuales
+    referralCode: { type: String, unique: true }, // Código para invitar amigos
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser', default: null }, // Quién lo invitó
+    createdAt: { type: Date, default: Date.now },
+    lastLogin: { type: Date, default: Date.now }
+});
+const AppUser = mongoose.model('AppUser', appUserSchema);
+
+// --- Modelo de Historial de Tickets ---
+const ticketHistorySchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser', required: true },
+    amount: { type: Number, required: true }, // Ej: +10 (ganó) o -5 (gastó)
+    reason: { type: String, required: true }, // Ej: "Vio un anuncio", "Compra en tienda", "Invitación"
+    date: { type: Date, default: Date.now }
+});
+const TicketHistory = mongoose.model('TicketHistory', ticketHistorySchema);
 
 // --- Modelo de Categoría ---
 const categorySchema = new mongoose.Schema({
@@ -318,11 +355,37 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Middleware para proteger rutas del admin
+// Middleware para proteger rutas del admin
 const requireAdmin = (req, res, next) => {
     if (req.isAuthenticated() && req.user) {
         return next();
     } else {
         res.redirect('/admin/login');
+    }
+};
+
+// APP: Middleware para proteger las rutas de la API móvil usando JWT
+const requireAppUser = async (req, res, next) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, message: 'Token no proporcionado o formato inválido.' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        // Verifica el token JWT usando el secreto del entorno (.env)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ferumi_secret_token_key_2026');
+        
+        const user = await AppUser.findById(decoded.id);
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Usuario de la aplicación no encontrado.' });
+        }
+
+        req.user = user; // Guardamos el usuario autenticado de la app en la request
+        next();
+    } catch (err) {
+        console.error('Error de autenticación JWT:', err.message);
+        return res.status(401).json({ success: false, message: 'Token inválido o expirado.' });
     }
 };
 
@@ -852,6 +915,104 @@ app.get('/ver-regalo/:uniqueId', async (req, res, next) => {
 // RUTAS API (PARA FUNCIONES DINÁMICAS)
 // =============================================
 
+// --- APP: API para Login / Registro con Google desde la Aplicación Móvil ---
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        const { email, displayName, photoUrl, googleId, referralCodeUsed } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'El correo electrónico es obligatorio.' });
+        }
+
+        // 1. Buscar si el usuario ya existe en el ecosistema de la app
+        let user = await AppUser.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            // Generar un código de referidos exclusivo para este nuevo usuario (Ej: FER-X8Z2)
+            let uniqueReferral = 'FER-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+            let checkingCode = await AppUser.findOne({ referralCode: uniqueReferral });
+            
+            // Bucle de seguridad por si de forma remota se duplica el código aleatorio
+            while (checkingCode) {
+                uniqueReferral = 'FER-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+                checkingCode = await AppUser.findOne({ referralCode: uniqueReferral });
+            }
+
+            // 2. Si ingresó el código de una amiga que la invitó, buscamos a la anfitriona
+            let referredByUserId = null;
+            if (referralCodeUsed) {
+                const referrer = await AppUser.findOne({ referralCode: referralCodeUsed.toUpperCase().trim() });
+                if (referrer) {
+                    referredByUserId = referrer._id;
+                    
+                    // Recompensa inmediata al que invitó (+5 tickets al marcador de sorteo)
+                    referrer.tickets += 5;
+                    await referrer.save();
+
+                    // Registramos la acción en el historial de la asociada/amiga que invitó
+                    await new TicketHistory({
+                        user: referrer._id,
+                        amount: 5,
+                        reason: `Invitó con éxito a una nueva usuaria (${email})`
+                    }).save();
+                }
+            }
+
+            // 3. Crear el perfil del nuevo usuario obsequiando 10 tickets por unirse
+            user = new AppUser({
+                googleId,
+                email: email.toLowerCase(),
+                displayName,
+                photoUrl,
+                tickets: 10,
+                referralCode: uniqueReferral,
+                referredBy: referredByUserId
+            });
+
+            await user.save();
+
+            // Guardar el registro de los puntos ganados de bienvenida
+            await new TicketHistory({
+                user: user._id,
+                amount: 10,
+                reason: '¡Bono de bienvenida a Ferumi Shop!'
+            }).save();
+
+        } else {
+            // Si el usuario ya existe, actualizamos su marca de tiempo y metadatos dinámicos
+            user.lastLogin = new Date();
+            if (googleId) user.googleId = googleId;
+            if (photoUrl) user.photoUrl = photoUrl;
+            await user.save();
+        }
+
+        // 4. Emitir el token firmado por JWT para que el smartphone recuerde la sesión por 30 días
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET || 'ferumi_secret_token_key_2026',
+            { expiresIn: '30d' }
+        );
+
+        res.json({
+            success: true,
+            message: 'Autenticación procesada con éxito.',
+            token,
+            user: {
+                id: user._id,
+                displayName: user.displayName,
+                email: user.email,
+                photoUrl: user.photoUrl,
+                tickets: user.tickets,
+                referralCode: user.referralCode
+            }
+        });
+
+    } catch (err) {
+        console.error('Error crítico en /api/auth/google:', err);
+        res.status(500).json({ success: false, message: 'Error interno en el servidor backend.' });
+    }
+});
+
 // --- API para Validar Cupones / Gift Cards desde el Carrito ---
 app.post('/api/regalos/validar', async (req, res) => {
     try {
@@ -900,6 +1061,58 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
+// =============================================
+// RUTAS API (EXCLUSIVAS PARA LA APP FLUTTER)
+// =============================================
+
+// --- APP: Obtener el Catálogo de Productos ---
+app.get('/api/app/productos', async (req, res) => {
+    try {
+        const products = await Product.find({ isForSale: true })
+            .populate('category')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, products });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error al obtener productos del servidor.' });
+    }
+});
+
+// --- APP: Obtener el Sorteo Activo del Mes ---
+app.get('/api/app/sorteo-activo', async (req, res) => {
+    try {
+        const activeGiveaway = await Giveaway.findOne({ isActive: true }).sort({ drawDate: 1 });
+        if (!activeGiveaway) {
+            return res.json({ success: true, giveaway: null, message: 'No hay sorteos activos en este momento.' });
+        }
+        res.json({ success: true, giveaway: activeGiveaway });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error al obtener el sorteo.' });
+    }
+});
+
+// --- APP: Reclamar Tickets por ver un Anuncio (Ruta Protegida) ---
+app.post('/api/app/tickets/anuncio', requireAppUser, async (req, res) => {
+    try {
+        // req.user viene del middleware requireAppUser
+        const user = req.user; 
+        
+        // Sumamos 2 tickets por ver el anuncio en la app
+        user.tickets += 2;
+        await user.save();
+
+        // Registramos la acción en su historial financiero/gamificado
+        await new TicketHistory({
+            user: user._id,
+            amount: 2,
+            reason: 'Recompensa por visualizar anuncio patrocinado'
+        }).save();
+
+        res.json({ success: true, message: '¡Felicidades! Ganaste 2 tickets.', tickets: user.tickets });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error al procesar la recompensa en el servidor.' });
+    }
+});
+
 
 // =============================================
 // RUTAS DEL PANEL ADMINISTRATIVO (BACKEND)
@@ -936,6 +1149,8 @@ app.get('/admin/logout', requireAdmin, (req, res, next) => {
     });
 });
 
+
+
 // --- Dashboard (Página principal del Admin) ---
 app.get('/admin', requireAdmin, (req, res) => res.redirect('/admin/dashboard'));
 
@@ -943,8 +1158,13 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
     try {
         const totalProducts = await Product.countDocuments();
         const totalCategories = await Category.countDocuments();
-        // Nueva estadística: regalos pendientes
         const pendingGifts = await Gift.countDocuments({ status: 'pendiente' });
+        
+        // APP: Nuevas estadísticas para la gamificación y usuarios móviles
+        const totalAppUsers = await AppUser.countDocuments();
+        // Calculamos cuántos tickets hay en circulación sumando los de todos los usuarios
+        const allUsers = await AppUser.find({}, 'tickets'); 
+        const totalTicketsInCirculation = allUsers.reduce((sum, user) => sum + (user.tickets || 0), 0);
         
         const mostViewedProducts = await Product.find()
             .sort({ views: -1 })
@@ -954,7 +1174,9 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
         const stats = {
             totalProducts: totalProducts,
             totalCategories: totalCategories,
-            pendingGifts: pendingGifts
+            pendingGifts: pendingGifts,
+            totalAppUsers: totalAppUsers, // APP: Total usuarios en Flutter
+            totalTickets: totalTicketsInCirculation // APP: Total de tickets
         };
 
         res.render('admin/dashboard', {
