@@ -110,9 +110,11 @@ const AdminUser = mongoose.model('AdminUser', adminUserSchema);
 // =============================================
 
 // --- Modelo de Usuario de la App ---
+// --- Modelo de Usuario de la App ---
 const appUserSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String }, // NUEVO: Para quienes se registran con correo
     displayName: { type: String, required: true },
     photoUrl: { type: String },
     tickets: { type: Number, default: 0 }, // Los tickets para los sorteos mensuales
@@ -914,6 +916,148 @@ app.get('/ver-regalo/:uniqueId', async (req, res, next) => {
 // =============================================
 // RUTAS API (PARA FUNCIONES DINÁMICAS)
 // =============================================
+
+
+// --- APP: API para Registro con Correo desde la Aplicación Móvil ---
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { name, email, password, referralCodeUsed } = req.body;
+
+        if (!email || !password || !name) {
+            return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios.' });
+        }
+
+        // 1. Verificamos si ya existe alguien con ese correo
+        let user = await AppUser.findOne({ email: email.toLowerCase() });
+        if (user) {
+            return res.status(400).json({ success: false, message: 'El correo ya está registrado.' });
+        }
+
+        // 2. Encriptamos la contraseña para que no se guarde en texto plano
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 3. Generar un código de referidos exclusivo para esta usuaria
+        let uniqueReferral = 'FER-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+        let checkingCode = await AppUser.findOne({ referralCode: uniqueReferral });
+        while (checkingCode) {
+            uniqueReferral = 'FER-' + crypto.randomBytes(2).toString('hex').toUpperCase();
+            checkingCode = await AppUser.findOne({ referralCode: uniqueReferral });
+        }
+
+        // 4. Lógica de recompensas si fue invitada por alguien
+        let referredByUserId = null;
+        if (referralCodeUsed) {
+            const referrer = await AppUser.findOne({ referralCode: referralCodeUsed.toUpperCase().trim() });
+            if (referrer) {
+                referredByUserId = referrer._id;
+                referrer.tickets += 5; // Premio para la anfitriona
+                await referrer.save();
+
+                await new TicketHistory({
+                    user: referrer._id,
+                    amount: 5,
+                    reason: `Invitó con éxito a una nueva usuaria (${email})`
+                }).save();
+            }
+        }
+
+        // 5. Crear la usuaria con 10 tickets de regalo
+        user = new AppUser({
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            displayName: name,
+            tickets: 10,
+            referralCode: uniqueReferral,
+            referredBy: referredByUserId
+        });
+
+        await user.save();
+
+        await new TicketHistory({
+            user: user._id,
+            amount: 10,
+            reason: '¡Bono de bienvenida a Ferumi Shop!'
+        }).save();
+
+        // 6. Emitir su "Llave" de sesión
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET || 'ferumi_secret_token_key_2026',
+            { expiresIn: '30d' }
+        );
+
+        res.status(201).json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                displayName: user.displayName,
+                email: user.email,
+                photoUrl: '',
+                tickets: user.tickets,
+                referralCode: user.referralCode
+            }
+        });
+    } catch (err) {
+        console.error('Error crítico en /api/auth/register:', err);
+        res.status(500).json({ success: false, message: 'Error interno en el servidor.' });
+    }
+});
+
+// --- APP: API para Login con Correo desde la Aplicación Móvil ---
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Correo y contraseña son obligatorios.' });
+        }
+
+        // 1. Buscamos a la usuaria
+        const user = await AppUser.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Credenciales incorrectas.' });
+        }
+
+        // 2. Si se registró con Google, no tiene contraseña, le avisamos
+        if (!user.password) {
+            return res.status(400).json({ success: false, message: 'Esta cuenta se creó con Google. Usa el botón de Google para entrar.' });
+        }
+
+        // 3. Verificamos que la contraseña sea exactamente la misma
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Credenciales incorrectas.' });
+        }
+
+        user.lastLogin = new Date();
+        await user.save();
+
+        // 4. Emitir su "Llave" de sesión
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET || 'ferumi_secret_token_key_2026',
+            { expiresIn: '30d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                displayName: user.displayName,
+                email: user.email,
+                photoUrl: user.photoUrl || '',
+                tickets: user.tickets,
+                referralCode: user.referralCode
+            }
+        });
+    } catch (err) {
+        console.error('Error crítico en /api/auth/login:', err);
+        res.status(500).json({ success: false, message: 'Error interno en el servidor.' });
+    }
+});
+
 
 // --- APP: API para Login / Registro con Google desde la Aplicación Móvil ---
 app.post('/api/auth/google', async (req, res) => {
