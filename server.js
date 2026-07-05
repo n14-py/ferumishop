@@ -111,19 +111,37 @@ const AdminUser = mongoose.model('AdminUser', adminUserSchema);
 
 // --- Modelo de Usuario de la App ---
 // --- Modelo de Usuario de la App ---
+// --- Modelo de Usuario de la App ---
 const appUserSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String }, // NUEVO: Para quienes se registran con correo
+    password: { type: String }, 
     displayName: { type: String, required: true },
     photoUrl: { type: String },
-    tickets: { type: Number, default: 0 }, // Los tickets para los sorteos mensuales
-    referralCode: { type: String, unique: true }, // Código para invitar amigos
-    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser', default: null }, // Quién lo invitó
+    tickets: { type: Number, default: 0 }, 
+    referralCode: { type: String, unique: true }, 
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser', default: null },
+    
+    // NUEVO: Motor Económico y Retención
+    completedMissions: [{ type: String }], // Guarda misiones únicas (Ej: 'follow_ig')
+    adsWatchedToday: { type: Number, default: 0 }, // Contador diario de AdMob
+    lastAdDate: { type: Date, default: null }, // Para resetear el contador a medianoche
+    
     createdAt: { type: Date, default: Date.now },
     lastLogin: { type: Date, default: Date.now }
 });
 const AppUser = mongoose.model('AppUser', appUserSchema);
+
+// --- Modelo de Cupones (Bóveda de Canje en la App) ---
+const appCouponSchema = new mongoose.Schema({
+    title: { type: String, required: true }, // Ej: "15% OFF en toda la tienda"
+    code: { type: String, required: true, unique: true }, // Ej: "FERUMIPRO15"
+    discountPercentage: { type: Number, required: true }, // Ej: 15
+    ticketCost: { type: Number, required: true }, // ¿Cuántos FerumiTickets cuesta canjearlo?
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const AppCoupon = mongoose.model('AppCoupon', appCouponSchema);
 
 // --- Modelo de Historial de Tickets ---
 const ticketHistorySchema = new mongoose.Schema({
@@ -916,6 +934,131 @@ app.get('/ver-regalo/:uniqueId', async (req, res, next) => {
 // =============================================
 // RUTAS API (PARA FUNCIONES DINÁMICAS)
 // =============================================
+
+
+// ==========================================
+// API: MOTOR ECONÓMICO (MISIONES Y CUPONES)
+// ==========================================
+
+// --- 1. RECLAMAR TICKET POR ANUNCIO (ADMOB) ---
+// Límite: 5 anuncios por día
+app.post('/api/app/misiones/claim-ad', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const user = await AppUser.findById(userId);
+        
+        if (!user) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+        const today = new Date();
+        const lastAd = user.lastAdDate;
+
+        // Resetear el contador si ya es otro día
+        if (lastAd && (lastAd.getDate() !== today.getDate() || lastAd.getMonth() !== today.getMonth() || lastAd.getFullYear() !== today.getFullYear())) {
+            user.adsWatchedToday = 0;
+        }
+
+        // Verificar el límite diario estricto para no bajar el CPC de AdMob
+        if (user.adsWatchedToday >= 5) {
+            return res.status(400).json({ success: false, message: 'Límite diario alcanzado. ¡Vuelve mañana para más tickets!' });
+        }
+
+        // Otorgar la recompensa
+        user.adsWatchedToday += 1;
+        user.lastAdDate = today;
+        user.tickets += 1; // 1 Anuncio = 1 Ticket
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            message: '¡Ticket reclamado con éxito!', 
+            tickets: user.tickets,
+            adsWatchedToday: user.adsWatchedToday 
+        });
+
+    } catch (err) {
+        console.error('Error en claim-ad:', err);
+        res.status(500).json({ success: false, message: 'Error del servidor' });
+    }
+});
+
+// --- 2. RECLAMAR MISIÓN ÚNICA (Ej: Seguir en Instagram) ---
+app.post('/api/app/misiones/claim-social', async (req, res) => {
+    try {
+        const { userId, missionId, rewardTickets } = req.body;
+        // missionId puede ser: 'follow_ig', 'follow_tiktok', 'share_whatsapp'
+
+        const user = await AppUser.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+
+        // Verificamos que no haya cobrado esta misión antes
+        if (user.completedMissions.includes(missionId)) {
+            return res.status(400).json({ success: false, message: 'Ya reclamaste la recompensa de esta misión.' });
+        }
+
+        // Otorgamos recompensa y guardamos la memoria
+        user.completedMissions.push(missionId);
+        user.tickets += parseInt(rewardTickets);
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            message: `¡Ganaste ${rewardTickets} tickets!`, 
+            tickets: user.tickets,
+            completedMissions: user.completedMissions 
+        });
+
+    } catch (err) {
+        console.error('Error en claim-social:', err);
+        res.status(500).json({ success: false, message: 'Error del servidor' });
+    }
+});
+
+// --- 3. VER CUPONES DISPONIBLES EN LA BÓVEDA ---
+app.get('/api/app/cupones', async (req, res) => {
+    try {
+        const cupones = await AppCoupon.find({ isActive: true }).sort({ ticketCost: 1 });
+        res.json({ success: true, cupones });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error al cargar los cupones' });
+    }
+});
+
+// --- 4. CANJEAR TICKETS POR UN CUPÓN ---
+app.post('/api/app/cupones/canjear', async (req, res) => {
+    try {
+        const { userId, couponId } = req.body;
+
+        const user = await AppUser.findById(userId);
+        const coupon = await AppCoupon.findById(couponId);
+
+        if (!user || !coupon) {
+            return res.status(404).json({ success: false, message: 'Datos inválidos' });
+        }
+
+        if (user.tickets < coupon.ticketCost) {
+            return res.status(400).json({ success: false, message: 'No tienes suficientes FerumiTickets.' });
+        }
+
+        // Cobramos los tickets
+        user.tickets -= coupon.ticketCost;
+        await user.save();
+
+        // NOTA PARA FUTURO: Aquí podríamos guardar el código en una tabla "CuponesAdquiridos" del usuario.
+        // Por ahora, se lo enviamos directamente a la app.
+
+        res.json({ 
+            success: true, 
+            message: '¡Canje exitoso!', 
+            tickets: user.tickets,
+            couponCode: coupon.code,
+            discount: coupon.discountPercentage
+        });
+
+    } catch (err) {
+        console.error('Error en canjear-cupon:', err);
+        res.status(500).json({ success: false, message: 'Error al canjear' });
+    }
+});
 
 
 // --- APP: API para Registro con Correo desde la Aplicación Móvil ---
@@ -1981,6 +2124,9 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
                 totalMayu += t.profitMayu || 0;
             } else if (t.type === 'egreso') {
                 totalEgresosExtra += t.amount;
+                // Si es un retiro de socio, descontamos de sus billeteras
+                totalNando += t.profitNando || 0;
+                totalMayu += t.profitMayu || 0;
             }
         });
 
@@ -2007,6 +2153,31 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
         delete req.session.error;
     } catch (err) {
         next(err);
+    }
+});
+
+// Registrar un Retiro de Socio (Egreso que descuenta de su ganancia)
+app.post('/admin/caja/retiro', requireAdmin, async (req, res, next) => {
+    try {
+        const { socio, amount } = req.body;
+        const montoRetiro = parseInt(amount.toString().replace(/\./g, ''));
+
+        const newTx = new Transaction({
+            type: 'egreso',
+            description: `Retiro de fondos: ${socio}`,
+            amount: montoRetiro,
+            cost: 0,
+            reinvestment: 0,
+            profitNando: socio === 'Nando' ? -montoRetiro : 0,
+            profitMayu: socio === 'Mayu' ? -montoRetiro : 0
+        });
+
+        await newTx.save();
+        req.session.success = `Retiro de ${socio} registrado correctamente.`;
+        res.redirect('/admin/caja');
+    } catch (err) {
+        req.session.error = `Error al registrar retiro: ${err.message}`;
+        res.redirect('/admin/caja');
     }
 });
 

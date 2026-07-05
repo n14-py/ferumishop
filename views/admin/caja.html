@@ -129,14 +129,14 @@
                 </div>
             </div>
 
-            <h6 class="fw-bold text-muted mb-3 text-uppercase font-monospace fs-7"><i class="fas fa-chart-pie me-1"></i> Métricas Consolidadas</h6>
+<h6 class="fw-bold text-muted mb-3 text-uppercase font-monospace fs-7"><i class="fas fa-chart-pie me-1"></i> Métricas Consolidadas</h6>
             <div class="row g-2 mb-4">
                 
                 <div class="col-12">
                     <div class="card app-card p-3 bg-gradient-disponible shadow-sm">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="stat-label text-white-50"><i class="fas fa-vault me-1"></i> Total Disponible Acumulado (Fondo General)</div>
+                                <div class="stat-label text-white-50"><i class="fas fa-vault me-1"></i> Total Disponible (Tienda + Socios)</div>
                                 <div class="stat-value fs-2">Gs. <%= (stats.totalIngresos - stats.totalEgresosExtra).toLocaleString('es-PY') %></div>
                             </div>
                             <i class="fas fa-money-bill-wave fa-2x text-white opacity-25"></i>
@@ -144,45 +144,49 @@
                     </div>
                 </div>
 
+                <div class="col-12 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-reposicion shadow-sm">
+                        <div class="stat-label text-white-50"><i class="fas fa-store"></i> Dinero de la Tienda (Capital)</div>
+                        <div class="stat-value">Gs.<br><%= (stats.totalCostosReposicion + stats.totalReinversion).toLocaleString('es-PY') %></div>
+                        <div class="small text-white-50 mt-1">Suma lo que se descuenta y se duplica</div>
+                    </div>
+                </div>
+
                 <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-mayu shadow-sm d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="stat-label text-white-50"><i class="fas fa-wallet"></i> Billetera Mayu</div>
+                            <div class="stat-value">Gs.<br><%= stats.totalMayu.toLocaleString('es-PY') %></div>
+                        </div>
+                        <button class="btn btn-sm btn-light mt-2 fw-bold text-danger w-100" data-bs-toggle="modal" data-bs-target="#modalRetiroMayu">
+                            <i class="fas fa-hand-holding-usd"></i> Retirar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <div class="card app-card h-100 p-3 bg-gradient-nando shadow-sm d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="stat-label text-white-50"><i class="fas fa-wallet"></i> Billetera Nando</div>
+                            <div class="stat-value">Gs.<br><%= stats.totalNando.toLocaleString('es-PY') %></div>
+                        </div>
+                        <button class="btn btn-sm btn-light mt-2 fw-bold text-dark w-100" data-bs-toggle="modal" data-bs-target="#modalRetiroNando">
+                            <i class="fas fa-hand-holding-usd"></i> Retirar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-6 mt-3">
                     <div class="card app-card h-100 p-3 bg-white border-start border-4 border-success">
-                        <div class="stat-label text-success"><i class="fas fa-cash-register"></i> Ingresos Brutos</div>
+                        <div class="stat-label text-success"><i class="fas fa-cash-register"></i> Ingresos Brutos (Ventas)</div>
                         <div class="stat-value text-dark">Gs.<br><%= stats.totalIngresos.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
-                <div class="col-6 col-md-4">
+                <div class="col-6 col-md-6 mt-3">
                     <div class="card app-card h-100 p-3 bg-white border-start border-4 border-danger">
-                        <div class="stat-label text-danger"><i class="fas fa-arrow-down-long"></i> Gastos Extra</div>
+                        <div class="stat-label text-danger"><i class="fas fa-arrow-down-long"></i> Gastos Extra / Retiros</div>
                         <div class="stat-value text-dark">Gs.<br><%= stats.totalEgresosExtra.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-4">
-                    <div class="card app-card h-100 p-3 bg-gradient-reposicion shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-box-open"></i> Resguardo Reposición</div>
-                        <div class="stat-value">Gs.<br><%= stats.totalCostosReposicion.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-4">
-                    <div class="card app-card h-100 p-3 bg-gradient-duplicar shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-layer-group"></i> Fondo Duplicación</div>
-                        <div class="stat-value">Gs.<br><%= stats.totalReinversion.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-4">
-                    <div class="card app-card h-100 p-3 bg-gradient-mayu shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-wallet"></i> Billetera Mayu</div>
-                        <div class="stat-value">Gs.<br><%= stats.totalMayu.toLocaleString('es-PY') %></div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-4">
-                    <div class="card app-card h-100 p-3 bg-gradient-nando shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-wallet"></i> Billetera Nando</div>
-                        <div class="stat-value">Gs.<br><%= stats.totalNando.toLocaleString('es-PY') %></div>
                     </div>
                 </div>
 
@@ -338,9 +342,63 @@
                         <input type="number" name="amount" class="form-control form-control-lg border-danger fw-bold" placeholder="0" required>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+<div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
                     <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" class="btn btn-danger fw-bold px-4 rounded-3 shadow-sm"><i class="fas fa-save me-1"></i> Registrar Gasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade no-print" id="modalRetiroMayu" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header bg-danger text-white rounded-top-4 border-0 py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-hand-holding-usd me-1"></i> Retirar dinero - Mayu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/caja/retiro" method="POST" class="form-safe-submit">
+                <input type="hidden" name="socio" value="Mayu">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0">
+                        <i class="fas fa-info-circle"></i> Tienes disponible: <strong>Gs. <%= stats.totalMayu.toLocaleString('es-PY') %></strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Monto a retirar (Gs.)</label>
+                        <input type="number" name="amount" class="form-control form-control-lg fw-bold border-danger" placeholder="Ej: 50000" max="<%= stats.totalMayu %>" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold px-4 rounded-3 shadow-sm">Confirmar Retiro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade no-print" id="modalRetiroNando" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header bg-dark text-white rounded-top-4 border-0 py-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-hand-holding-usd me-1"></i> Retirar dinero - Nando</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/caja/retiro" method="POST" class="form-safe-submit">
+                <input type="hidden" name="socio" value="Nando">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0">
+                        <i class="fas fa-info-circle"></i> Tienes disponible: <strong>Gs. <%= stats.totalNando.toLocaleString('es-PY') %></strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Monto a retirar (Gs.)</label>
+                        <input type="number" name="amount" class="form-control form-control-lg fw-bold border-dark" placeholder="Ej: 50000" max="<%= stats.totalNando %>" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-dark fw-bold px-4 rounded-3 shadow-sm">Confirmar Retiro</button>
                 </div>
             </form>
         </div>
