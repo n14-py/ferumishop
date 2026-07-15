@@ -7,14 +7,14 @@
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-        <link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     
     <style>
         /* Estilos específicos para la página del producto para asegurar el responsive */
         .product-detail-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; flex-wrap: wrap; gap: 40px; }
         .product-images-section { flex: 1; min-width: 300px; }
-        .product-info-section { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
+        .product-info-section { flex: 1; min-width: 300px; display: flex; flex-direction: column; position: relative; }
         
         /* Galería */
         .main-image-container { width: 100%; border-radius: 15px; overflow: hidden; background: #f9f9f9; text-align: center; margin-bottom: 15px; border: 1px solid #eee; }
@@ -27,7 +27,9 @@
         /* Información */
         .product-title { font-size: 2.2rem; font-weight: bold; color: #333; margin-bottom: 10px; line-height: 1.2; }
         .product-price { font-size: 2rem; font-weight: bold; color: var(--primary-color, #ff4757); margin-bottom: 20px; }
-        .product-description { font-size: 1.1rem; color: #555; line-height: 1.6; margin-bottom: 30px; }
+        
+        /* MEJORA LECTURA SEO: pre-wrap respeta los saltos de línea y espacios de tu texto */
+        .product-description { font-size: 1.1rem; color: #555; line-height: 1.6; margin-bottom: 30px; white-space: pre-wrap; word-break: break-word; }
         
         /* Variantes (Botones Efectos/Tonos) */
         .variants-box { margin-bottom: 25px; padding: 20px; background: #fdfdfd; border-radius: 15px; border: 1px solid #eee; }
@@ -43,18 +45,41 @@
         .stock-ok { color: #198754; }
         .stock-out { color: #dc3545; }
 
-        /* Botones de Acción */
-        .action-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+        /* MEJORA BOTONES FIJOS: Ahora siguen al usuario al hacer scroll */
+        .action-buttons { 
+            display: flex; flex-direction: column; gap: 15px; margin-top: auto; 
+            position: sticky; bottom: 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px);
+            padding: 15px 0; z-index: 100; border-top: 1px solid transparent;
+        }
         .btn-cart, .btn-whatsapp { width: 100%; padding: 16px; border-radius: 50px; font-size: 1.2rem; font-weight: bold; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; color: white; text-decoration: none; }
         .btn-cart { background: #333; }
         .btn-cart:hover { background: #000; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .btn-whatsapp { background: #25D366; }
         .btn-whatsapp:hover { background: #128C7E; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3); }
 
+        /* MEJORA: Sección de Recomendados al fondo */
+        .recommended-section { width: 100%; margin-top: 30px; padding-top: 40px; border-top: 2px solid #eee; }
+        .recommended-section h2 { text-align: center; margin-bottom: 30px; font-size: 2rem; color: #333; font-weight: bold; }
+
         @media (max-width: 768px) {
-            .product-detail-container { padding: 0 15px; margin: 20px auto; }
+            /* Espacio abajo para que no se oculte texto con la barra fija */
+            .product-detail-container { padding: 0 15px; margin: 20px auto; padding-bottom: 180px; }
             .product-title { font-size: 1.8rem; }
             .btn-cart, .btn-whatsapp { font-size: 1.1rem; padding: 14px; }
+            
+            /* En celulares es una barra fija 100% segura abajo */
+            .action-buttons {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 15px 20px;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+                margin: 0;
+                border-radius: 20px 20px 0 0;
+                border-top: 1px solid #eee;
+            }
         }
     </style>
 </head>
@@ -148,6 +173,18 @@
             </div>
 
         </section>
+
+        <% if (locals.recommendedProducts && recommendedProducts.length > 0) { %>
+        <section class="recommended-section">
+            <h2>También podría interesarte</h2>
+            <div class="product-grid">
+                <% recommendedProducts.forEach(prod => { %>
+                    <%- include('../partials/product-card.html', { product: prod }) %>
+                <% }); %>
+            </div>
+        </section>
+        <% } %>
+
     </main>
 
     <%- include('../partials/footer.html') %>
