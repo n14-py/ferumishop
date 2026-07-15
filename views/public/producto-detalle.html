@@ -45,11 +45,9 @@
         .stock-ok { color: #198754; }
         .stock-out { color: #dc3545; }
 
-        /* MEJORA BOTONES FIJOS: Ahora siguen al usuario al hacer scroll */
+        /* Botones de Accion (Sin flotantes, adaptados al nuevo diseño) */
         .action-buttons { 
-            display: flex; flex-direction: column; gap: 15px; margin-top: auto; 
-            position: sticky; bottom: 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px);
-            padding: 15px 0; z-index: 100; border-top: 1px solid transparent;
+            display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px;
         }
         .btn-cart, .btn-whatsapp { width: 100%; padding: 16px; border-radius: 50px; font-size: 1.2rem; font-weight: bold; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.3s; color: white; text-decoration: none; }
         .btn-cart { background: #333; }
@@ -57,29 +55,16 @@
         .btn-whatsapp { background: #25D366; }
         .btn-whatsapp:hover { background: #128C7E; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3); }
 
-        /* MEJORA: Sección de Recomendados al fondo */
-        .recommended-section { width: 100%; margin-top: 30px; padding-top: 40px; border-top: 2px solid #eee; }
+        .divider { border: 0; border-top: 1px solid #eee; margin: 30px 0; }
+
+        /* Sección de Recomendados */
+        .recommended-section { width: 100%; margin-top: 20px; padding-top: 40px; border-top: 2px solid #eee; }
         .recommended-section h2 { text-align: center; margin-bottom: 30px; font-size: 2rem; color: #333; font-weight: bold; }
 
         @media (max-width: 768px) {
-            /* Espacio abajo para que no se oculte texto con la barra fija */
-            .product-detail-container { padding: 0 15px; margin: 20px auto; padding-bottom: 180px; }
+            .product-detail-container { padding: 0 15px; margin: 20px auto; }
             .product-title { font-size: 1.8rem; }
             .btn-cart, .btn-whatsapp { font-size: 1.1rem; padding: 14px; }
-            
-            /* En celulares es una barra fija 100% segura abajo */
-            .action-buttons {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: white;
-                padding: 15px 20px;
-                box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
-                margin: 0;
-                border-radius: 20px 20px 0 0;
-                border-top: 1px solid #eee;
-            }
         }
     </style>
 </head>
@@ -90,6 +75,7 @@
 
     <main class="product-detail-container">
         
+        <!-- COLUMNA IZQUIERDA: FOTOS -->
         <section class="product-images-section">
             <div class="main-image-container">
                 <% if (product.photos && product.photos.length > 0) { %>
@@ -111,16 +97,13 @@
             <% } %>
         </section>
 
-
+        <!-- COLUMNA DERECHA: INFORMACIÓN Y BOTONES -->
         <section class="product-info-section">
             
             <h1 class="product-title"><%= product.name %></h1>
             <div class="product-price"><%= formatPrice(product.price) %></div>
             
-            <div class="product-description">
-                <%- product.description %>
-            </div>
-
+            <!-- 1. BLOQUE DE VARIANTES (Primero) -->
             <% if (product.hasVariants && product.variants && product.variants.length > 0) { %>
                 <div class="variants-box">
                     <span class="variants-title">Selecciona una opción:</span>
@@ -156,14 +139,14 @@
                 </div>
             <% } %>
 
+            <!-- 2. BLOQUE DE BOTONES SUPERIOR (Antes de la descripción) -->
             <div class="action-buttons">
-                <button id="btnAddToCart" 
-                        data-id="<%= product._id %>" 
+                <button data-id="<%= product._id %>" 
                         data-name="<%= product.name %>" 
                         data-price="<%= product.price %>" 
                         data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
-                        onclick="handleAddToCart()" 
-                        class="btn-cart">
+                        onclick="handleAddToCart(this)" 
+                        class="btn-cart btnAddToCart">
                     <i class="fas fa-shopping-cart"></i> Añadir al Carrito
                 </button>
 
@@ -172,8 +155,34 @@
                 </button>
             </div>
 
+            <hr class="divider">
+
+            <!-- 3. DESCRIPCIÓN SEO (Al medio) -->
+            <div class="product-description">
+                <%- product.description %>
+            </div>
+
+            <hr class="divider">
+
+            <!-- 4. BLOQUE DE BOTONES INFERIOR (Después de leer toda la descripción) -->
+            <div class="action-buttons" style="margin-bottom: 0;">
+                <button data-id="<%= product._id %>" 
+                        data-name="<%= product.name %>" 
+                        data-price="<%= product.price %>" 
+                        data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
+                        onclick="handleAddToCart(this)" 
+                        class="btn-cart btnAddToCart">
+                    <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                </button>
+
+                <button onclick="handleWhatsApp()" class="btn-whatsapp">
+                    <i class="fab fa-whatsapp fa-lg"></i> Comprar por WhatsApp
+                </button>
+            </div>
+
         </section>
 
+        <!-- SECCIÓN DE PRODUCTOS RECOMENDADOS -->
         <% if (locals.recommendedProducts && recommendedProducts.length > 0) { %>
         <section class="recommended-section">
             <h2>También podría interesarte</h2>
@@ -194,7 +203,6 @@
         const originalMainImageSrc = "<%= product.photos && product.photos.length > 0 ? product.photos[0] : '' %>";
         const originalCartImageSrc = "<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>";
         const mainProductImageElement = document.getElementById('mainProductImage');
-        const btnAddToCartElement = document.getElementById('btnAddToCart');
 
         // 2. Cambiar foto al tocar miniatura
         function changeMainImage(thumbElement, newSrc) {
@@ -235,30 +243,37 @@
             }
 
             // --- LA MAGIA DE LA FOTO ---
+            // Buscamos todos los botones de "Añadir al carrito" (el de arriba y el de abajo)
+            const cartButtons = document.querySelectorAll('.btnAddToCart');
+
             if (variantPhoto && variantPhoto !== '') {
                 // Si la variante tiene su propia foto, la mostramos en grande
                 changeMainImage(null, variantPhoto);
-                // Le pasamos esa misma foto en chiquito al botón del carrito
-                btnAddToCartElement.setAttribute('data-image', variantPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
+                // Le pasamos esa misma foto en chiquito a LOS DOS botones del carrito
+                cartButtons.forEach(btnCart => {
+                    btnCart.setAttribute('data-image', variantPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
+                });
             } else {
                 // Si la variante NO tiene foto, volvemos a la original del producto
                 changeMainImage(null, originalMainImageSrc);
-                btnAddToCartElement.setAttribute('data-image', originalCartImageSrc);
+                cartButtons.forEach(btnCart => {
+                    btnCart.setAttribute('data-image', originalCartImageSrc);
+                });
             }
         }
 
-        // 4. Añadir al carrito global
-        function handleAddToCart() {
+        // 4. Añadir al carrito global (Soporta múltiples botones)
+        function handleAddToCart(clickedBtn) {
             const stock = parseInt(document.getElementById('currentStock').value);
             if (stock <= 0) {
                 alert("⚠️ Lo sentimos, el modelo seleccionado está agotado actualmente.");
                 return;
             }
 
-            const baseId = btnAddToCartElement.getAttribute('data-id');
-            const baseName = btnAddToCartElement.getAttribute('data-name');
-            const price = btnAddToCartElement.getAttribute('data-price');
-            const currentImage = btnAddToCartElement.getAttribute('data-image'); // Atrapa la foto actual
+            const baseId = clickedBtn.getAttribute('data-id');
+            const baseName = clickedBtn.getAttribute('data-name');
+            const price = clickedBtn.getAttribute('data-price');
+            const currentImage = clickedBtn.getAttribute('data-image');
             
             const selectedVariant = document.getElementById('selectedVariantName').value;
             
@@ -292,14 +307,16 @@
             window.open(link, '_blank');
         }
 
-        // Al cargar la página, si la primera variante tiene foto, mostrarla
+        // Al cargar la página, si la primera variante tiene foto, mostrarla en los botones también
         window.onload = () => {
             const firstVariantBtn = document.querySelector('.btn-variant.selected');
             if (firstVariantBtn) {
                 const initialPhoto = firstVariantBtn.getAttribute('data-photo');
                 if (initialPhoto && initialPhoto !== '') {
                     changeMainImage(null, initialPhoto);
-                    btnAddToCartElement.setAttribute('data-image', initialPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
+                    document.querySelectorAll('.btnAddToCart').forEach(btnCart => {
+                        btnCart.setAttribute('data-image', initialPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
+                    });
                 }
             }
         };
