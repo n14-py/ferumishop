@@ -234,12 +234,11 @@ const Giveaway = mongoose.model('Giveaway', giveawaySchema);
 
 
 // --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
-// --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
 const transactionSchema = new mongoose.Schema({
-    type: { type: String, enum: ['ingreso', 'egreso'], required: true },
+    type: { type: String, enum: ['ingreso', 'egreso', 'capital'], required: true }, // <-- SE AGREGÓ 'capital'
     description: { type: String, required: true }, 
     amount: { type: Number, required: true }, // Total pagado por el cliente
-    cost: { type: Number, default: 0 }, // Costo de Reposición
+    cost: { type: Number, default: 0 }, // Costo de Reposici
     reinvestment: { type: Number, default: 0 }, // Costo destinado a comprar producto extra
     profitNando: { type: Number, default: 0 }, // Ganancia limpia Nando
     profitMayu: { type: Number, default: 0 }, // Ganancia limpia Mayu
@@ -2097,16 +2096,44 @@ app.post('/admin/importaciones/pedidos/status/:id', requireAdmin, async (req, re
 // GESTIÓN DE CAJA Y FINANZAS (ADMIN)
 // =============================================
 
-// Ver la caja del mes actual
-// Ver la caja del mes actual
+// Ver la caja del mes actual (Con filtros y cálculos históricos)
 app.get('/admin/caja', requireAdmin, async (req, res, next) => {
     try {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        // 1. Manejo del Filtro de Meses y Años
+        const queryMonth = parseInt(req.query.mes);
+        const queryYear = parseInt(req.query.anio);
 
+        const now = new Date();
+        let targetDate = now;
+        
+        // Si mandaron mes y año, usamos ese (restando 1 al mes porque en JS enero es 0)
+        if (queryMonth && queryYear) {
+            targetDate = new Date(queryYear, queryMonth - 1, 1);
+        }
+
+        const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+        const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
+
+        // 2. Obtener solo los meses/años donde existen registros en la Base de Datos
+        const allTx = await Transaction.find().select('date');
+        const availableMonthsMap = {};
+        allTx.forEach(t => {
+            const y = t.date.getFullYear();
+            const m = t.date.getMonth() + 1;
+            availableMonthsMap[`${y}-${m}`] = { year: y, month: m };
+        });
+        
+        // Ordenados del más reciente al más antiguo
+        const availableMonths = Object.values(availableMonthsMap).sort((a, b) => {
+            if (a.year !== b.year) return b.year - a.year;
+            return b.month - a.month;
+        });
+
+        // 3. Traer transacciones del mes
         const transactions = await Transaction.find({ date: { $gte: startOfMonth, $lte: endOfMonth } }).sort({ date: -1 });
-        const products = await Product.find().select('name price costPrice stock hasVariants variants');
+        
+        // 4. FIX DE LA FOTO: Agregamos 'photos' al SELECT para arreglar el error del "?"
+        const products = await Product.find().select('name price costPrice stock hasVariants variants photos');
 
         let totalIngresos = 0;
         let totalCostosReposicion = 0;
@@ -2114,6 +2141,7 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
         let totalNando = 0;
         let totalMayu = 0;
         let totalEgresosExtra = 0;
+        let totalCapitalMes = 0;
 
         transactions.forEach(t => {
             if (t.type === 'ingreso') {
@@ -2124,28 +2152,45 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
                 totalMayu += t.profitMayu || 0;
             } else if (t.type === 'egreso') {
                 totalEgresosExtra += t.amount;
-                // Si es un retiro de socio, descontamos de sus billeteras
-                totalNando += t.profitNando || 0;
+                // Si es retiro, descuenta
+                totalNando += t.profitNando || 0; 
                 totalMayu += t.profitMayu || 0;
+            } else if (t.type === 'capital') {
+                totalCapitalMes += t.amount; // Suma el capital inyectado
             }
         });
 
         const gananciaNeta = totalIngresos - totalCostosReposicion - totalEgresosExtra;
 
+        // 5. CÁLCULO DE LA DEUDA HISTÓRICA ACUMULADA 
+        // Sumamos TODA la historia hasta fin del mes seleccionado para saber cuánto se les debe
+        const lifetimeTx = await Transaction.find({ date: { $lte: endOfMonth } });
+        let deudaTotalNando = 0;
+        let deudaTotalMayu = 0;
+        lifetimeTx.forEach(t => {
+            deudaTotalNando += t.profitNando || 0;
+            deudaTotalMayu += t.profitMayu || 0;
+        });
+
         res.render('admin/caja', {
             pageTitle: 'Caja y Finanzas',
             transactions,
             products,
+            availableMonths, // Enviamos los meses válidos a la vista
+            currentFilter: { mes: targetDate.getMonth() + 1, anio: targetDate.getFullYear() },
             stats: { 
                 totalIngresos, 
                 totalCostosReposicion, 
-                totalReinversion,
-                totalNando,
-                totalMayu,
+                totalReinversion, 
+                totalNando, 
+                totalMayu, 
                 totalEgresosExtra, 
-                gananciaNeta 
+                totalCapitalMes,
+                gananciaNeta,
+                deudaTotalNando,
+                deudaTotalMayu
             },
-            mesActual: now.toLocaleString('es-PY', { month: 'long', year: 'numeric' }).toUpperCase(),
+            mesActual: targetDate.toLocaleString('es-PY', { month: 'long', year: 'numeric' }).toUpperCase(),
             success: req.session.success,
             error: req.session.error
         });
@@ -2155,6 +2200,58 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
         next(err);
     }
 });
+
+
+// =============================================
+// NUEVO: Ruta Especial para el Reporte PDF
+// =============================================
+app.get('/admin/caja/reporte', requireAdmin, async (req, res, next) => {
+    try {
+        const queryMonth = parseInt(req.query.mes);
+        const queryYear = parseInt(req.query.anio);
+
+        let targetDate = new Date();
+        if (queryMonth && queryYear) {
+            targetDate = new Date(queryYear, queryMonth - 1, 1);
+        }
+
+        const startOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+        const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
+
+        // Traemos todas las transacciones del mes ordenadas por fecha (de más antigua a más nueva para el reporte)
+        const transactions = await Transaction.find({ date: { $gte: startOfMonth, $lte: endOfMonth } }).sort({ date: 1 });
+
+        res.render('admin/reporte-caja', {
+            mesActual: targetDate.toLocaleString('es-PY', { month: 'long', year: 'numeric' }).toUpperCase(),
+            transactions
+        });
+    } catch (err) {
+        res.status(500).send("Error generando el reporte de caja");
+    }
+});
+
+// =============================================
+// NUEVO: Registrar inyección de Capital
+// =============================================
+app.post('/admin/caja/capital', requireAdmin, async (req, res, next) => {
+    try {
+        const { description, amount } = req.body;
+        const newTx = new Transaction({
+            type: 'capital',
+            description: purify.sanitize(description),
+            amount: parseInt(amount.toString().replace(/\./g, '')),
+            cost: 0, reinvestment: 0, profitNando: 0, profitMayu: 0
+        });
+        await newTx.save();
+        req.session.success = 'Capital registrado correctamente.';
+        res.redirect('/admin/caja');
+    } catch (err) {
+        req.session.error = `Error al inyectar capital: ${err.message}`;
+        res.redirect('/admin/caja');
+    }
+});
+
+
 
 // Registrar un Retiro de Socio (Egreso que descuenta de su ganancia)
 app.post('/admin/caja/retiro', requireAdmin, async (req, res, next) => {
