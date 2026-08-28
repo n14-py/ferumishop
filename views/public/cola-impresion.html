@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cola de Impresión - FERUMI</title>
+    <!-- Fuente elegante para la firma -->
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <!-- Librería ultraligera para generar QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        body {
+            background: #e9ecef;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: monospace; /* Tipo de letra de ticket clásico */
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Contenedor exacto para impresora térmica de 58mm (384px) */
+        .ticket {
+            background: white;
+            width: 384px;
+            padding: 15px;
+            box-sizing: border-box;
+            color: black;
+        }
+
+        .centrado { text-align: center; }
+        .negrita { font-weight: bold; }
+        .separador { border-top: 1px dashed black; margin: 10px 0; }
+        .firma { font-family: 'Great Vibes', cursive; font-size: 32px; margin-top: 5px; }
+        #qrcode { display: flex; justify-content: center; margin-top: 15px; }
+
+        /* =========================================
+           ZONA DEL BOTÓN (MUY ABAJO)
+           ========================================= */
+        .zona-accion {
+            margin-top: 800px; /* Aquí está la distancia larga que pediste */
+            padding-bottom: 50px;
+            text-align: center;
+        }
+
+        .btn-siguiente {
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #25D366; /* Verde tipo check */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+        }
+
+        /* Oculta los botones en el papel físico */
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .ticket { width: 100%; margin: 0; padding: 0; box-shadow: none; }
+            .zona-accion { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SI HAY UN PEDIDO PENDIENTE -->
+    <% if (pedido) { %>
+        
+        <div class="ticket">
+            <div class="centrado">
+                <h2 style="margin: 0;">FERUMI SHOP</h2>
+                <p style="margin: 5px 0;">Ticket de Entrega</p>
+            </div>
+
+            <div class="separador"></div>
+
+            <p><span class="negrita">Cliente:</span> <%= pedido.cliente %></p>
+            <p><span class="negrita">Fecha:</span> <%= new Date(pedido.fecha).toLocaleDateString('es-PY', {hour: '2-digit', minute:'2-digit'}) %></p>
+
+            <div class="separador"></div>
+
+            <table style="width: 100%; text-align: left; font-size: 14px;">
+                <thead>
+                    <tr>
+                        <th>Detalle</th>
+                        <th style="text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% pedido.items.forEach(item => { %>
+                    <tr>
+                        <td><%= item.nombre %></td>
+                        <td style="text-align: right;"><%= item.precio.toLocaleString('es-PY') %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+
+            <div class="separador"></div>
+            <h3 style="text-align: right; margin: 5px 0;">Total: <%= pedido.total.toLocaleString('es-PY') %> Gs</h3>
+            <div class="separador"></div>
+
+            <div class="centrado">
+                <p style="margin: 10px 0 0 0;">¡Gracias por tu compra!</p>
+                <div class="firma">Ferumishop</div>
+            </div>
+
+            <!-- Si cargaste coordenadas, genera el QR -->
+            <% if (pedido.lat && pedido.lng) { %>
+                <div id="qrcode"></div>
+                <p class="centrado" style="font-size: 10px; margin-top: 5px;">Escanear para mapa</p>
+                <script>
+                    const linkMapa = `https://www.google.com/maps/search/?api=1&query=<%= pedido.lat %>,<%= pedido.lng %>`;
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: linkMapa,
+                        width: 140,
+                        height: 140,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff"
+                    });
+                </script>
+            <% } %>
+        </div>
+
+        <div class="zona-accion">
+            <!-- Este botón POST marca el ticket como impreso y carga el siguiente -->
+            <form action="/logistica/despacho/termica/marcar-impreso/<%= pedido.id %>" method="POST">
+                <button type="submit" class="btn-siguiente">✅ YA IMPRIMÍ - SIGUIENTE</button>
+            </form>
+        </div>
+
+        <!-- Disparador automático de impresión (1 segundo) -->
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 1000);
+            }
+        </script>
+
+    <!-- SI NO HAY PEDIDOS PENDIENTES -->
+    <% } else { %>
+        <div style="text-align: center; margin-top: 100px; font-family: sans-serif; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <h1 style="color: #d81b60; font-size: 50px; margin-bottom: 10px;">✅</h1>
+            <h2>Fila Vacía</h2>
+            <p style="font-size: 18px; color: #666;">No hay tickets pendientes de impresión.</p>
+            <button onclick="window.location.reload()" style="margin-top: 20px; padding: 15px 30px; font-size: 18px; cursor: pointer; border-radius: 8px; border: none; background: #333; color: white;">🔄 Actualizar</button>
+        </div>
+    <% } %>
+
+</body>
+</html>

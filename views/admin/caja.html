@@ -320,6 +320,15 @@
             </div>
             <form action="/admin/caja/venta" method="POST" class="form-safe-submit">
                 <div class="modal-body p-4">
+                    <!-- DATOS PARA EL TICKET DE DELIVERY -->
+<div class="mb-3 border-top pt-3 mt-3">
+    <label class="form-label fw-bold" style="color: #d81b60;">
+        <i class="fas fa-motorcycle"></i> Datos para Delivery (Opcional)
+    </label>
+    <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del Cliente (Ej: María López)">
+    <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas (Ej: -25.672376, -57.826487)">
+    <small class="text-muted">Pegar las coordenadas de Google Maps aquí para generar el QR.</small>
+</div>
                     
                     <input type="hidden" name="productId" id="selectedProductId" required>
 
