@@ -234,6 +234,7 @@ const Giveaway = mongoose.model('Giveaway', giveawaySchema);
 
 
 // --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
+// --- NUEVO: Modelo de Transacciones (Caja / Finanzas) ---
 const transactionSchema = new mongoose.Schema({
     type: { type: String, enum: ['ingreso', 'egreso', 'capital'], required: true },
     description: { type: String, required: true }, 
@@ -243,9 +244,10 @@ const transactionSchema = new mongoose.Schema({
     profitNando: { type: Number, default: 0 }, // Ganancia limpia Nando
     profitMayu: { type: Number, default: 0 }, // Ganancia limpia Mayu
     date: { type: Date, default: Date.now },
+    // --- DATOS DEL DELIVERY ---
     customerName: { type: String, default: 'Cliente Local' },
+    customerPhone: { type: String, default: '' }, // <-- NUEVO: WhatsApp del cliente
     locationCoords: { type: String, default: '' },
-    // NUEVO: Control de la cola de impresión
     isPrinted: { type: Boolean, default: false } 
 });
 
@@ -2313,6 +2315,7 @@ app.post('/admin/caja/gasto', requireAdmin, async (req, res, next) => {
 // Registrar una Venta Manual (Ingreso) - VERSIÓN ULTRA MEJORADA
 // Registrar una Venta Manual (Ingreso)
 // Registrar una Venta Manual (Ingreso) - VERSI N ULTRA MEJORADA
+// Registrar una Venta Manual (Ingreso) - VERSI N ULTRA MEJORADA
 app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
     try {
         const lastTxTime = req.session.lastSaleTime || 0;
@@ -2320,41 +2323,31 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         if (nowTime - lastTxTime < 3000) return res.redirect('/admin/caja');
         req.session.lastSaleTime = nowTime;
 
-        // AGREGADO: customerName y locationCoords desde el formulario
-        const { productId, variantName, sellPrice, quantity, customerName, locationCoords } = req.body;
+        // AGREGADO: customerPhone
+        const { productId, variantName, sellPrice, quantity, customerName, customerPhone, locationCoords } = req.body;
         const qty = parseInt(quantity) || 1;
         
         const product = await Product.findById(productId);
         if (!product) throw new Error('Producto no encontrado.');
 
-        // 1. Total cobrado al cliente
         const totalAmount = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
-        
-        // 2. Costo del producto desde la base de datos (Ej: 3000)
         const unitCost = product.costPrice || 0;
         const costoReposicion = unitCost * qty;
         
-        // 3. Variables para repartir
         let reinversion = 0;
         let gananciaRestante = 0;
         let gananciaNando = 0;
         let gananciaMayu = 0;
 
-        // Si cobramos m s de lo que nos cost  el producto, hay ganancia bruta
         if (totalAmount > costoReposicion) {
             const gananciaBruta = totalAmount - costoReposicion;
-            
-            //  Alcanza para duplicar el producto al 100% o sobra dinero?
             if (gananciaBruta >= costoReposicion) {
-                reinversion = costoReposicion; // Separamos el costo exacto para comprar 1 extra
-                gananciaRestante = gananciaBruta - reinversion; // El sobrante es ganancia limpia
+                reinversion = costoReposicion;
+                gananciaRestante = gananciaBruta - reinversion;
             } else {
-                // Si la ganancia es bajita (Ej: solo sobran 300 Gs)
-                // Mitad para el fondo de duplicar, mitad para ustedes. As  SIEMPRE suman plata.
                 reinversion = Math.floor(gananciaBruta / 2);
                 gananciaRestante = gananciaBruta - reinversion;
             }
-            // Dividir la ganancia restante 50/50
             gananciaNando = Math.floor(gananciaRestante / 2);
             gananciaMayu = gananciaRestante - gananciaNando;
         }
@@ -2362,7 +2355,7 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         let desc = `Venta: ${product.name} (x${qty})`;
         if (variantName) desc = `Venta: ${product.name} - ${variantName} (x${qty})`;
 
-        // 4. Guardar TODO en la base de datos (NUEVO: Incluye nombre y coordenadas)
+        // AGREGADO: Guardamos el customerPhone
         const newTx = new Transaction({ 
             type: 'ingreso', 
             description: desc, 
@@ -2372,11 +2365,11 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
             profitNando: gananciaNando,
             profitMayu: gananciaMayu,
             customerName: customerName || 'Cliente Local',
+            customerPhone: customerPhone || '',
             locationCoords: locationCoords || ''
         });
         await newTx.save();
 
-        // 5. Descontar Stock
         if (product.hasVariants && variantName) {
             const variantIndex = product.variants.findIndex(v => v.name === variantName);
             if (variantIndex > -1 && product.variants[variantIndex].stock >= qty) {
@@ -2386,9 +2379,10 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
             if (product.stock >= qty) product.stock -= qty;
         }
         await product.save();
+        
+        req.session.success = 'Venta registrada con éxito.';
+        res.redirect('/admin/caja');
 
-        // REDIRECCIÓN DIRECTA AL TICKET PÚBLICO
-        res.redirect('/admin/caja'); // <-- VOLVEMOS A LA CAJA NORMALMENTE
     } catch (err) {
         req.session.error = `Error al registrar venta: ${err.message}`;
         res.redirect('/admin/caja');
@@ -2403,6 +2397,60 @@ app.post('/admin/caja/delete/:id', requireAdmin, async (req, res, next) => {
     } catch (err) {
         req.session.error = `Error: ${err.message}`;
         res.redirect('/admin/caja');
+    }
+});
+
+
+
+// =============================================
+// NUEVO: RUTA PÚBLICA PARA EL CÓDIGO QR (DELIVERY)
+// =============================================
+app.get('/pedido/:id', async (req, res, next) => {
+    try {
+        const transaccion = await Transaction.findById(req.params.id);
+        if (!transaccion) {
+            return res.status(404).render('public/error', { message: 'Pedido no encontrado.' });
+        }
+
+        // 1. Separar coordenadas para el mapa
+        let lat = '';
+        let lng = '';
+        if (transaccion.locationCoords) {
+            const coords = transaccion.locationCoords.split(',');
+            if (coords.length === 2) {
+                lat = coords[0].trim();
+                lng = coords[1].trim();
+            }
+        }
+
+        // 2. Limpiar teléfono para que el botón de WhatsApp funcione perfecto
+        let phone = transaccion.customerPhone || '';
+        phone = phone.replace(/\D/g, ''); // Deja solo números
+        if (phone.startsWith('09')) {
+            phone = '595' + phone.substring(1); // Convierte 0981... a 595981...
+        }
+
+        // 3. Armar el objeto del pedido
+        const pedido = {
+            id: transaccion._id,
+            cliente: transaccion.customerName || 'Cliente',
+            telefonoOriginal: transaccion.customerPhone || 'No especificado',
+            telefonoWa: phone,
+            items: [{ nombre: transaccion.description, precio: transaccion.amount }],
+            total: transaccion.amount,
+            lat: lat,
+            lng: lng,
+            fecha: transaccion.date
+        };
+
+        // 4. Renderizar la vista móvil para el delivery
+        res.render('public/detalle-delivery', {
+            pageTitle: 'Detalle para Delivery',
+            pedido: pedido
+        });
+
+    } catch (err) {
+        next(err);
     }
 });
 
