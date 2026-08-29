@@ -165,18 +165,18 @@
             <hr class="divider">
 
             <!-- 4. BLOQUE DE BOTONES INFERIOR (Después de leer toda la descripción) -->
+<!-- 4. BLOQUE DE BOTONES INFERIOR (Después de leer toda la descripción) -->
             <div class="action-buttons" style="margin-bottom: 0;">
-                <button data-id="<%= product._id %>" 
-                        data-name="<%= product.name %>" 
-                        data-price="<%= product.price %>" 
-                        data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
-                        onclick="handleAddToCart(this)" 
-                        class="btn-cart btnAddToCart">
-                    <i class="fas fa-shopping-cart"></i> Añadir al Carrito
+                <button data-id="<%= product._id %>"
+                         data-name="<%= product.name %>"
+                         data-price="<%= product.price %>"
+                         data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>"
+                         onclick="abrirModalPagopar(this)"
+                         class="btn-whatsapp" style="background: #d81b60;">
+                    <i class="fas fa-credit-card fa-lg"></i> Comprar con Pagopar
                 </button>
-
-                <button onclick="handleWhatsApp()" class="btn-whatsapp">
-                    <i class="fab fa-whatsapp fa-lg"></i> Comprar por WhatsApp
+                <button onclick="handleWhatsApp()" class="btn-whatsapp" style="background: #25D366; margin-top: 10px;">
+                    <i class="fab fa-whatsapp fa-lg"></i> Consultar por WhatsApp
                 </button>
             </div>
 
@@ -193,6 +193,117 @@
             </div>
         </section>
         <% } %>
+
+        <!-- MODAL DE PAGOPAR -->
+        <div id="modalPagopar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+            <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; position: relative;">
+                <button onclick="cerrarModalPagopar()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                <h4 style="color: #d81b60; margin-bottom: 20px;"><i class="fas fa-lock"></i> Compra Segura</h4>
+                
+                <input type="hidden" id="pago_id">
+                <input type="hidden" id="pago_nombre">
+                <input type="hidden" id="pago_precio">
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; font-size: 0.9rem;">Nombre Completo *</label>
+                    <input type="text" id="chk_nombre" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; font-size: 0.9rem;">Cédula de Identidad *</label>
+                    <input type="text" id="chk_ci" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; font-size: 0.9rem;">Correo Electrónico *</label>
+                    <input type="email" id="chk_email" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: bold; font-size: 0.9rem;">Teléfono / WhatsApp *</label>
+                    <input type="text" id="chk_telefono" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
+                </div>
+
+                <button id="btn-procesar-pago" onclick="procesarPagoDirecto()" style="width: 100%; padding: 15px; background: #d81b60; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
+                    Ir a Pagar
+                </button>
+                <p id="pago-status" style="display:none; color: #d81b60; font-weight: bold; text-align: center; margin-top: 15px;">Procesando...</p>
+            </div>
+        </div>
+
+        <script>
+            // Funciones del Modal de Pago
+            function abrirModalPagopar(btn) {
+                // Verificar stock
+                const stock = parseInt(document.getElementById('currentStock').value);
+                if (stock <= 0) {
+                    alert("Lo sentimos, el modelo seleccionado está agotado actualmente.");
+                    return;
+                }
+
+                const baseId = btn.getAttribute('data-id');
+                const baseName = btn.getAttribute('data-name');
+                const price = btn.getAttribute('data-price');
+                const selectedVariant = document.getElementById('selectedVariantName').value;
+
+                // Guardar datos temporalmente en el modal
+                document.getElementById('pago_id').value = baseId;
+                document.getElementById('pago_nombre').value = selectedVariant ? `${baseName} - ${selectedVariant}` : baseName;
+                document.getElementById('pago_precio').value = price;
+
+                document.getElementById('modalPagopar').style.display = 'flex';
+            }
+
+            function cerrarModalPagopar() {
+                document.getElementById('modalPagopar').style.display = 'none';
+            }
+
+            async function procesarPagoDirecto() {
+                const nombre = document.getElementById('chk_nombre').value.trim();
+                const ci = document.getElementById('chk_ci').value.trim();
+                const email = document.getElementById('chk_email').value.trim();
+                const telefono = document.getElementById('chk_telefono').value.trim();
+                const id = document.getElementById('pago_id').value;
+                const prodNombre = document.getElementById('pago_nombre').value;
+                const precio = document.getElementById('pago_precio').value;
+
+                if (!nombre || !ci || !email || !telefono) {
+                    alert("Por favor, completa todos los campos.");
+                    return;
+                }
+
+                document.getElementById('btn-procesar-pago').style.display = 'none';
+                document.getElementById('pago-status').style.display = 'block';
+
+                try {
+                    // Simular formato de carrito para que el backend lo entienda
+                    const cartItems = [{ id: id, name: prodNombre, quantity: 1, price: precio }];
+
+                    const response = await fetch('/tienda/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            customerName: nombre,
+                            customerDocument: ci,
+                            customerEmail: email,
+                            customerPhone: telefono,
+                            cartItems: cartItems
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success && data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        alert("Error: " + (data.message || "No se pudo iniciar el pago."));
+                        document.getElementById('btn-procesar-pago').style.display = 'block';
+                        document.getElementById('pago-status').style.display = 'none';
+                    }
+                } catch (error) {
+                    alert("Hubo un error de conexión.");
+                    document.getElementById('btn-procesar-pago').style.display = 'block';
+                    document.getElementById('pago-status').style.display = 'none';
+                }
+            }
+        </script>
 
     </main>
 
