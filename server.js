@@ -253,6 +253,28 @@ const transactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
+
+
+// --- NUEVO: Modelo de Pedido Web (Tienda Online / Pagopar) ---
+const webOrderSchema = new mongoose.Schema({
+    customerName: { type: String, required: true },
+    customerEmail: { type: String, required: true },
+    customerDocument: { type: String, required: true }, // Obligatorio para Pagopar (CI o RUC)
+    customerPhone: { type: String, required: true },
+    items: [{
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        name: { type: String },
+        quantity: { type: Number },
+        price: { type: Number }
+    }],
+    totalAmount: { type: Number, required: true },
+    pagoparHash: { type: String, default: null }, // El hash que nos devolverá Pagopar
+    status: { type: String, enum: ['pendiente', 'pagado', 'cancelado'], default: 'pendiente' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const WebOrder = mongoose.model('WebOrder', webOrderSchema);
+
 // =============================================
 // NUEVOS MODELOS: SISTEMA DE ASOCIADAS (IMPORTACIÓN B2B)
 // =============================================
@@ -820,6 +842,269 @@ app.get('/links', (req, res) => {
 //               SERVER.JS - FERUMI
 //             (PARTE 2 - FINAL)
 // =============================================
+
+
+// =============================================
+// RUTAS DE CHECKOUT Y PAGOPAR (TIENDA ONLINE)
+// =============================================
+
+// --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
+app.post('/tienda/checkout', async (req, res, next) => {
+    try {
+        // 1. Recibir datos del formulario de checkout y el carrito desde JS
+        const { customerName, customerEmail, customerDocument, customerPhone, cartItems } = req.body;
+
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ success: false, message: 'El carrito está vacío.' });
+        }
+
+        let totalAmount = 0;
+        let orderItems = [];
+        let pagoparItems = [];
+
+        // 2. Calcular total de forma segura consultando la BD
+        for (const item of cartItems) {
+            // El id viene del frontend. Separamos si tiene variante (Ej: "id-TonoClaro")
+            const baseId = item.id.split('-')[0]; 
+            const product = await Product.findById(baseId);
+            
+            if (product) {
+                const itemTotal = product.price * item.quantity;
+                totalAmount += itemTotal;
+
+                orderItems.push({
+                    productId: product._id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: product.price
+                });
+
+                // Estructura estricta que exige Pagopar para cada item
+                pagoparItems.push({
+                    ciudad: "1", // 1 obligatorio si no usas envíos tercerizados de Pagopar
+                    nombre: item.name,
+                    cantidad: item.quantity,
+                    categoria: "909", // 909 obligatorio si no usas envíos tercerizados
+                    public_key: process.env.PAGOPAR_PUBLIC_KEY,
+                    url_imagen: item.image || "",
+                    descripcion: item.name,
+                    id_producto: product._id.toString(),
+                    precio_total: itemTotal, // Pagopar pide el precio TOTAL del item (precio * cant)
+                    vendedor_telefono: "",
+                    vendedor_direccion: "",
+                    vendedor_direccion_referencia: "",
+                    vendedor_direccion_coordenadas: ""
+                });
+            }
+        }
+
+        // 3. Crear el pedido en nuestra base de datos (Estado: pendiente)
+        const newOrder = new WebOrder({
+            customerName: purify.sanitize(customerName),
+            customerEmail: purify.sanitize(customerEmail),
+            customerDocument: purify.sanitize(customerDocument),
+            customerPhone: purify.sanitize(customerPhone),
+            items: orderItems,
+            totalAmount: totalAmount
+        });
+        await newOrder.save();
+
+        const orderId = newOrder._id.toString();
+
+        // 4. Generar Token SHA1 de seguridad
+        // Regla: sha1(private_key + id_pedido + monto_total)
+        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + orderId + String(totalAmount);
+        const tokenPagopar = crypto.createHash('sha1').update(tokenString).digest('hex');
+
+        // Formatear fecha máxima de pago (Damos 3 días de gracia) - Formato: YYYY-MM-DD HH:MM:SS
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + 3);
+        const fechaMaxima = maxDate.toISOString().replace('T', ' ').substring(0, 19);
+
+        // 5. Armar el JSON maestro
+        const pagoparData = {
+            token: tokenPagopar,
+            comprador: {
+                ruc: "", // Vacío si no pide factura
+                email: customerEmail,
+                ciudad: 1,
+                nombre: customerName,
+                telefono: customerPhone,
+                direccion: "",
+                documento: customerDocument, // Obligatorio
+                coordenadas: "",
+                razon_social: customerName,
+                tipo_documento: "CI",
+                direccion_referencia: ""
+            },
+            public_key: process.env.PAGOPAR_PUBLIC_KEY,
+            monto_total: totalAmount,
+            tipo_pedido: "VENTA-COMERCIO",
+            compras_items: pagoparItems,
+            fecha_maxima_pago: fechaMaxima,
+            id_pedido_comercio: orderId,
+            descripcion_resumen: "Compra en FERUMI SHOP",
+            forma_pago: "" // Enviamos vacío para que le salgan todas las opciones (Tarjetas, QR, Tigo Money, etc)
+        };
+
+        // 6. Hacer la petición a Pagopar usando fetch nativo
+        const response = await fetch('https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pagoparData)
+        });
+
+        const result = await response.json();
+
+        // 7. Extraer el Hash y devolver al frontend
+        if (result.respuesta && result.resultado && result.resultado[0].data) {
+            const hashPagopar = result.resultado[0].data;
+            
+            // Guardamos el hash de Pagopar en el pedido
+            newOrder.pagoparHash = hashPagopar;
+            await newOrder.save();
+
+            // Devolvemos la URL para que el frontend redirija al cliente
+            res.json({ 
+                success: true, 
+                redirectUrl: `https://www.pagopar.com/pagos/${hashPagopar}` 
+            });
+        } else {
+            console.error("Error de Pagopar:", result);
+            res.status(400).json({ success: false, message: 'La pasarela rechazó la transacción.', details: result.resultado });
+        }
+
+    } catch (err) {
+        console.error('Error Checkout:', err);
+        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+    }
+});
+
+
+
+
+
+// --- PASO 3 PAGOPAR: Webhook de Notificación de Pago (Respuesta) ---
+app.post('/api/pagopar/webhook', async (req, res) => {
+    try {
+        const data = req.body;
+        
+        // Verificamos que venga la estructura correcta
+        if (!data || !data.resultado || data.resultado.length === 0) {
+            return res.status(400).send('Estructura JSON inválida');
+        }
+
+        const pagoInfo = data.resultado[0];
+        const hashPedido = pagoInfo.hash_pedido;
+        const tokenPagopar = pagoInfo.token;
+        const pagado = pagoInfo.pagado;
+
+        // 1. REGLA DE ORO DE SEGURIDAD: Validar el token
+        // Para el Webhook el token es: sha1(private_key + hash_pedido)
+        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + hashPedido;
+        const tokenLocal = crypto.createHash('sha1').update(tokenString).digest('hex');
+
+        if (tokenLocal !== tokenPagopar) {
+            console.error("ALERTA DE SEGURIDAD: Token de Pagopar no coincide.");
+            // Detenemos la ejecución y rechazamos la petición
+            return res.status(403).send('Token no coincide');
+        }
+
+        // 2. Buscar el pedido en nuestra base de datos
+        const order = await WebOrder.findOne({ pagoparHash: hashPedido });
+        
+        if (order) {
+            // 3. Actualizar el estado del pedido
+            if (pagado === true && order.status !== 'pagado') {
+                order.status = 'pagado';
+                
+                // OPCIONAL FUTURO: Aquí es donde descontarías el stock de tus productos
+                // o crearías el registro en la colección 'Transaction' para la caja.
+            } else if (pagado === false) {
+                // Si es un pago pendiente, reversado o el simulador en false
+                order.status = 'pendiente'; 
+            }
+            await order.save();
+        }
+
+        // 4. RETORNO OBLIGATORIO: Pagopar exige que le devolvamos EXACTAMENTE 
+        // el mismo array 'resultado' que nos enviaron, con status 200.
+        res.status(200).json(data.resultado);
+
+    } catch (err) {
+        console.error("Error en el Webhook de Pagopar:", err);
+        // Si hay un error 500, Pagopar volverá a intentar notificar cada 10 minutos
+        res.status(500).send('Error interno del servidor');
+    }
+});
+
+
+
+// --- PASO 4 PAGOPAR: Redireccionamiento y Consulta de Estado ---
+app.get('/tienda/resultado/:hash', async (req, res, next) => {
+    try {
+        const hashPedido = req.params.hash;
+
+        // 1. Generar token para consulta
+        // Regla: sha1(private_key + "CONSULTA")
+        const privateKey = process.env.PAGOPAR_PRIVATE_KEY;
+        const publicKey = process.env.PAGOPAR_PUBLIC_KEY;
+        const tokenString = privateKey + "CONSULTA";
+        const tokenConsulta = crypto.createHash('sha1').update(tokenString).digest('hex');
+
+        // 2. Armar el JSON de consulta
+        const payloadConsulta = {
+            hash_pedido: hashPedido,
+            token: tokenConsulta,
+            token_publico: publicKey
+        };
+
+        // 3. Consultar a Pagopar el estado real del pedido
+        const response = await fetch('https://api.pagopar.com/api/pedidos/1.1/traer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadConsulta)
+        });
+
+        const result = await response.json();
+
+        // 4. Procesar el resultado y renderizar la vista
+        if (result.respuesta && result.resultado && result.resultado.length > 0) {
+            const estadoPago = result.resultado[0];
+            
+            // Sincronizamos la base de datos local por si el webhook se retrasó
+            const order = await WebOrder.findOne({ pagoparHash: hashPedido });
+            if (order) {
+                if (estadoPago.pagado === true) {
+                    order.status = 'pagado';
+                } else if (estadoPago.cancelado === true) {
+                    order.status = 'cancelado';
+                }
+                await order.save();
+            }
+
+            // Renderizamos una pantalla de éxito, error o pago pendiente
+            res.render('public/pago-resultado', {
+                pageTitle: 'Resultado del Pago',
+                estado: estadoPago, // Pasamos el objeto completo a la vista
+                orderLocal: order
+            });
+        } else {
+            res.status(400).render('public/error', { 
+                pageTitle: 'Error de Pago', 
+                message: 'No pudimos verificar el estado de la transacción.' 
+            });
+        }
+
+    } catch (err) {
+        console.error("Error consultando estado en Pagopar:", err);
+        next(err);
+    }
+});
+
+
+
+
 
 // =============================================
 // RUTAS DE REGALOS (CLIENTE - NUEVO)

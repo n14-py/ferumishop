@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - FERUMI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+    <%- include('../partials/header.html') %>
+    
+    <main class="container" style="max-width: 600px; padding: 4rem 1rem; margin: 0 auto; text-align: center;">
+        <div style="background: white; border-radius: 20px; padding: 3rem 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+            
+            <% if (estado.pagado === true) { %>
+                <i class="fas fa-check-circle" style="font-size: 5rem; color: #25D366; margin-bottom: 1rem;"></i>
+                <h1 style="color: #333; margin-bottom: 10px;">¡Pago Exitoso!</h1>
+                <p style="color: #666; font-size: 1.1rem;">Tu pedido <strong>#<%= estado.numero_pedido %></strong> ha sido procesado correctamente por <%= formatPrice(estado.monto) %> Gs.</p>
+                <p style="color: #888;">Nos comunicaremos pronto contigo para la entrega.</p>
+            
+            <% } else if (estado.cancelado === true) { %>
+                <i class="fas fa-times-circle" style="font-size: 5rem; color: #d81b60; margin-bottom: 1rem;"></i>
+                <h1 style="color: #333; margin-bottom: 10px;">Pago Cancelado</h1>
+                <p style="color: #666; font-size: 1.1rem;">La transacción no pudo ser procesada o superó el límite de tiempo.</p>
+                
+            <% } else { %>
+                <i class="fas fa-clock" style="font-size: 5rem; color: #f6ad55; margin-bottom: 1rem;"></i>
+                <h1 style="color: #333; margin-bottom: 10px;">Pago Pendiente</h1>
+                <p style="color: #666; font-size: 1.1rem;">Elegiste pagar con <strong><%= estado.forma_pago %></strong>.</p>
+                
+                <% if (estado.mensaje_resultado_pago) { %>
+                    <div style="background: #fff8eb; padding: 1.5rem; border-radius: 12px; border: 1px solid #fbd38d; margin-top: 1.5rem; text-align: left;">
+                        <h4 style="color: #dd6b20; margin-bottom: 10px;"><%= estado.mensaje_resultado_pago.titulo %></h4>
+                        <div style="color: #555;"><%- estado.mensaje_resultado_pago.descripcion %></div>
+                    </div>
+                <% } %>
+            <% } %>
+
+            <div style="margin-top: 2rem;">
+                <a href="/tienda" class="btn btn-primary" style="padding: 12px 30px; border-radius: 50px;">Volver a la Tienda</a>
+            </div>
+        </div>
+    </main>
+    
+    <%- include('../partials/footer.html') %>
+</body>
+</html>
