@@ -850,6 +850,7 @@ app.get('/links', (req, res) => {
 
 // --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
 // --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
+// --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
 app.post('/tienda/checkout', async (req, res, next) => {
     try {
         const { customerName, customerEmail, customerDocument, customerPhone, cartItems } = req.body;
@@ -858,69 +859,52 @@ app.post('/tienda/checkout', async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'El carrito está vacío.' });
         }
 
+        // Para esta prueba, sumaremos todo y enviaremos un solo "item" a Pagopar como el ejemplo
         let totalAmount = 0;
         let orderItems = [];
-        let pagoparItems = [];
 
         for (const item of cartItems) {
-            const baseId = item.id.split('-')[0]; 
-            const product = await Product.findById(baseId);
-            
-            if (product) {
-                const itemTotal = parseInt(product.price * item.quantity);
-                totalAmount += itemTotal;
-
-                orderItems.push({
-                    productId: product._id,
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: product.price
-                });
-
-                pagoparItems.push({
-                    "ciudad": "1",
-                    "nombre": item.name.substring(0, 100),
-                    "cantidad": parseInt(item.quantity),
-                    "categoria": "909",
-                    "public_key": process.env.PAGOPAR_PUBLIC_KEY,
-                    "url_imagen": "",
-                    "descripcion": item.name.substring(0, 100),
-                    "id_producto": 1, // FORZADO A ENTERO: Evita el rechazo de la pasarela por los IDs alfanuméricos de Mongo
-                    "precio_total": itemTotal, 
-                    "vendedor_telefono": "",
-                    "vendedor_direccion": "",
-                    "vendedor_direccion_referencia": "",
-                    "vendedor_direccion_coordenadas": ""
-                });
-            }
+            totalAmount += parseInt(item.price);
+            orderItems.push({
+                name: item.name,
+                quantity: 1,
+                price: parseInt(item.price)
+            });
         }
 
+        // 1. Guardamos el pedido temporalmente para tener un ID real
         const newOrder = new WebOrder({
-            customerName: purify.sanitize(customerName),
-            customerEmail: purify.sanitize(customerEmail),
-            customerDocument: purify.sanitize(customerDocument),
-            customerPhone: purify.sanitize(customerPhone),
+            customerName: customerName,
+            customerEmail: customerEmail,
+            customerDocument: customerDocument,
+            customerPhone: customerPhone,
             items: orderItems,
             totalAmount: totalAmount
         });
         await newOrder.save();
 
-        const orderId = newOrder._id.toString();
+        const orderId = String(newOrder._id);
 
-        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + orderId + String(totalAmount);
+        // 2. TOKEN ESTRICTO: private_key + id_pedido + monto_total
+        const privateKey = String(process.env.PAGOPAR_PRIVATE_KEY);
+        const publicKey = String(process.env.PAGOPAR_PUBLIC_KEY);
+        const montoTotal = String(totalAmount); // <--- Los () que mencionaste para asegurar que sea string
+        
+        const tokenString = privateKey + orderId + montoTotal;
         const tokenPagopar = crypto.createHash('sha1').update(tokenString).digest('hex');
 
+        // Fecha de vencimiento
         const maxDate = new Date();
         maxDate.setDate(maxDate.getDate() + 3);
         const fechaMaxima = maxDate.toISOString().replace('T', ' ').substring(0, 19);
 
-        // ESTRUCTURA ESTRICTA DE PAGOPAR
+        // 3. EL JSON EXACTO QUE ENVIASTE (Con tus variables)
         const pagoparData = {
             "token": tokenPagopar,
             "comprador": {
-                "ruc": "", 
+                "ruc": customerDocument + "-0", // Usamos la CI para simular un RUC genérico
                 "email": customerEmail,
-                "ciudad": null, // OBLIGATORIO NULL
+                "ciudad": null,
                 "nombre": customerName,
                 "telefono": customerPhone,
                 "direccion": "",
@@ -928,18 +912,35 @@ app.post('/tienda/checkout', async (req, res, next) => {
                 "coordenadas": "",
                 "razon_social": customerName,
                 "tipo_documento": "CI",
-                "direccion_referencia": null // OBLIGATORIO NULL
+                "direccion_referencia": null
             },
-            "public_key": process.env.PAGOPAR_PUBLIC_KEY,
+            "public_key": publicKey,
             "monto_total": parseInt(totalAmount),
             "tipo_pedido": "VENTA-COMERCIO",
-            "compras_items": pagoparItems,
+            "compras_items": [
+                {
+                    "ciudad": "1",
+                    "nombre": "Compra en FERUMI",
+                    "cantidad": 1,
+                    "categoria": "909",
+                    "public_key": publicKey,
+                    "url_imagen": "https://ferumi.shop/ferumi.logo.png",
+                    "descripcion": "Compra en FERUMI",
+                    "id_producto": 895, // Forzado a número tal como tu ejemplo
+                    "precio_total": parseInt(totalAmount),
+                    "vendedor_telefono": "",
+                    "vendedor_direccion": "",
+                    "vendedor_direccion_referencia": "",
+                    "vendedor_direccion_coordenadas": ""
+                }
+            ],
             "fecha_maxima_pago": fechaMaxima,
             "id_pedido_comercio": orderId,
-            "descripcion_resumen": "Pedido " + orderId,
-            "forma_pago": 9 // Enviamos 9 (Tarjetas) por defecto para pasar la validación del esquema
+            "descripcion_resumen": "",
+            "forma_pago": 9 // 9 = Tarjetas (puedes borrar esta línea si luego quieres que salgan todas las opciones)
         };
 
+        // 4. Enviar a Pagopar
         const response = await fetch('https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -948,12 +949,13 @@ app.post('/tienda/checkout', async (req, res, next) => {
 
         const result = await response.json();
 
-        if (result.respuesta && result.resultado && result.resultado[0].data) {
+        // 5. Validar respuesta
+        if (result.respuesta === true) {
             newOrder.pagoparHash = result.resultado[0].data;
             await newOrder.save();
             res.json({ success: true, redirectUrl: `https://www.pagopar.com/pagos/${result.resultado[0].data}` });
         } else {
-            console.error("Detalle del rechazo:", result.resultado);
+            console.error("Detalle del rechazo Pagopar:", result.resultado);
             res.status(400).json({ success: false, details: result.resultado });
         }
 
@@ -962,7 +964,6 @@ app.post('/tienda/checkout', async (req, res, next) => {
         res.status(500).json({ success: false, message: 'Error interno del servidor.' });
     }
 });
-
 
 
 
