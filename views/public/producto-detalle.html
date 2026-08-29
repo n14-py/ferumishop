@@ -293,7 +293,13 @@
                     if (data.success && data.redirectUrl) {
                         window.location.href = data.redirectUrl;
                     } else {
-                        alert("Error: " + (data.message || "No se pudo iniciar el pago."));
+                        // Extraemos el error real que nos manda Pagopar
+                        let errorPagopar = data.details || data.message || "Error desconocido";
+                        if (typeof data.details === 'object') {
+                            errorPagopar = JSON.stringify(data.details);
+                        }
+                        alert("Pagopar rechazó la transacción. Detalle: " + errorPagopar);
+                        
                         document.getElementById('btn-procesar-pago').style.display = 'block';
                         document.getElementById('pago-status').style.display = 'none';
                     }
