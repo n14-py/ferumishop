@@ -880,16 +880,17 @@ app.post('/tienda/checkout', async (req, res, next) => {
                 });
 
                 // Estructura estricta que exige Pagopar para cada item
+// Estructura estricta que exige Pagopar para cada item
                 pagoparItems.push({
-                    ciudad: "1", // 1 obligatorio si no usas envíos tercerizados de Pagopar
+                    ciudad: "1", 
                     nombre: item.name,
                     cantidad: item.quantity,
-                    categoria: "909", // 909 obligatorio si no usas envíos tercerizados
+                    categoria: "909", 
                     public_key: process.env.PAGOPAR_PUBLIC_KEY,
-                    url_imagen: item.image || "",
+                    url_imagen: "", // Lo enviamos vacío por seguridad para evitar errores de URL inválida
                     descripcion: item.name,
                     id_producto: product._id.toString(),
-                    precio_total: itemTotal, // Pagopar pide el precio TOTAL del item (precio * cant)
+                    precio_total: parseFloat(itemTotal), 
                     vendedor_telefono: "",
                     vendedor_direccion: "",
                     vendedor_direccion_referencia: "",
@@ -911,9 +912,9 @@ app.post('/tienda/checkout', async (req, res, next) => {
 
         const orderId = newOrder._id.toString();
 
-        // 4. Generar Token SHA1 de seguridad
-        // Regla: sha1(private_key + id_pedido + monto_total)
-        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + orderId + String(totalAmount);
+        // 4. Generar Token SHA1 de seguridad EXACTO
+        const montoStr = String(parseFloat(totalAmount));
+        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + orderId + montoStr;
         const tokenPagopar = crypto.createHash('sha1').update(tokenString).digest('hex');
 
         // Formatear fecha máxima de pago (Damos 3 días de gracia) - Formato: YYYY-MM-DD HH:MM:SS
@@ -921,30 +922,30 @@ app.post('/tienda/checkout', async (req, res, next) => {
         maxDate.setDate(maxDate.getDate() + 3);
         const fechaMaxima = maxDate.toISOString().replace('T', ' ').substring(0, 19);
 
-        // 5. Armar el JSON maestro
+        // 5. Armar el JSON maestro ESTRICTO
         const pagoparData = {
             token: tokenPagopar,
             comprador: {
-                ruc: "", // Vacío si no pide factura
+                ruc: "", 
                 email: customerEmail,
-                ciudad: 1,
+                ciudad: 1, // Entero
                 nombre: customerName,
                 telefono: customerPhone,
                 direccion: "",
-                documento: customerDocument, // Obligatorio
+                documento: customerDocument,
                 coordenadas: "",
                 razon_social: customerName,
                 tipo_documento: "CI",
                 direccion_referencia: ""
             },
             public_key: process.env.PAGOPAR_PUBLIC_KEY,
-            monto_total: totalAmount,
+            monto_total: parseFloat(totalAmount), // Entero/Float
             tipo_pedido: "VENTA-COMERCIO",
             compras_items: pagoparItems,
             fecha_maxima_pago: fechaMaxima,
             id_pedido_comercio: orderId,
-            descripcion_resumen: "Compra en FERUMI SHOP",
-            forma_pago: "" // Enviamos vacío para que le salgan todas las opciones (Tarjetas, QR, Tigo Money, etc)
+            descripcion_resumen: "Compra en FERUMI SHOP"
+            // ELIMINADO EL CAMPO forma_pago para que Pagopar muestre todas las opciones sin dar error
         };
 
         // 6. Hacer la petición a Pagopar usando fetch nativo
