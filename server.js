@@ -849,9 +849,9 @@ app.get('/links', (req, res) => {
 // =============================================
 
 // --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
+// --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
 app.post('/tienda/checkout', async (req, res, next) => {
     try {
-        // 1. Recibir datos del formulario de checkout y el carrito desde JS
         const { customerName, customerEmail, customerDocument, customerPhone, cartItems } = req.body;
 
         if (!cartItems || cartItems.length === 0) {
@@ -862,14 +862,12 @@ app.post('/tienda/checkout', async (req, res, next) => {
         let orderItems = [];
         let pagoparItems = [];
 
-        // 2. Calcular total de forma segura consultando la BD
         for (const item of cartItems) {
-            // El id viene del frontend. Separamos si tiene variante (Ej: "id-TonoClaro")
             const baseId = item.id.split('-')[0]; 
             const product = await Product.findById(baseId);
             
             if (product) {
-                const itemTotal = product.price * item.quantity;
+                const itemTotal = parseInt(product.price * item.quantity);
                 totalAmount += itemTotal;
 
                 orderItems.push({
@@ -879,27 +877,24 @@ app.post('/tienda/checkout', async (req, res, next) => {
                     price: product.price
                 });
 
-                // Estructura estricta que exige Pagopar para cada item
-// Estructura estricta que exige Pagopar para cada item
                 pagoparItems.push({
-                    ciudad: "1", 
-                    nombre: item.name,
-                    cantidad: item.quantity,
-                    categoria: "909", 
-                    public_key: process.env.PAGOPAR_PUBLIC_KEY,
-                    url_imagen: "", // Lo enviamos vacío por seguridad para evitar errores de URL inválida
-                    descripcion: item.name,
-                    id_producto: product._id.toString(),
-                    precio_total: parseFloat(itemTotal), 
-                    vendedor_telefono: "",
-                    vendedor_direccion: "",
-                    vendedor_direccion_referencia: "",
-                    vendedor_direccion_coordenadas: ""
+                    "ciudad": "1",
+                    "nombre": item.name.substring(0, 100),
+                    "cantidad": parseInt(item.quantity),
+                    "categoria": "909",
+                    "public_key": process.env.PAGOPAR_PUBLIC_KEY,
+                    "url_imagen": "",
+                    "descripcion": item.name.substring(0, 100),
+                    "id_producto": 1, // FORZADO A ENTERO: Evita el rechazo de la pasarela por los IDs alfanuméricos de Mongo
+                    "precio_total": itemTotal, 
+                    "vendedor_telefono": "",
+                    "vendedor_direccion": "",
+                    "vendedor_direccion_referencia": "",
+                    "vendedor_direccion_coordenadas": ""
                 });
             }
         }
 
-        // 3. Crear el pedido en nuestra base de datos (Estado: pendiente)
         const newOrder = new WebOrder({
             customerName: purify.sanitize(customerName),
             customerEmail: purify.sanitize(customerEmail),
@@ -912,43 +907,39 @@ app.post('/tienda/checkout', async (req, res, next) => {
 
         const orderId = newOrder._id.toString();
 
-        // 4. Generar Token SHA1 de seguridad EXACTO
-        const montoStr = String(parseFloat(totalAmount));
-        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + orderId + montoStr;
+        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + orderId + String(totalAmount);
         const tokenPagopar = crypto.createHash('sha1').update(tokenString).digest('hex');
 
-        // Formatear fecha máxima de pago (Damos 3 días de gracia) - Formato: YYYY-MM-DD HH:MM:SS
         const maxDate = new Date();
         maxDate.setDate(maxDate.getDate() + 3);
         const fechaMaxima = maxDate.toISOString().replace('T', ' ').substring(0, 19);
 
-        // 5. Armar el JSON maestro ESTRICTO
+        // ESTRUCTURA ESTRICTA DE PAGOPAR
         const pagoparData = {
-            token: tokenPagopar,
-            comprador: {
-                ruc: "", 
-                email: customerEmail,
-                ciudad: 1, // Entero
-                nombre: customerName,
-                telefono: customerPhone,
-                direccion: "",
-                documento: customerDocument,
-                coordenadas: "",
-                razon_social: customerName,
-                tipo_documento: "CI",
-                direccion_referencia: ""
+            "token": tokenPagopar,
+            "comprador": {
+                "ruc": "", 
+                "email": customerEmail,
+                "ciudad": null, // OBLIGATORIO NULL
+                "nombre": customerName,
+                "telefono": customerPhone,
+                "direccion": "",
+                "documento": customerDocument,
+                "coordenadas": "",
+                "razon_social": customerName,
+                "tipo_documento": "CI",
+                "direccion_referencia": null // OBLIGATORIO NULL
             },
-            public_key: process.env.PAGOPAR_PUBLIC_KEY,
-            monto_total: parseFloat(totalAmount), // Entero/Float
-            tipo_pedido: "VENTA-COMERCIO",
-            compras_items: pagoparItems,
-            fecha_maxima_pago: fechaMaxima,
-            id_pedido_comercio: orderId,
-            descripcion_resumen: "Compra en FERUMI SHOP"
-            // ELIMINADO EL CAMPO forma_pago para que Pagopar muestre todas las opciones sin dar error
+            "public_key": process.env.PAGOPAR_PUBLIC_KEY,
+            "monto_total": parseInt(totalAmount),
+            "tipo_pedido": "VENTA-COMERCIO",
+            "compras_items": pagoparItems,
+            "fecha_maxima_pago": fechaMaxima,
+            "id_pedido_comercio": orderId,
+            "descripcion_resumen": "Pedido " + orderId,
+            "forma_pago": 9 // Enviamos 9 (Tarjetas) por defecto para pasar la validación del esquema
         };
 
-        // 6. Hacer la petición a Pagopar usando fetch nativo
         const response = await fetch('https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -957,22 +948,13 @@ app.post('/tienda/checkout', async (req, res, next) => {
 
         const result = await response.json();
 
-        // 7. Extraer el Hash y devolver al frontend
         if (result.respuesta && result.resultado && result.resultado[0].data) {
-            const hashPagopar = result.resultado[0].data;
-            
-            // Guardamos el hash de Pagopar en el pedido
-            newOrder.pagoparHash = hashPagopar;
+            newOrder.pagoparHash = result.resultado[0].data;
             await newOrder.save();
-
-            // Devolvemos la URL para que el frontend redirija al cliente
-            res.json({ 
-                success: true, 
-                redirectUrl: `https://www.pagopar.com/pagos/${hashPagopar}` 
-            });
+            res.json({ success: true, redirectUrl: `https://www.pagopar.com/pagos/${result.resultado[0].data}` });
         } else {
-            console.error("Error de Pagopar:", result);
-            res.status(400).json({ success: false, message: 'La pasarela rechazó la transacción.', details: result.resultado });
+            console.error("Detalle del rechazo:", result.resultado);
+            res.status(400).json({ success: false, details: result.resultado });
         }
 
     } catch (err) {
