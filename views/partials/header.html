@@ -63,9 +63,14 @@
             <span>Total:</span>
             <span id="cart-total-price">0 Gs.</span>
         </div>
-        <button id="checkout-whatsapp" class="btn btn-primary btn-block" style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
-            <i class="fas fa-lock" style="font-size: 1.1rem;"></i> Finalizar compra
-        </button>
+        <div class="cart-checkout-stack">
+            <button type="button" id="checkout-pagopar" class="btn-checkout-pagopar">
+                <i class="fas fa-lock"></i> Finalizar compra
+            </button>
+            <button type="button" id="checkout-whatsapp" class="btn-checkout-wa">
+                <i class="fab fa-whatsapp"></i> Pedir por WhatsApp
+            </button>
+        </div>
     </div>
 </div>
 
@@ -336,11 +341,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.openFerumiCart = openCart;
 
-    // Finalizar compra → checkout guiado (Pagopar + envío)
+    const FERUMI_WA = "<%= typeof siteConfig !== 'undefined' && siteConfig.whatsappNumber ? siteConfig.whatsappNumber : '595987301591' %>";
+    const checkoutPagoparBtn = document.getElementById('checkout-pagopar');
+    if (checkoutPagoparBtn) {
+        checkoutPagoparBtn.addEventListener('click', () => {
+            if (cart.length === 0) return alert('El carrito está vacío');
+            window.location.href = '/checkout';
+        });
+    }
     if (checkoutWhatsappBtn) {
         checkoutWhatsappBtn.addEventListener('click', () => {
             if (cart.length === 0) return alert('El carrito está vacío');
-            window.location.href = '/checkout';
+            const lines = cart.map((item) => `• ${item.quantity}x ${item.name} (${formatPrice(item.price)} Gs.)`);
+            let total = cart.reduce((s, item) => s + item.price * item.quantity, 0);
+            if (appliedCoupon) total = Math.max(0, total - appliedCoupon.amount);
+            const msg = `Hola FERUMI 💖 Quiero comprar:\n${lines.join('\n')}\n\nTotal: ${formatPrice(total)} Gs.`;
+            window.open(`https://wa.me/${FERUMI_WA}?text=${encodeURIComponent(msg)}`, '_blank');
         });
     }
 

@@ -168,7 +168,11 @@ module.exports = function registerEcommerce(app, deps) {
         });
     });
 
-    app.get('/ticket/:code', async (req, res, next) => {
+    app.get('/ticket/:code', async (req, res) => {
+        res.redirect(302, `/compra-ok/${encodeURIComponent(req.params.code)}`);
+    });
+
+    app.get('/compra-ok/:code', async (req, res, next) => {
         try {
             const order = await WebOrder.findOne({
                 $or: [
@@ -177,13 +181,12 @@ module.exports = function registerEcommerce(app, deps) {
                 ]
             });
             if (!order) {
-                return res.status(404).render('public/error', { pageTitle: 'Ticket', message: 'Ticket no encontrado.' });
+                return res.status(404).render('public/error', { pageTitle: 'Pedido', message: 'No encontramos ese pedido.' });
             }
-            res.render('public/ticket', {
-                pageTitle: `Ticket ${order.orderNumber}`,
+            res.render('public/compra-ok', {
+                pageTitle: 'Pedido recibido',
                 order: shop.publicOrderView(order),
-                store: shop.storeFromConfig(res.locals.siteConfig),
-                qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent('FERUMI|' + order.ticketCode)}`
+                store: shop.storeFromConfig(res.locals.siteConfig)
             });
         } catch (err) {
             next(err);
@@ -246,7 +249,7 @@ module.exports = function registerEcommerce(app, deps) {
                             duplicate: true,
                             orderNumber: existing.orderNumber,
                             ticketCode: existing.ticketCode,
-                            redirectUrl: `/ticket/${existing.ticketCode}`,
+                            redirectUrl: `/compra-ok/${existing.ticketCode}`,
                             trackingUrl: `/tracking?q=${encodeURIComponent(existing.ticketCode)}`
                         });
                     }
@@ -344,7 +347,7 @@ module.exports = function registerEcommerce(app, deps) {
                     success: true,
                     orderNumber: order.orderNumber,
                     ticketCode: order.ticketCode,
-                    redirectUrl: `/ticket/${order.ticketCode}`,
+                    redirectUrl: `/compra-ok/${order.ticketCode}`,
                     trackingUrl: `/tracking?q=${encodeURIComponent(order.ticketCode)}`
                 });
             }
@@ -467,8 +470,7 @@ module.exports = function registerEcommerce(app, deps) {
                 estado,
                 orderLocal: order,
                 orderView: order ? shop.publicOrderView(order) : null,
-                store: shop.storeFromConfig(res.locals.siteConfig),
-                qrUrl: order ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent('FERUMI|' + order.ticketCode)}` : ''
+                store: shop.storeFromConfig(res.locals.siteConfig)
             });
         } catch (err) {
             console.error('Error consultando estado en Pagopar:', err);
@@ -697,12 +699,9 @@ module.exports = function registerEcommerce(app, deps) {
         try {
             const order = await WebOrder.findById(req.params.id);
             if (!order) return res.status(404).render('admin/error', { message: 'Pedido no encontrado', pageTitle: 'Error' });
-            res.render('public/ticket', {
-                pageTitle: `Ticket ${order.orderNumber}`,
-                order: shop.publicOrderView(order),
-                store: shop.storeFromConfig(res.locals.siteConfig),
-                qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent('FERUMI|' + order.ticketCode)}`,
-                printNow: true
+            res.render('public/cola-impresion', {
+                pedido: shop.thermalPedidoFromWebOrder(order),
+                autoPrint: true
             });
         } catch (err) {
             next(err);

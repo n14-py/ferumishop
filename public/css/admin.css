@@ -247,7 +247,14 @@ body {
         padding-left: 1rem;
         font-weight: 700;
         text-align: left;
-        color: var(--admin-primary-dark);
+        color: #666;
+    }
+    .sidebar .nav-link {
+        padding: 1.05rem 1.5rem;
+        font-size: 1.05rem;
+    }
+    .btn, .form-control, .form-select {
+        min-height: 44px;
     }
     .table-responsive td:last-child { border-bottom: 0; }
 }

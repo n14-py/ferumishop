@@ -317,6 +317,7 @@ const webOrderSchema = new mongoose.Schema({
     paidAt: Date,
     preparedAt: Date,
     deliveredAt: Date,
+    isPrinted: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -536,9 +537,15 @@ app.use(async (req, res, next) => {
 // Muestra banner, categorías y productos destacados
 app.get('/', async (req, res, next) => {
     try {
-        const featuredProducts = await Product.find({ isFeatured: true })
+        const featuredProducts = await Product.find({ isFeatured: true, isForSale: true })
             .populate('category')
-            .limit(12)
+            .limit(8)
+            .sort({ createdAt: -1 });
+
+        const featuredIds = featuredProducts.map((p) => p._id);
+        const latestProducts = await Product.find({ isForSale: true, _id: { $nin: featuredIds } })
+            .populate('category')
+            .limit(8)
             .sort({ createdAt: -1 });
 
         const categories = await Category.find().limit(12);
@@ -546,6 +553,7 @@ app.get('/', async (req, res, next) => {
         res.render('public/index', {
             pageTitle: 'Inicio',
             featuredProducts,
+            latestProducts,
             categories,
             seoDescription: 'FERUMI Shop Paraguay: maquillaje, uñas y accesorios. Pago con Pagopar, Motobolt en Central, transportadora al interior o retiro en Ferumishop.'
         });
@@ -2559,49 +2567,39 @@ app.get('/pedido/:id', async (req, res, next) => {
 // URL Secreta: ferumi.shop/logistica/despacho/termica/pendientes
 // =============================================
 
-// 1. Mostrar el ticket más antiguo sin imprimir
+const shopPrint = require('./lib/orders');
+
+// 1. Mostrar el ticket más antiguo sin imprimir (pedidos web primero, luego caja)
 app.get('/logistica/despacho/termica/pendientes', async (req, res, next) => {
     try {
-        // Busca la venta más antigua que NO esté impresa aún
-        const transaccion = await Transaction.findOne({ 
-            type: 'ingreso', 
-            isPrinted: false 
+        const webOrder = await WebOrder.findOne({
+            isPrinted: { $ne: true },
+            deletedAt: { $exists: false },
+            fulfillmentStatus: { $nin: ['cancelado', 'devuelto'] },
+            $or: [
+                { paymentStatus: 'pagado' },
+                { paymentMethod: 'efectivo_retiro' }
+            ]
+        }).sort({ createdAt: 1 });
+
+        if (webOrder) {
+            return res.render('public/cola-impresion', {
+                pedido: shopPrint.thermalPedidoFromWebOrder(webOrder)
+            });
+        }
+
+        const transaccion = await Transaction.findOne({
+            type: 'ingreso',
+            isPrinted: false
         }).sort({ date: 1 });
 
         if (!transaccion) {
-            // Si no hay pendientes, mandamos 'pedido' como nulo para mostrar la pantalla de "Fila Vacía"
             return res.render('public/cola-impresion', { pedido: null });
         }
 
-        // Extraer coordenadas si existen
-        let lat = '';
-        let lng = '';
-        if (transaccion.locationCoords) {
-            const coords = transaccion.locationCoords.split(',');
-            if (coords.length === 2) {
-                lat = coords[0].trim();
-                lng = coords[1].trim();
-            }
-        }
-
-        // Construir datos del ticket
-        const pedido = {
-            id: transaccion._id,
-            cliente: transaccion.customerName || 'Cliente Local',
-            items: [
-                {
-                    nombre: transaccion.description,
-                    precio: transaccion.amount
-                }
-            ],
-            total: transaccion.amount,
-            lat: lat,
-            lng: lng,
-            fecha: transaccion.date
-        };
-
-        res.render('public/cola-impresion', { pedido: pedido });
-
+        res.render('public/cola-impresion', {
+            pedido: shopPrint.thermalPedidoFromTransaction(transaccion)
+        });
     } catch (err) {
         next(err);
     }
@@ -2610,10 +2608,13 @@ app.get('/logistica/despacho/termica/pendientes', async (req, res, next) => {
 // 2. Marcar como impreso y saltar al siguiente automáticamente
 app.post('/logistica/despacho/termica/marcar-impreso/:id', async (req, res, next) => {
     try {
-        // Cambiamos el estado a "Impreso"
-        await Transaction.findByIdAndUpdate(req.params.id, { isPrinted: true });
-        
-        // Recargamos la URL principal para que busque el siguiente en la fila
+        const web = await WebOrder.findById(req.params.id);
+        if (web) {
+            web.isPrinted = true;
+            await web.save();
+        } else {
+            await Transaction.findByIdAndUpdate(req.params.id, { isPrinted: true });
+        }
         res.redirect('/logistica/despacho/termica/pendientes');
     } catch (err) {
         next(err);

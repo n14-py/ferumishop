@@ -50,3 +50,20 @@ test('parsePrice strips thousand dots', () => {
     assert.equal(shop.parsePrice('25.000'), 25000);
     assert.equal(shop.parsePrice(25000), 25000);
 });
+
+test('thermal ticket QR marks prepared', () => {
+    const pedido = shop.thermalPedidoFromWebOrder({
+        _id: '65f000000000000000000001',
+        customerName: 'Ana',
+        customerPhone: '0981',
+        items: [{ quantity: 1, name: 'Labial', price: 25000 }],
+        totalAmount: 25000,
+        createdAt: new Date(),
+        ticketCode: 'FM-ABC',
+        orderNumber: 'FER-1',
+        shippingMethod: 'motobolt'
+    });
+    assert.equal(pedido.qrPayload, 'FERUMI|FM-ABC');
+    assert.match(pedido.qrHint, /preparar/i);
+    assert.equal(pedido.shippingLabel, 'Motobolt');
+});
