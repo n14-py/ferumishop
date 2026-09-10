@@ -75,64 +75,8 @@
 </head>
 <body>
 
-<div class="admin-wrapper">
-    
-    <aside class="sidebar" id="admin-sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-crown"></i> FERUMI
-        </div>
-        <div class="sidebar-content mt-3">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a href="/admin/dashboard" class="nav-link">
-                        <i class="fa-solid fa-house fa-fw"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/caja" class="nav-link">
-                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/productos" class="nav-link">
-                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/categorias" class="nav-link">
-                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/regalos" class="nav-link">
-                        <i class="fas fa-gift fa-fw"></i> Regalos Online
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/sorteos" class="nav-link">
-                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
-                    </a>
-                </li>
-                <li class="nav-item mt-4">
-                    <a href="/admin/configuracion" class="nav-link active">
-                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div class="sidebar-footer">
-            <a href="/" target="_blank" class="nav-link">
-                <i class="fa-solid fa-globe fa-fw"></i> Ver Tienda
-            </a>
-            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
-                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
-            </a>
-        </div>
-    </aside>
-    
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-    <div class="main-content-wrapper">
+<div class="admin-wrapper">    <%- include('./partials/sidebar.html') %>
+<div class="main-content-wrapper">
         
         <header class="admin-header bg-white px-3 py-3 sticky-top">
             <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);">
@@ -177,8 +121,48 @@
                                 <textarea id="whatsappMessage" name="whatsappMessage" rows="3" class="form-control bg-light" required><%= siteConfig.whatsappMessage %></textarea>
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Dirección Ferumishop</label>
+                                <input type="text" name="storeAddress" class="form-control bg-light" value="<%= siteConfig.storeAddress || '' %>" placeholder="Barrio, ciudad">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-bold">Latitud</label>
+                                    <input type="text" name="storeLat" class="form-control bg-light" value="<%= siteConfig.storeLat || -25.28646 %>">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-bold">Longitud</label>
+                                    <input type="text" name="storeLng" class="form-control bg-light" value="<%= siteConfig.storeLng || -57.647 %>">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Link de Google Maps</label>
+                                <input type="url" name="storeMapsUrl" class="form-control bg-light" value="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Km máximos Motobolt</label>
+                                <input type="number" name="motoboltMaxKm" class="form-control bg-light" value="<%= siteConfig.motoboltMaxKm || 40 %>">
+                                <small class="text-muted">Todo Central / Gran Asunción. Más lejos = transportadora.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Instagram</label>
+                                <input type="url" name="instagramUrl" class="form-control bg-light" value="<%= siteConfig.instagramUrl || 'https://instagram.com/ferumishop' %>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">TikTok</label>
+                                <input type="url" name="tiktokUrl" class="form-control bg-light" value="<%= siteConfig.tiktokUrl || 'https://tiktok.com/@ferumishop' %>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Facebook</label>
+                                <input type="url" name="facebookUrl" class="form-control bg-light" value="<%= siteConfig.facebookUrl || '' %>">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Texto Sobre Nosotros</label>
+                                <textarea name="aboutUsText" rows="4" class="form-control bg-light"><%= siteConfig.aboutUsText || '' %></textarea>
+                            </div>
+
                             <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm">
-                                <i class="fas fa-save me-2"></i> Guardar WhatsApp
+                                <i class="fas fa-save me-2"></i> Guardar WhatsApp y local
                             </button>
                         </form>
                     </div>

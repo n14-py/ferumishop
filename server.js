@@ -192,7 +192,15 @@ const siteConfigSchema = new mongoose.Schema({
     whatsappMessage: { type: String, default: 'Hola, vi este producto en la web y quisiera más información: ' },
     aboutUsText: { type: String, default: 'Escribe aquí la descripción de "Sobre Nosotros".' },
     logoUrl: { type: String },
-    bannerImages: [{ type: String }] // URLs de Cloudinary para el banner principal
+    bannerImages: [{ type: String }], // URLs de Cloudinary para el banner principal
+    storeAddress: { type: String, default: 'Ferumishop, Asunción - Paraguay' },
+    storeLat: { type: Number, default: -25.28646 },
+    storeLng: { type: Number, default: -57.647 },
+    storeMapsUrl: { type: String, default: 'https://share.google/39F8jWwL96lFY65Th' },
+    motoboltMaxKm: { type: Number, default: 40 },
+    instagramUrl: { type: String, default: 'https://instagram.com/ferumishop' },
+    facebookUrl: { type: String, default: '' },
+    tiktokUrl: { type: String, default: 'https://tiktok.com/@ferumishop' }
 });
 
 const SiteConfig = mongoose.model('SiteConfig', siteConfigSchema);
@@ -257,19 +265,58 @@ const Transaction = mongoose.model('Transaction', transactionSchema);
 
 // --- NUEVO: Modelo de Pedido Web (Tienda Online / Pagopar) ---
 const webOrderSchema = new mongoose.Schema({
+    orderNumber: { type: String, unique: true, sparse: true },
+    ticketCode: { type: String, unique: true, sparse: true },
+    idempotencyKey: { type: String, unique: true, sparse: true },
     customerName: { type: String, required: true },
     customerEmail: { type: String, required: true },
     customerDocument: { type: String, required: true }, // Obligatorio para Pagopar (CI o RUC)
     customerPhone: { type: String, required: true },
     items: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        variantName: { type: String, default: '' },
         name: { type: String },
         quantity: { type: Number },
-        price: { type: Number }
+        price: { type: Number },
+        image: { type: String, default: '' }
     }],
+    subtotal: { type: Number, default: 0 },
+    shippingCost: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
+    couponCode: { type: String, default: '' },
     totalAmount: { type: Number, required: true },
-    pagoparHash: { type: String, default: null }, // El hash que nos devolverá Pagopar
+    pagoparHash: { type: String, default: null },
+    pagoparNumero: { type: String, default: '' },
+    pagoparFormaPago: { type: String, default: '' },
+    pagoparLastConsulta: { type: mongoose.Schema.Types.Mixed },
     status: { type: String, enum: ['pendiente', 'pagado', 'cancelado'], default: 'pendiente' },
+    paymentMethod: { type: String, enum: ['pagopar', 'efectivo_retiro'], default: 'pagopar' },
+    paymentStatus: { type: String, enum: ['pendiente', 'pagado', 'cancelado', 'reembolsado'], default: 'pendiente' },
+    shippingMethod: { type: String, enum: ['motobolt', 'transportadora', 'retiro'], default: 'retiro' },
+    shippingAddress: { type: String, default: '' },
+    shippingCity: { type: String, default: '' },
+    shippingReference: { type: String, default: '' },
+    shippingCoords: {
+        lat: Number,
+        lng: Number
+    },
+    shippingDistanceKm: { type: Number, default: null },
+    housePhotoUrl: { type: String, default: '' },
+    fulfillmentStatus: { type: String, default: 'pendiente_pago' },
+    trackingEvents: [{
+        status: String,
+        title: String,
+        detail: String,
+        at: { type: Date, default: Date.now }
+    }],
+    stockDeducted: { type: Boolean, default: false },
+    cashRegisterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
+    deletedAt: Date,
+    deleteReason: String,
+    deleteType: { type: String, enum: ['error', 'cancelacion', 'devolucion'] },
+    paidAt: Date,
+    preparedAt: Date,
+    deliveredAt: Date,
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -491,15 +538,16 @@ app.get('/', async (req, res, next) => {
     try {
         const featuredProducts = await Product.find({ isFeatured: true })
             .populate('category')
-            .limit(8)
+            .limit(12)
             .sort({ createdAt: -1 });
 
-        const categories = await Category.find().limit(6);
+        const categories = await Category.find().limit(12);
         
         res.render('public/index', {
             pageTitle: 'Inicio',
             featuredProducts,
-            categories
+            categories,
+            seoDescription: 'FERUMI Shop Paraguay: maquillaje, uñas y accesorios. Pago con Pagopar, Motobolt en Central, transportadora al interior o retiro en Ferumishop.'
         });
     } catch (err) {
         next(err);
@@ -845,250 +893,18 @@ app.get('/links', (req, res) => {
 
 
 // =============================================
-// RUTAS DE CHECKOUT Y PAGOPAR (TIENDA ONLINE)
+// RUTAS DE CHECKOUT, PAGOPAR, TRACKING Y DESPACHO
 // =============================================
-
-// --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
-// --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
-// --- PASO 1 y 2: Recibir carrito, crear pedido e iniciar transacción ---
-app.post('/tienda/checkout', async (req, res, next) => {
-    try {
-        const { customerName, customerEmail, customerDocument, customerPhone, cartItems } = req.body;
-
-        if (!cartItems || cartItems.length === 0) {
-            return res.status(400).json({ success: false, message: 'El carrito está vacío.' });
-        }
-
-        // Para esta prueba, sumaremos todo y enviaremos un solo "item" a Pagopar como el ejemplo
-        let totalAmount = 0;
-        let orderItems = [];
-
-        for (const item of cartItems) {
-            totalAmount += parseInt(item.price);
-            orderItems.push({
-                name: item.name,
-                quantity: 1,
-                price: parseInt(item.price)
-            });
-        }
-
-        // 1. Guardamos el pedido temporalmente para tener un ID real
-        const newOrder = new WebOrder({
-            customerName: customerName,
-            customerEmail: customerEmail,
-            customerDocument: customerDocument,
-            customerPhone: customerPhone,
-            items: orderItems,
-            totalAmount: totalAmount
-        });
-        await newOrder.save();
-
-        const orderId = String(newOrder._id);
-
-        // 2. TOKEN ESTRICTO: private_key + id_pedido + monto_total
-        const privateKey = String(process.env.PAGOPAR_PRIVATE_KEY);
-        const publicKey = String(process.env.PAGOPAR_PUBLIC_KEY);
-        const montoTotal = String(totalAmount); // <--- Los () que mencionaste para asegurar que sea string
-        
-        const tokenString = privateKey + orderId + montoTotal;
-        const tokenPagopar = crypto.createHash('sha1').update(tokenString).digest('hex');
-
-        // Fecha de vencimiento
-        const maxDate = new Date();
-        maxDate.setDate(maxDate.getDate() + 3);
-        const fechaMaxima = maxDate.toISOString().replace('T', ' ').substring(0, 19);
-
-        // 3. EL JSON EXACTO QUE ENVIASTE (Con tus variables)
-        const pagoparData = {
-            "token": tokenPagopar,
-            "comprador": {
-                "ruc": customerDocument + "-0", // Usamos la CI para simular un RUC genérico
-                "email": customerEmail,
-                "ciudad": null,
-                "nombre": customerName,
-                "telefono": customerPhone,
-                "direccion": "",
-                "documento": customerDocument,
-                "coordenadas": "",
-                "razon_social": customerName,
-                "tipo_documento": "CI",
-                "direccion_referencia": null
-            },
-            "public_key": publicKey,
-            "monto_total": parseInt(totalAmount),
-            "tipo_pedido": "VENTA-COMERCIO",
-            "compras_items": [
-                {
-                    "ciudad": "1",
-                    "nombre": "Compra en FERUMI",
-                    "cantidad": 1,
-                    "categoria": "909",
-                    "public_key": publicKey,
-                    "url_imagen": "https://ferumi.shop/ferumi.logo.png",
-                    "descripcion": "Compra en FERUMI",
-                    "id_producto": 895, // Forzado a número tal como tu ejemplo
-                    "precio_total": parseInt(totalAmount),
-                    "vendedor_telefono": "",
-                    "vendedor_direccion": "",
-                    "vendedor_direccion_referencia": "",
-                    "vendedor_direccion_coordenadas": ""
-                }
-            ],
-            "fecha_maxima_pago": fechaMaxima,
-            "id_pedido_comercio": orderId,
-            "descripcion_resumen": "",
-            "forma_pago": 9 // 9 = Tarjetas (puedes borrar esta línea si luego quieres que salgan todas las opciones)
-        };
-
-        // 4. Enviar a Pagopar
-        const response = await fetch('https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pagoparData)
-        });
-
-        const result = await response.json();
-
-        // 5. Validar respuesta
-        if (result.respuesta === true) {
-            newOrder.pagoparHash = result.resultado[0].data;
-            await newOrder.save();
-            res.json({ success: true, redirectUrl: `https://www.pagopar.com/pagos/${result.resultado[0].data}` });
-        } else {
-            console.error("Detalle del rechazo Pagopar:", result.resultado);
-            res.status(400).json({ success: false, details: result.resultado });
-        }
-
-    } catch (err) {
-        console.error('Error Checkout:', err);
-        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
-    }
+require('./routes/ecommerce')(app, {
+    WebOrder,
+    Product,
+    Transaction,
+    SiteConfig,
+    Gift,
+    requireAdmin,
+    upload,
+    purify
 });
-
-
-
-
-// --- PASO 3 PAGOPAR: Webhook de Notificación de Pago (Respuesta) ---
-app.post('/api/pagopar/webhook', async (req, res) => {
-    try {
-        const data = req.body;
-        
-        // Verificamos que venga la estructura correcta
-        if (!data || !data.resultado || data.resultado.length === 0) {
-            return res.status(400).send('Estructura JSON inválida');
-        }
-
-        const pagoInfo = data.resultado[0];
-        const hashPedido = pagoInfo.hash_pedido;
-        const tokenPagopar = pagoInfo.token;
-        const pagado = pagoInfo.pagado;
-
-        // 1. REGLA DE ORO DE SEGURIDAD: Validar el token
-        // Para el Webhook el token es: sha1(private_key + hash_pedido)
-        const tokenString = process.env.PAGOPAR_PRIVATE_KEY + hashPedido;
-        const tokenLocal = crypto.createHash('sha1').update(tokenString).digest('hex');
-
-        if (tokenLocal !== tokenPagopar) {
-            console.error("ALERTA DE SEGURIDAD: Token de Pagopar no coincide.");
-            // Detenemos la ejecución y rechazamos la petición
-            return res.status(403).send('Token no coincide');
-        }
-
-        // 2. Buscar el pedido en nuestra base de datos
-        const order = await WebOrder.findOne({ pagoparHash: hashPedido });
-        
-        if (order) {
-            // 3. Actualizar el estado del pedido
-            if (pagado === true && order.status !== 'pagado') {
-                order.status = 'pagado';
-                
-                // OPCIONAL FUTURO: Aquí es donde descontarías el stock de tus productos
-                // o crearías el registro en la colección 'Transaction' para la caja.
-            } else if (pagado === false) {
-                // Si es un pago pendiente, reversado o el simulador en false
-                order.status = 'pendiente'; 
-            }
-            await order.save();
-        }
-
-        // 4. RETORNO OBLIGATORIO: Pagopar exige que le devolvamos EXACTAMENTE 
-        // el mismo array 'resultado' que nos enviaron, con status 200.
-        res.status(200).json(data.resultado);
-
-    } catch (err) {
-        console.error("Error en el Webhook de Pagopar:", err);
-        // Si hay un error 500, Pagopar volverá a intentar notificar cada 10 minutos
-        res.status(500).send('Error interno del servidor');
-    }
-});
-
-
-
-// --- PASO 4 PAGOPAR: Redireccionamiento y Consulta de Estado ---
-app.get('/tienda/resultado/:hash', async (req, res, next) => {
-    try {
-        const hashPedido = req.params.hash;
-
-        // 1. Generar token para consulta
-        // Regla: sha1(private_key + "CONSULTA")
-        const privateKey = process.env.PAGOPAR_PRIVATE_KEY;
-        const publicKey = process.env.PAGOPAR_PUBLIC_KEY;
-        const tokenString = privateKey + "CONSULTA";
-        const tokenConsulta = crypto.createHash('sha1').update(tokenString).digest('hex');
-
-        // 2. Armar el JSON de consulta
-        const payloadConsulta = {
-            hash_pedido: hashPedido,
-            token: tokenConsulta,
-            token_publico: publicKey
-        };
-
-        // 3. Consultar a Pagopar el estado real del pedido
-        const response = await fetch('https://api.pagopar.com/api/pedidos/1.1/traer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadConsulta)
-        });
-
-        const result = await response.json();
-
-        // 4. Procesar el resultado y renderizar la vista
-        if (result.respuesta && result.resultado && result.resultado.length > 0) {
-            const estadoPago = result.resultado[0];
-            
-            // Sincronizamos la base de datos local por si el webhook se retrasó
-            const order = await WebOrder.findOne({ pagoparHash: hashPedido });
-            if (order) {
-                if (estadoPago.pagado === true) {
-                    order.status = 'pagado';
-                } else if (estadoPago.cancelado === true) {
-                    order.status = 'cancelado';
-                }
-                await order.save();
-            }
-
-            // Renderizamos una pantalla de éxito, error o pago pendiente
-            res.render('public/pago-resultado', {
-                pageTitle: 'Resultado del Pago',
-                estado: estadoPago, // Pasamos el objeto completo a la vista
-                orderLocal: order
-            });
-        } else {
-            res.status(400).render('public/error', { 
-                pageTitle: 'Error de Pago', 
-                message: 'No pudimos verificar el estado de la transacción.' 
-            });
-        }
-
-    } catch (err) {
-        console.error("Error consultando estado en Pagopar:", err);
-        next(err);
-    }
-});
-
-
-
-
 
 // =============================================
 // RUTAS DE REGALOS (CLIENTE - NUEVO)
@@ -1710,11 +1526,15 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
         const totalCategories = await Category.countDocuments();
         const pendingGifts = await Gift.countDocuments({ status: 'pendiente' });
         
-        // APP: Nuevas estadísticas para la gamificación y usuarios móviles
-        const totalAppUsers = await AppUser.countDocuments();
-        // Calculamos cuántos tickets hay en circulación sumando los de todos los usuarios
-        const allUsers = await AppUser.find({}, 'tickets'); 
-        const totalTicketsInCirculation = allUsers.reduce((sum, user) => sum + (user.tickets || 0), 0);
+        const pendingDispatch = await WebOrder.countDocuments({
+            deletedAt: { $exists: false },
+            fulfillmentStatus: { $in: ['pagado', 'preparando', 'preparado', 'esperando_motobolt', 'enviando', 'esperando_retiro'] }
+        });
+        const paidToday = await WebOrder.countDocuments({
+            deletedAt: { $exists: false },
+            paymentStatus: 'pagado',
+            paidAt: { $gte: new Date(new Date().setHours(0,0,0,0)) }
+        });
         
         const mostViewedProducts = await Product.find()
             .sort({ views: -1 })
@@ -1725,8 +1545,8 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
             totalProducts: totalProducts,
             totalCategories: totalCategories,
             pendingGifts: pendingGifts,
-            totalAppUsers: totalAppUsers, // APP: Total usuarios en Flutter
-            totalTickets: totalTicketsInCirculation // APP: Total de tickets
+            pendingDispatch,
+            paidToday
         };
 
         res.render('admin/dashboard', {
@@ -2128,13 +1948,22 @@ app.get('/admin/configuracion', requireAdmin, async (req, res, next) => {
 // Actualizar textos y WhatsApp
 app.post('/admin/configuracion/update', requireAdmin, async (req, res, next) => {
     try {
-        const { whatsappNumber, whatsappMessage } = req.body;
+        const { whatsappNumber, whatsappMessage, storeAddress, storeLat, storeLng, storeMapsUrl, motoboltMaxKm, instagramUrl, facebookUrl, tiktokUrl, aboutUsText } = req.body;
         
         await SiteConfig.findOneAndUpdate(
             { configKey: 'main_config' },
             {
             whatsappNumber: purify.sanitize(whatsappNumber),
-            whatsappMessage: purify.sanitize(whatsappMessage)
+            whatsappMessage: purify.sanitize(whatsappMessage),
+            storeAddress: purify.sanitize(storeAddress || ''),
+            storeLat: parseFloat(storeLat) || -25.28646,
+            storeLng: parseFloat(storeLng) || -57.647,
+            storeMapsUrl: purify.sanitize(storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th'),
+            motoboltMaxKm: parseInt(motoboltMaxKm, 10) || 40,
+            instagramUrl: purify.sanitize(instagramUrl || ''),
+            facebookUrl: purify.sanitize(facebookUrl || ''),
+            tiktokUrl: purify.sanitize(tiktokUrl || ''),
+            aboutUsText: purify.sanitize(aboutUsText || '', { USE_PROFILES: { html: true } })
         },
             { upsert: true, new: true } // Crea la config si no existe
         );
@@ -2811,10 +2640,11 @@ app.get('/sitemap.xml', async (req, res, next) => {
         const staticPages = [
             { url: '', priority: '1.0' },
             { url: '/tienda', priority: '0.9' },
-            { url: '/sorteos', priority: '0.8' },
+            { url: '/checkout', priority: '0.5' },
+            { url: '/tracking', priority: '0.7' },
             { url: '/regalos/crear', priority: '0.8' },
-            { url: '/sobre-nosotros', priority: '0.6' },
-            { url: '/contacto', priority: '0.6' }
+            { url: '/sobre-nosotros', priority: '0.8' },
+            { url: '/contacto', priority: '0.8' }
         ];
 
         staticPages.forEach(page => {

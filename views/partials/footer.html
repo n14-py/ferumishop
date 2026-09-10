@@ -9,6 +9,13 @@
             <a href="https://wa.me/<%= typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591' %>" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-whatsapp"></i></a>
         </div>
         
+        <p style="margin-bottom: 16px;">
+            <a href="/tienda" style="color:#ddd; margin: 0 8px;">Tienda</a>
+            <a href="/tracking" style="color:#ddd; margin: 0 8px;">Tracking</a>
+            <a href="/sobre-nosotros" style="color:#ddd; margin: 0 8px;">Sobre nosotros</a>
+            <a href="/contacto" style="color:#ddd; margin: 0 8px;">Contacto</a>
+        </p>
+        <p style="color:#aaa; font-size:0.9rem; margin-bottom: 18px;">Ferumishop · Central con Motobolt (despacho en 1 hora) · Interior por transportadora · Retiro en local</p>
         <div style="border-top: 1px solid #333; padding-top: 20px; color: #777; font-size: 0.9rem;">
             <p>Hecho con <i class="fas fa-heart" style="color: #ff4757;"></i> en Paraguay | © 2026 FERUMI</p>
         </div>
@@ -177,200 +184,28 @@
     .pop-anim { animation: pop 0.4s ease; }
 </style>
 
-<div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
-<div id="cartSidebar" class="cart-sidebar">
-    <div class="cart-header">
-        <h3><i class="fas fa-shopping-bag text-primary"></i> Mi Carrito</h3>
-        <button class="close-cart" onclick="toggleCart()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="cart-items" id="cartItemsContainer">
-        </div>
-    <div class="cart-footer">
-        <div class="cart-total">
-            <span>Total:</span>
-            <span id="cartTotalPrice">Gs. 0</span>
-        </div>
-        <button class="btn-checkout" onclick="sendOrderWhatsApp()">
-            <i class="fab fa-whatsapp fa-lg"></i> Pedir por WhatsApp
-        </button>
-        <button class="btn-clear" onclick="clearCart()">Vaciar carrito</button>
-    </div>
-</div>
-
-<button id="floatingCartBtn" class="floating-cart-btn" onclick="toggleCart()">
+<button id="floatingCartBtn" class="floating-cart-btn" type="button" aria-label="Abrir carrito">
     <i class="fas fa-shopping-cart"></i>
     <span id="cartBadge" class="cart-badge">0</span>
 </button>
-
+<link rel="stylesheet" href="/css/shop-extras.css">
 <script>
-    // 1. Inicializar el carrito desde LocalStorage
-    let shoppingCart = JSON.parse(localStorage.getItem('ferumiCart')) || [];
-    const whatsappNumber = "<%= typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591' %>";
-
-    // 2. Función para formatear moneda
-    function formatMoney(amount) {
-        return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(amount);
-    }
-
-    // 3. Abrir / Cerrar el panel
-    function toggleCart() {
-        document.getElementById('cartSidebar').classList.toggle('active');
-        document.getElementById('cartOverlay').classList.toggle('active');
-        renderCart();
-    }
-
-    // 4. Añadir un producto al carrito (Esta función la llama producto-detalle.html)
-    function addToCart(id, name, price, image) {
-        const existingItem = shoppingCart.find(item => item.id === id);
-        
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            shoppingCart.push({
-                id: id,
-                name: name,
-                price: parseInt(price),
-                image: image || '/img/placeholder.png',
-                quantity: 1
-            });
+    (function syncFloatingCart() {
+        function count() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('ferumi_cart') || '[]');
+                return cart.reduce((s, i) => s + (i.quantity || 1), 0);
+            } catch (e) { return 0; }
         }
-        
-        saveCart();
-        updateBadge();
-        
-        // Animación del botón flotante para avisar que se añadió
-        const btn = document.getElementById('floatingCartBtn');
-        btn.classList.add('pop-anim');
-        setTimeout(() => btn.classList.remove('pop-anim'), 400);
-        
-        // Abrir el carrito automáticamente para que vea que se agregó
-        document.getElementById('cartSidebar').classList.add('active');
-        document.getElementById('cartOverlay').classList.add('active');
-        renderCart();
-    }
-
-    // 5. Cambiar cantidad de un producto (+ o -)
-    function changeQuantity(id, change) {
-        const item = shoppingCart.find(i => i.id === id);
-        if (item) {
-            item.quantity += change;
-            if (item.quantity <= 0) {
-                removeFromCart(id);
-            } else {
-                saveCart();
-                renderCart();
-                updateBadge();
-            }
+        function paint() {
+            const badge = document.getElementById('cartBadge');
+            if (badge) badge.innerText = count();
         }
-    }
-
-    // 6. Eliminar producto del carrito
-    function removeFromCart(id) {
-        shoppingCart = shoppingCart.filter(item => item.id !== id);
-        saveCart();
-        renderCart();
-        updateBadge();
-    }
-
-    // 7. Vaciar todo el carrito
-    function clearCart() {
-        if(confirm('¿Estás segura de vaciar tu carrito?')) {
-            shoppingCart = [];
-            saveCart();
-            renderCart();
-            updateBadge();
-        }
-    }
-
-    // 8. Guardar en la memoria del navegador
-    function saveCart() {
-        localStorage.setItem('ferumiCart', JSON.stringify(shoppingCart));
-    }
-
-    // 9. Actualizar el numerito rojo del botón flotante
-    function updateBadge() {
-        const totalItems = shoppingCart.reduce((sum, item) => sum + item.quantity, 0);
-        const badge = document.getElementById('cartBadge');
-        badge.innerText = totalItems;
-        // Ocultar el botón si el carrito está vacío (opcional, yo lo dejo visible siempre)
-        // document.getElementById('floatingCartBtn').style.display = totalItems > 0 ? 'flex' : 'none';
-    }
-
-    // 10. Dibujar el carrito en la pantalla (Renderizar)
-    function renderCart() {
-        const container = document.getElementById('cartItemsContainer');
-        const totalPriceEl = document.getElementById('cartTotalPrice');
-        let total = 0;
-
-        if (shoppingCart.length === 0) {
-            container.innerHTML = `
-                <div class="cart-empty-msg">
-                    <i class="fas fa-shopping-basket"></i>
-                    <h4>Tu carrito está vacío</h4>
-                    <p style="font-size: 0.9rem;">¡Anímate a agregar algunos productos!</p>
-                </div>`;
-            totalPriceEl.innerText = formatMoney(0);
-            return;
-        }
-
-        let html = '';
-        shoppingCart.forEach(item => {
-            const subtotal = item.price * item.quantity;
-            total += subtotal;
-            html += `
-                <div class="cart-item">
-                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
-                    <div class="cart-item-info">
-                        <div class="cart-item-title">${item.name}</div>
-                        <div class="cart-item-price">${formatMoney(item.price)}</div>
-                        <div class="qty-controls">
-                            <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
-                            <span style="font-weight:bold; width: 20px; text-align:center;">${item.quantity}</span>
-                            <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
-                        </div>
-                    </div>
-                    <button class="remove-item" onclick="removeFromCart('${item.id}')"><i class="fas fa-trash-alt"></i></button>
-                </div>
-            `;
+        document.getElementById('floatingCartBtn')?.addEventListener('click', () => {
+            if (typeof window.openFerumiCart === 'function') window.openFerumiCart();
+            else document.getElementById('cart-icon')?.click();
         });
-
-        container.innerHTML = html;
-        totalPriceEl.innerText = formatMoney(total);
-    }
-
-    // 11. ENVIAR EL PEDIDO POR WHATSAPP
-    function sendOrderWhatsApp() {
-        if (shoppingCart.length === 0) {
-            alert('Agrega al menos un producto al carrito para hacer tu pedido.');
-            return;
-        }
-
-        let total = 0;
-        let message = "✨ *NUEVO PEDIDO FERUMI* ✨\n\nHola, quiero hacer el siguiente pedido:\n\n";
-
-        shoppingCart.forEach((item, index) => {
-            const subtotal = item.price * item.quantity;
-            total += subtotal;
-            message += `🛍️ *${item.quantity}x* ${item.name}\n`;
-            message += `   Subtotal: ${formatMoney(subtotal)}\n\n`;
-        });
-
-        message += `======================\n`;
-        message += `💰 *TOTAL A PAGAR: ${formatMoney(total)}*\n`;
-        message += `======================\n\n`;
-        message += `Espero confirmación de stock y métodos de pago. ¡Gracias! 💕`;
-
-        const encodedMessage = encodeURIComponent(message);
-        const link = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-        
-        window.open(link, '_blank');
-    }
-
-    // Al cargar cualquier página, actualizar el numerito rojo
-    window.onload = function() {
-        updateBadge();
-        // Si tienes alguna otra función de onload en otras páginas (como en producto-detalle), asegúrate de no sobrescribirla.
-        // Lo ideal es usar event listeners.
-    };
-    document.addEventListener('DOMContentLoaded', updateBadge);
+        paint();
+        setInterval(paint, 1200);
+    })();
 </script>

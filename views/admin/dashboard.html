@@ -29,67 +29,7 @@
 
 <div class="admin-wrapper">
     
-    <aside class="sidebar" id="admin-sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-crown"></i> FERUMI
-        </div>
-        <div class="sidebar-content mt-3">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a href="/admin/dashboard" class="nav-link active">
-                        <i class="fa-solid fa-house fa-fw"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/caja" class="nav-link">
-                        <i class="fa-solid fa-wallet fa-fw"></i> Caja y Finanzas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/productos" class="nav-link">
-                        <i class="fa-solid fa-box-open fa-fw"></i> Productos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/categorias" class="nav-link">
-                        <i class="fa-solid fa-tags fa-fw"></i> Categorías
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/regalos" class="nav-link">
-                        <i class="fas fa-gift fa-fw"></i> Regalos Online
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/admin/sorteos" class="nav-link">
-                        <i class="fas fa-ticket-alt fa-fw"></i> Sorteos
-                    </a>
-                </li>
-
-                <li class="nav-item mt-2">
-                    <a href="/admin/b2b" class="nav-link">
-                        <i class="fas fa-handshake fa-fw"></i> Mayoristas B2B
-                    </a>
-                </li>
-
-                <li class="nav-item mt-4">
-                    <a href="/admin/configuracion" class="nav-link">
-                        <i class="fa-solid fa-cog fa-fw"></i> Ajustes de Tienda
-                    </a>
-                </li>
-            </ul>
-        </div>
-        <div class="sidebar-footer">
-            <a href="/" target="_blank" class="nav-link">
-                <i class="fa-solid fa-globe fa-fw"></i> Ver mi Tienda
-            </a>
-            <a href="/admin/logout" class="nav-link text-white" style="opacity: 0.8;">
-                <i class="fa-solid fa-sign-out-alt fa-fw"></i> Salir
-            </a>
-        </div>
-    </aside>
-    
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <%- include('./partials/sidebar.html') %>
 
     <div class="main-content-wrapper">
         
@@ -148,23 +88,27 @@
                 </div>
                 
                 <div class="col-6 col-md-6">
-                    <div class="card app-card h-100 p-3" style="background-color: #f0f8ff;">
-                        <div class="icon-box bg-info text-white mb-3 shadow-sm">
-                            <i class="fas fa-mobile-alt"></i>
+                    <a href="/admin/despacho" class="text-decoration-none">
+                        <div class="card app-card h-100 p-3" style="background-color: #fff0f3;">
+                            <div class="icon-box bg-danger text-white mb-3 shadow-sm">
+                                <i class="fas fa-motorcycle"></i>
+                            </div>
+                            <div class="stat-value text-danger"><%= stats.pendingDispatch %></div>
+                            <div class="stat-label text-danger">Por despachar</div>
                         </div>
-                        <div class="stat-value text-info"><%= stats.totalAppUsers %></div>
-                        <div class="stat-label text-info">Usuarios App</div>
-                    </div>
+                    </a>
                 </div>
 
                 <div class="col-6 col-md-6">
-                    <div class="card app-card h-100 p-3" style="background-color: #fff8e1;">
-                        <div class="icon-box bg-warning text-dark mb-3 shadow-sm">
-                            <i class="fas fa-ticket-alt"></i>
+                    <a href="/admin/despacho" class="text-decoration-none">
+                        <div class="card app-card h-100 p-3" style="background-color: #f0f8ff;">
+                            <div class="icon-box bg-info text-white mb-3 shadow-sm">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="stat-value text-info"><%= stats.paidToday %></div>
+                            <div class="stat-label text-info">Pagos hoy</div>
                         </div>
-                        <div class="stat-value text-warning"><%= stats.totalTickets %></div>
-                        <div class="stat-label text-warning">Tickets Circulando</div>
-                    </div>
+                    </a>
                 </div>
                 
             </div>
@@ -188,11 +132,11 @@
                     </a>
                 </div>
                 <div class="col-4">
-                    <a href="/admin/productos" class="d-block text-decoration-none text-dark">
+                    <a href="/admin/despacho" class="d-block text-decoration-none text-dark">
                         <div class="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm mb-2" style="width: 60px; height: 60px; border: 2px solid var(--admin-primary);">
-                            <i class="fas fa-box-open text-primary fs-4"></i>
+                            <i class="fas fa-motorcycle text-primary fs-4"></i>
                         </div>
-                        <small class="fw-bold">Producto</small>
+                        <small class="fw-bold">Despacho</small>
                     </a>
                 </div>
             </div>

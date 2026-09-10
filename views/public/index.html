@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FERUMI - Maquillaje, Uñas y Accesorios</title>
-    <meta name="description" content="Tu tienda favorita de maquillaje, insumos para uñas y accesorios de moda. Resalta tu belleza con FERUMI.">
+    <%- include('../partials/seo.html', { pageTitle: 'Inicio', seoDescription: 'FERUMI Shop Paraguay: maquillaje, uñas y accesorios. Pagá con Pagopar, envío Motobolt en Central o retiro en Ferumishop.' }) %>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -86,6 +86,43 @@
 
 
     <section class="featured-products">
+        <h2 class="section-title">Cómo comprar en FERUMI</h2>
+        <p class="section-subtitle">Un flujo guiado: producto → carrito → ubicación → envío inteligente → Pagopar → tracking.</p>
+        <div class="guide-grid">
+            <div class="guide-card">
+                <div class="guide-num">1</div>
+                <h3>Elegí tu producto</h3>
+                <p>Fotos, stock y variantes claras. Agregá al carrito o comprá ahora.</p>
+            </div>
+            <div class="guide-card">
+                <div class="guide-num">2</div>
+                <h3>Pasá tu ubicación</h3>
+                <p>Vemos a cuántos km estás de Ferumishop. Central = Motobolt. Interior = transportadora.</p>
+            </div>
+            <div class="guide-card">
+                <div class="guide-num">3</div>
+                <h3>Pagá o retirás</h3>
+                <p>Pagopar (tarjetas, Tigo, bocas). Efectivo solo si retirás en el local.</p>
+            </div>
+            <div class="guide-card">
+                <div class="guide-num">4</div>
+                <h3>Seguí tu pedido</h3>
+                <p>Pagado → preparando → Motobolt / envío / retiro → entregado. Ticket con QR.</p>
+            </div>
+        </div>
+        <div class="home-trust">
+            <div class="home-trust-item"><i class="fas fa-motorcycle"></i><strong>Motobolt 1 hora</strong>Despacho en Central</div>
+            <div class="home-trust-item"><i class="fas fa-store"></i><strong>Ferumishop</strong>Retiro en el local</div>
+            <div class="home-trust-item"><i class="fas fa-lock"></i><strong>Pagopar</strong>Pago seguro Paraguay</div>
+            <div class="home-trust-item"><i class="fas fa-map-marker-alt"></i><strong>Ubicación</strong><a href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Ver en Maps</a></div>
+        </div>
+        <p style="text-align:center; margin-bottom: 3rem;">
+            <a href="/tracking" class="btn btn-secondary">Tracking de pedidos</a>
+            <a href="/sobre-nosotros" class="btn btn-primary" style="margin-left:8px;">Sobre nosotros</a>
+        </p>
+    </section>
+
+    <section class="featured-products">
         <h2 class="section-title">Productos Destacados</h2>
         <p class="section-subtitle">Lo más nuevo en tendencias y cuidado personal.</p>
 
@@ -108,6 +145,18 @@
 <%- include('../partials/footer.html') %>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BeautySalon",
+  "name": "FERUMI / Ferumishop",
+  "url": "https://www.ferumi.shop/",
+  "image": "https://www.ferumi.shop/ferumi.logo.png",
+  "telephone": "+<%= siteConfig.whatsappNumber %>",
+  "address": { "@type": "PostalAddress", "addressLocality": "Asunción", "addressCountry": "PY" },
+  "sameAs": ["https://instagram.com/ferumishop", "https://tiktok.com/@ferumishop"]
+}
+</script>
 
 </body>
 </html>
