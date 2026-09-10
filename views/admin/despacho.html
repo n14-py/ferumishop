@@ -30,14 +30,9 @@
         .order-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
         .order-actions .span-2 { grid-column: 1 / -1; }
         .order-meta { font-size: 1rem; line-height: 1.45; }
-        .scan-box { position: sticky; top: 64px; z-index: 8; }
         @media (max-width: 767px) {
             .main-content { padding: 12px !important; }
             .order-card { font-size: 1.05rem; }
-            .scan-box { top: 58px; }
-        }
-        @media (min-width: 768px) {
-            .scan-box { position: static; }
         }
     </style>
 </head>
@@ -114,7 +109,7 @@
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div>
                         <div class="fw-bold" style="font-size:1.15rem;"><%= order.orderNumber %></div>
-                        <div class="text-muted"><%= order.ticketCode %> · <%= new Date(order.createdAt).toLocaleString('es-PY') %></div>
+                        <div class="text-muted"><%= order.ticketCode %> · <%= new Date(order.createdAt).toLocaleString('es-PY', { timeZone: 'America/Asuncion', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) %></div>
                     </div>
                     <span class="status-pill"><%= statusLabel %></span>
                 </div>

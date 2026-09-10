@@ -235,8 +235,18 @@
     .card-actions .btn { min-height: 40px; font-size: 0.78rem !important; padding: 8px !important; }
 
     .pagination-numbers { display: none; }
-    .shop-pager { display: flex; position: sticky; bottom: 12px; z-index: 5; }
-    .shop-pager-btn { flex: 1; }
+    .shop-pager {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        position: static;
+        gap: 8px 10px;
+        margin: 1.4rem 0 5.5rem;
+        width: 100%;
+    }
+    .shop-pager-status { grid-column: 1 / -1; text-align: center; padding: 4px 0; }
+    .shop-pager-btn { width: 100%; min-width: 0; }
+    .home-track-banner { margin-bottom: 5rem; padding-bottom: 1.8rem; }
+    .site-footer { margin-bottom: 2.5rem; }
 
     .cart-sidebar { max-width: 100% !important; width: 100% !important; }
     .cart-footer { padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); }

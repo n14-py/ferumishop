@@ -89,13 +89,13 @@
             <% if (totalPages > 1) { %>
                 <% const pagerParams = new URLSearchParams(query); %>
                 <nav class="shop-pager" aria-label="Páginas de la tienda">
+                    <span class="shop-pager-status">Página <%= currentPage %> de <%= totalPages %></span>
                     <% if (currentPage > 1) { %>
                         <% pagerParams.set('page', currentPage - 1); %>
                         <a class="shop-pager-btn" href="/tienda?<%= pagerParams.toString() %>">Anterior</a>
                     <% } else { %>
                         <span class="shop-pager-btn disabled" aria-disabled="true">Anterior</span>
                     <% } %>
-                    <span class="shop-pager-status">Página <%= currentPage %> de <%= totalPages %></span>
                     <% if (currentPage < totalPages) { %>
                         <% pagerParams.set('page', currentPage + 1); %>
                         <a class="shop-pager-btn" href="/tienda?<%= pagerParams.toString() %>">Siguiente</a>
