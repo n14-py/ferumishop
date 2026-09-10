@@ -14,12 +14,12 @@
 <%- include('../partials/header.html') %>
 <main class="container checkout-wrap">
     <h1 style="text-align:center; margin-bottom: 0.4rem;">Tu compra, paso a paso</h1>
-    <p class="checkout-help" style="text-align:center;">Pagopar pide tus datos. Después vemos a cuántos km estás de Ferumishop y te mostramos el envío que corresponde.</p>
+    <p class="checkout-help" style="text-align:center;">Completá tus datos, decinos dónde estás y elegí cómo te llega. Al final pagás con Pagopar o, si retirás, también en efectivo.</p>
 
     <div class="checkout-steps">
         <div class="checkout-step-pill active" data-step-pill="1">1. Datos</div>
-        <div class="checkout-step-pill" data-step-pill="2">2. Ubicación</div>
-        <div class="checkout-step-pill" data-step-pill="3">3. Envío y pago</div>
+        <div class="checkout-step-pill" data-step-pill="2">2. Dónde</div>
+        <div class="checkout-step-pill" data-step-pill="3">3. Envío</div>
     </div>
 
     <div class="checkout-panel" id="step1">
@@ -52,7 +52,7 @@
     <div class="checkout-panel" id="step2" style="display:none;">
         <h2>¿Dónde te queda?</h2>
         <p class="checkout-help">Primero tu ubicación. Calculamos los km hasta Ferumishop. Todo Central se cubre con Motobolt; el interior va por transportadora.</p>
-        <div id="map" style="height: 260px; border-radius: 14px; margin-bottom: 12px;"></div>
+        <div id="map" style="height: 220px; border-radius: 14px; margin-bottom: 12px;"></div>
         <button type="button" class="btn-shop secondary" style="margin-bottom:12px;" onclick="useMyLocation()"><i class="fas fa-location-arrow"></i> Usar mi ubicación</button>
         <div class="chk-row">
             <div>
@@ -78,13 +78,21 @@
         <div id="shipOptions"></div>
         <div id="payBox" style="display:none; margin-top: 1rem;">
             <h3 style="font-size:1.1rem;">Pago</h3>
-            <div class="ship-option selected" id="payPagopar" onclick="selectPay('pagopar')">
-                <input type="radio" name="pay" value="pagopar" checked> <strong>Pagopar</strong>
-                <p>Tarjetas, Tigo Money, Aqui Pago, bancos. Seguro y automático.</p>
+            <div class="ship-card selected" id="payPagopar" onclick="selectPay('pagopar')">
+                <input type="radio" name="pay" value="pagopar" checked>
+                <span class="ship-card-icon"><i class="fas fa-lock"></i></span>
+                <span class="ship-card-body">
+                    <h4>Pagopar</h4>
+                    <p>Tarjetas, Tigo Money, Aqui Pago, bancos.</p>
+                </span>
             </div>
-            <div class="ship-option" id="payCash" style="display:none;" onclick="selectPay('efectivo_retiro')">
-                <input type="radio" name="pay" value="efectivo_retiro"> <strong>Efectivo al retirar</strong>
-                <p>Único pago en efectivo: solo si pasás a buscar por Ferumishop.</p>
+            <div class="ship-card" id="payCash" style="display:none;" onclick="selectPay('efectivo_retiro')">
+                <input type="radio" name="pay" value="efectivo_retiro">
+                <span class="ship-card-icon"><i class="fas fa-money-bill-wave"></i></span>
+                <span class="ship-card-body">
+                    <h4>Efectivo al retirar</h4>
+                    <p>Solo si pasás a buscar por Ferumishop.</p>
+                </span>
             </div>
         </div>
         <div id="cartPreview" style="margin-top:1rem;"></div>
@@ -168,14 +176,17 @@ async function calcShipping() {
 function renderShips() {
     const wrap = document.getElementById('shipOptions');
     wrap.innerHTML = shipping.options.map((o, i) => `
-        <label class="ship-option ${i===0?'selected':''}" data-ship="${o.id}">
+        <label class="ship-card ${i===0?'selected':''}" data-ship="${o.id}">
             <input type="radio" name="ship" value="${o.id}" ${i===0?'checked':''}>
-            <h4>${o.label}</h4>
-            <p>${o.eta} — ${o.detail}</p>
+            <span class="ship-card-icon"><i class="fas ${o.icon || 'fa-box'}"></i></span>
+            <span class="ship-card-body">
+                <h4>${o.easyTitle || o.label}</h4>
+                <p>${o.easyText || o.eta}</p>
+            </span>
         </label>`).join('');
-    wrap.querySelectorAll('.ship-option').forEach(el => {
+    wrap.querySelectorAll('.ship-card').forEach(el => {
         el.addEventListener('click', () => {
-            wrap.querySelectorAll('.ship-option').forEach(x => x.classList.remove('selected'));
+            wrap.querySelectorAll('.ship-card').forEach(x => x.classList.remove('selected'));
             el.classList.add('selected');
             el.querySelector('input').checked = true;
             toggleCash();
@@ -198,7 +209,7 @@ function selectPay(v) {
 }
 function toggleCash() {
     const cash = document.getElementById('payCash');
-    if (selectedShip() === 'retiro') { cash.style.display = 'block'; }
+    if (selectedShip() === 'retiro') { cash.style.display = 'flex'; }
     else { cash.style.display = 'none'; selectPay('pagopar'); }
 }
 

@@ -85,19 +85,19 @@
     <% } %>
 
 
-    <section class="featured-products">
+    <section class="featured-products home-block">
         <h2 class="section-title">Cómo comprar en FERUMI</h2>
-        <p class="section-subtitle">Un flujo guiado: producto → carrito → ubicación → envío inteligente → Pagopar → tracking.</p>
+        <p class="section-subtitle">Tan fácil que se entiende en 4 toques: producto, dónde estás, cómo te llega y pago.</p>
         <div class="guide-grid">
             <div class="guide-card">
                 <div class="guide-num">1</div>
                 <h3>Elegí tu producto</h3>
-                <p>Fotos, stock y variantes claras. Agregá al carrito o comprá ahora.</p>
+                <p>Tocá Añadir. También podés pedir por WhatsApp desde el carrito.</p>
             </div>
             <div class="guide-card">
                 <div class="guide-num">2</div>
-                <h3>Pasá tu ubicación</h3>
-                <p>Vemos a cuántos km estás de Ferumishop. Central = Motobolt. Interior = transportadora.</p>
+                <h3>Decinos dónde estás</h3>
+                <p>Usá tu ubicación. Si estás cerca, va Motobolt. Si estás lejos, encomienda.</p>
             </div>
             <div class="guide-card">
                 <div class="guide-num">3</div>
@@ -107,7 +107,7 @@
             <div class="guide-card">
                 <div class="guide-num">4</div>
                 <h3>Seguí tu pedido</h3>
-                <p>Pagado → preparando → Motobolt / envío / retiro → entregado. Ticket con QR.</p>
+                <p>Pagado → preparando → moto / encomienda / retiro → entregado.</p>
             </div>
         </div>
         <div class="home-trust">
@@ -116,15 +116,15 @@
             <div class="home-trust-item"><i class="fas fa-lock"></i><strong>Pagopar</strong>Pago seguro Paraguay</div>
             <div class="home-trust-item"><i class="fas fa-map-marker-alt"></i><strong>Ubicación</strong><a href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Ver en Maps</a></div>
         </div>
-        <p style="text-align:center; margin-bottom: 3rem;">
-            <a href="/tracking" class="btn btn-secondary">Tracking de pedidos</a>
-            <a href="/sobre-nosotros" class="btn btn-primary" style="margin-left:8px;">Sobre nosotros</a>
-        </p>
+        <div class="home-cta-row">
+            <a href="/tienda" class="btn btn-primary">Ver toda la tienda</a>
+            <a href="/tracking" class="btn btn-secondary">Seguir mi pedido</a>
+        </div>
     </section>
 
-    <section class="featured-products">
+    <section class="featured-products home-block">
         <h2 class="section-title">Productos Destacados</h2>
-        <p class="section-subtitle">Lo más nuevo en tendencias y cuidado personal.</p>
+        <p class="section-subtitle">Lo más pedido, listo para llevar.</p>
 
         <div class="product-grid">
             <% if (featuredProducts && featuredProducts.length > 0) { %>
@@ -133,11 +133,58 @@
                 <% }); %>
             <% } else { %>
                 <div class="no-results-card">
-                    <h3>No hay productos destacados</h3>
-                    <p>El administrador aún no ha marcado ningún producto como destacado.</p>
+                    <h3>Pronto más destacados</h3>
+                    <p>Mientras tanto, mirá toda la tienda.</p>
+                    <a href="/tienda" class="btn btn-primary" style="margin-top:1rem;">Ver catálogo</a>
                 </div>
             <% } %>
         </div>
+        <div class="section-more">
+            <a href="/tienda" class="btn btn-primary">Ver todo</a>
+        </div>
+    </section>
+
+    <% if (locals.latestProducts && latestProducts.length > 0) { %>
+    <section class="featured-products home-block">
+        <h2 class="section-title">Recién llegados</h2>
+        <p class="section-subtitle">Lo último que sumamos a FERUMI.</p>
+        <div class="product-grid">
+            <% latestProducts.forEach(product => { %>
+                <%- include('../partials/product-card.html', { product: product }) %>
+            <% }); %>
+        </div>
+        <div class="section-more">
+            <a href="/tienda" class="btn btn-secondary">Ver catálogo completo</a>
+        </div>
+    </section>
+    <% } %>
+
+    <section class="home-block">
+        <h2 class="section-title">¿Cómo te llega?</h2>
+        <p class="section-subtitle">Elegí lo que te quede más fácil. Te lo explicamos en 3 opciones.</p>
+        <div class="home-ship-grid">
+            <div class="home-ship-card">
+                <i class="fas fa-motorcycle"></i>
+                <h3>Moto a tu casa</h3>
+                <p>En Gran Asunción / Central. Vos pedís Motobolt. Despacho en 1 hora.</p>
+            </div>
+            <div class="home-ship-card">
+                <i class="fas fa-truck"></i>
+                <h3>Encomienda</h3>
+                <p>Si estás lejos, va por transportadora al interior. Coordinamos juntos.</p>
+            </div>
+            <div class="home-ship-card">
+                <i class="fas fa-store"></i>
+                <h3>Paso a buscar</h3>
+                <p>Retiro en Ferumishop. Acá sí podés pagar en efectivo.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-track-banner">
+        <h2>¿Ya compraste?</h2>
+        <p>Buscá tu pedido con el teléfono, el correo o tu cédula.</p>
+        <a href="/tracking" class="btn btn-primary" style="margin-top:10px;">Ver tracking</a>
     </section>
 
 </main>

@@ -12,8 +12,8 @@
 <body>
 <%- include('../partials/header.html') %>
 <main class="container" style="max-width:800px;">
-    <h1 style="text-align:center;">Tracking de pedidos</h1>
-    <p style="text-align:center; color: var(--text-muted-color);">Ingresá tu teléfono, correo, cédula o número de ticket. Vas a ver el estado como en AliExpress: pagado, preparando, Motobolt, envío o retiro.</p>
+    <h1 style="text-align:center;">¿Dónde está mi pedido?</h1>
+    <p style="text-align:center; color: var(--text-muted-color);">Escribí tu teléfono, correo, cédula o número de pedido. Vas a ver si está pagado, preparando, en moto, encomienda o listo para retirar.</p>
     <form class="track-search" id="trackForm">
         <label class="chk-label">Buscar mis compras</label>
         <input class="chk-input" id="q" placeholder="Ej: 0981..., tu correo o FER-..." value="<%= query.q || '' %>">
@@ -46,7 +46,7 @@ function render(orders){
             <div class="track-timeline">
                 ${(o.events||[]).map(e => `<div class="track-event"><strong>${e.title}</strong><div style="font-size:0.85rem;color:#666;">${e.detail||''}<br>${new Date(e.at).toLocaleString('es-PY')}</div></div>`).join('')}
             </div>
-            <a href="/ticket/${o.ticketCode}" class="btn btn-primary" style="margin-top:10px; display:inline-block;">Ver ticket / QR</a>
+            <a href="/tracking?q=${encodeURIComponent(o.ticketCode)}" class="btn-shop" style="margin-top:12px; display:block; text-decoration:none;">Ver este pedido</a>
         </article>`).join('');
 }
 document.getElementById('trackForm').addEventListener('submit', async (e) => {

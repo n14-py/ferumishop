@@ -37,36 +37,70 @@ test('checkout view renders', async () => {
     }));
     assert.match(html, /Usar mi ubicación/);
     assert.match(html, /Pagopar/);
+    assert.match(html, /Pedir por WhatsApp/);
 });
 
 test('tracking view renders', async () => {
     const html = await ejs.renderFile(path.join(views, 'public/tracking.html'), locals({ pageTitle: 'Tracking' }));
-    assert.match(html, /Tracking de pedidos/);
+    assert.match(html, /Dónde está mi pedido/);
+    assert.doesNotMatch(html, /Ver ticket \/ QR/);
 });
 
-test('ticket view renders QR and items', async () => {
-    const html = await ejs.renderFile(path.join(views, 'public/ticket.html'), locals({
-        pageTitle: 'Ticket',
-        qrUrl: 'https://example.com/qr.png',
-        printNow: false,
+test('compra-ok thank you has tracking and no customer QR', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/compra-ok.html'), locals({
+        pageTitle: 'Pedido recibido',
         store: { address: 'Ferumishop', mapsUrl: 'https://share.google/39F8jWwL96lFY65Th' },
         order: {
             orderNumber: 'FER-TEST',
             ticketCode: 'FM-ABC',
-            tracking: { title: 'Preparando' },
-            customerName: 'Ana',
-            customerDocument: '123',
-            customerPhone: '0981',
+            tracking: { title: 'Preparando', detail: 'Armando tu pedido' },
             paymentMethod: 'pagopar',
-            paymentStatus: 'pagado',
-            shippingMethod: 'motobolt',
-            shippingAddress: '',
-            items: [{ quantity: 1, name: 'Labial', price: 25000 }],
-            totalAmount: 25000
+            shippingMethod: 'motobolt'
+        }
+    }));
+    assert.match(html, /FER-TEST/);
+    assert.match(html, /Ver mi tracking/);
+    assert.doesNotMatch(html, /qrserver|Ticket QR|Imprimir ticket/i);
+});
+
+test('pago resultado thank you has tracking and no QR', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/pago-resultado.html'), locals({
+        pageTitle: 'Pago',
+        estado: { pagado: true, numero_pedido: 1, monto: 25000 },
+        orderView: {
+            orderNumber: 'FER-1',
+            ticketCode: 'FM-1',
+            tracking: { title: 'Pagado', detail: 'Recibimos tu pago' },
+            shippingMethod: 'motobolt'
+        },
+        store: { mapsUrl: 'https://share.google/39F8jWwL96lFY65Th' }
+    }));
+    assert.match(html, /Pago confirmado/);
+    assert.match(html, /Ver mi tracking/);
+    assert.doesNotMatch(html, /qrserver|Ticket QR/i);
+});
+
+test('printed thermal ticket has prepare QR', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/cola-impresion.html'), locals({
+        pageTitle: 'Cola',
+        autoPrint: false,
+        pedido: {
+            id: '65f000000000000000000001',
+            cliente: 'Ana',
+            items: [{ nombre: '1x Labial', precio: 25000 }],
+            total: 25000,
+            fecha: new Date(),
+            orderNumber: 'FER-TEST',
+            ticketCode: 'FM-ABC',
+            shippingLabel: 'Motobolt',
+            qrPayload: 'FERUMI|FM-ABC',
+            qrHint: 'Escanear al preparar'
         }
     }));
     assert.match(html, /FER-TEST/);
     assert.match(html, /FM-ABC/);
+    assert.match(html, /FERUMI\|FM-ABC/);
+    assert.match(html, /Escanear al preparar/);
 });
 
 test('despacho admin view renders', async () => {
@@ -101,9 +135,10 @@ test('despacho admin view renders', async () => {
             housePhotoUrl: ''
         }]
     });
-    assert.match(html, /Despachar compras/);
+    assert.match(html, /Despachar/);
     assert.match(html, /FER-1/);
-    assert.match(html, /Escanear ticket/);
+    assert.match(html, /Escanear para marcar PREPARADO/);
+    assert.match(html, /Marcar PREPARADO/);
 });
 
 test('webhook extract + echo shape', () => {

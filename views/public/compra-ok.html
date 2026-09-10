@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido recibido - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Pedido recibido', seoDescription: 'Tu pedido FERUMI fue recibido. Seguí el estado desde tracking.' }) %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="thanks-wrap">
+    <div class="thanks-card">
+        <div class="thanks-emoji">💖</div>
+        <h1>¡Listo, ya recibimos tu pedido!</h1>
+        <p>Pedido <strong><%= order.orderNumber %></strong></p>
+        <p>Estado: <strong><%= order.tracking.title %></strong></p>
+        <p style="margin-top:8px;"><%= order.tracking.detail %></p>
+
+        <% if (order.paymentMethod === 'efectivo_retiro') { %>
+            <div class="thanks-note">
+                Vas a pagar <strong>en efectivo</strong> cuando retires en Ferumishop.
+                Te avisamos por WhatsApp cuando esté listo.
+                <% if (locals.store) { %><br><a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar al local</a><% } %>
+            </div>
+        <% } else if (order.shippingMethod === 'motobolt') { %>
+            <div class="thanks-note">
+                Cuando esté preparado te escribimos para que pidas <strong>Motobolt</strong>.
+                Despacho en 1 hora como máximo.
+                <% if (locals.store) { %><br><a href="<%= store.mapsUrl %>" target="_blank">Ubicación Ferumishop</a><% } %>
+            </div>
+        <% } else if (order.shippingMethod === 'retiro') { %>
+            <div class="thanks-note">
+                Retiro en Ferumishop. Te avisamos cuando esté listo.
+                <% if (locals.store) { %><br><a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar</a><% } %>
+            </div>
+        <% } else { %>
+            <div class="thanks-note">
+                Va por transportadora. Te escribimos para coordinar el envío al interior.
+            </div>
+        <% } %>
+
+        <p style="font-size:0.9rem; color:#888;">Guardá este número por si nos escribís: <strong><%= order.ticketCode %></strong></p>
+
+        <div class="thanks-actions">
+            <a class="btn-shop" href="/tracking?q=<%= encodeURIComponent(order.ticketCode) %>"><i class="fas fa-map-marker-alt"></i> Ver mi tracking</a>
+            <a class="btn-shop secondary" href="/tienda">Seguir comprando</a>
+        </div>
+    </div>
+</main>
+<%- include('../partials/footer.html') %>
+</body>
+</html>

@@ -9,54 +9,52 @@
 </head>
 <body class="bg-light">
     <%- include('../partials/header.html') %>
-    
-    <main class="container" style="max-width: 600px; padding: 4rem 1rem; margin: 0 auto; text-align: center;">
-        <div style="background: white; border-radius: 20px; padding: 3rem 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-            
+
+    <main class="thanks-wrap">
+        <div class="thanks-card">
             <% if (estado.pagado === true) { %>
-                <i class="fas fa-check-circle" style="font-size: 5rem; color: #25D366; margin-bottom: 1rem;"></i>
-                <h1 style="color: #333; margin-bottom: 10px;">¡Pago Exitoso!</h1>
-                <p style="color: #666; font-size: 1.1rem;">Tu pedido <strong>#<%= estado.numero_pedido || (orderView && orderView.orderNumber) %></strong> está pagado<%= estado.monto ? ' por ' + formatPrice(estado.monto) + ' Gs.' : '' %></p>
+                <div class="thanks-emoji">💖</div>
+                <h1>¡Pago confirmado!</h1>
+                <p>Tu pedido <strong>#<%= estado.numero_pedido || (orderView && orderView.orderNumber) %></strong> ya está pagado<%= estado.monto ? ' por ' + formatPrice(estado.monto) + ' Gs.' : '' %>.</p>
                 <% if (locals.orderView) { %>
-                    <p>Estado: <strong><%= orderView.tracking.title %></strong> — <%= orderView.tracking.detail %></p>
-                    <% if (locals.qrUrl) { %><img src="<%= qrUrl %>" alt="Ticket QR" style="width:180px;height:180px;margin:12px auto;"><% } %>
-                    <p>Ticket <strong><%= orderView.ticketCode %></strong></p>
-                    <p><a href="/ticket/<%= orderView.ticketCode %>">Imprimir ticket</a> · <a href="/tracking?q=<%= orderView.ticketCode %>">Ver tracking</a></p>
+                    <p>Estado: <strong><%= orderView.tracking.title %></strong></p>
+                    <p><%= orderView.tracking.detail %></p>
                     <% if (orderView.shippingMethod === 'motobolt' && locals.store) { %>
-                        <p style="background:#fff0f6; padding:12px; border-radius:12px;">Cuando esté preparado te escribimos para que pidas Motobolt. Ubicación: <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps</a>. Despacho en 1 hora como máximo.</p>
+                        <div class="thanks-note">Cuando esté preparado te escribimos para que pidas Motobolt. Despacho en 1 hora. <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps</a>.</div>
+                    <% } else if (orderView.shippingMethod === 'retiro' && locals.store) { %>
+                        <div class="thanks-note">Retiro en Ferumishop. Te avisamos cuando esté listo. <a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar</a></div>
+                    <% } else { %>
+                        <div class="thanks-note">Coordinamos la transportadora al interior. Te escribimos por WhatsApp.</div>
                     <% } %>
-                    <% if (orderView.shippingMethod === 'retiro' && locals.store) { %>
-                        <p style="background:#fff0f6; padding:12px; border-radius:12px;">Retiro en Ferumishop. Te avisamos cuando esté listo. <a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar</a></p>
-                    <% } %>
+                    <p style="font-size:0.9rem; color:#888;">Número para buscar tu pedido: <strong><%= orderView.ticketCode %></strong></p>
                 <% } %>
-            
+
             <% } else if (estado.cancelado === true) { %>
-                <i class="fas fa-times-circle" style="font-size: 5rem; color: #d81b60; margin-bottom: 1rem;"></i>
-                <h1 style="color: #333; margin-bottom: 10px;">Pago Cancelado</h1>
-                <p style="color: #666; font-size: 1.1rem;">La transacción no pudo ser procesada o superó el límite de tiempo.</p>
-                
+                <div class="thanks-emoji">😕</div>
+                <h1>Pago cancelado</h1>
+                <p>La transacción no se completó o se venció el tiempo. Podés volver a intentar desde el carrito.</p>
+
             <% } else { %>
-                <i class="fas fa-clock" style="font-size: 5rem; color: #f6ad55; margin-bottom: 1rem;"></i>
-                <h1 style="color: #333; margin-bottom: 10px;">Pago Pendiente</h1>
-                <p style="color: #666; font-size: 1.1rem;">Elegiste pagar con <strong><%= estado.forma_pago %></strong>.</p>
-                
+                <div class="thanks-emoji">⏳</div>
+                <h1>Pago pendiente</h1>
+                <p>Elegiste pagar con <strong><%= estado.forma_pago || 'Pagopar' %></strong>.</p>
                 <% if (estado.mensaje_resultado_pago) { %>
-                    <div style="background: #fff8eb; padding: 1.5rem; border-radius: 12px; border: 1px solid #fbd38d; margin-top: 1.5rem; text-align: left;">
-                        <h4 style="color: #dd6b20; margin-bottom: 10px;"><%= estado.mensaje_resultado_pago.titulo %></h4>
-                        <div style="color: #555;"><%- estado.mensaje_resultado_pago.descripcion %></div>
+                    <div class="thanks-note">
+                        <strong><%= estado.mensaje_resultado_pago.titulo %></strong>
+                        <div><%- estado.mensaje_resultado_pago.descripcion %></div>
                     </div>
                 <% } %>
             <% } %>
 
-            <div style="margin-top: 2rem;">
+            <div class="thanks-actions">
                 <% if (typeof orderView !== 'undefined' && orderView) { %>
-                    <a href="/tracking?q=<%= orderView.ticketCode %>" class="btn btn-primary" style="padding: 12px 30px; border-radius: 50px;">Seguir mi pedido</a>
+                    <a href="/tracking?q=<%= encodeURIComponent(orderView.ticketCode) %>" class="btn-shop"><i class="fas fa-map-marker-alt"></i> Ver mi tracking</a>
                 <% } %>
-                <a href="/tienda" class="btn btn-secondary" style="padding: 12px 30px; border-radius: 50px;">Volver a la Tienda</a>
+                <a href="/tienda" class="btn-shop secondary">Volver a la tienda</a>
             </div>
         </div>
     </main>
-    
+
     <%- include('../partials/footer.html') %>
 </body>
 </html>
