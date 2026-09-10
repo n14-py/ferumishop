@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /asociada
+Disallow: /logistica
+Sitemap: https://www.ferumi.shop/sitemap.xml

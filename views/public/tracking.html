@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking de pedidos - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Tracking de pedidos', seoDescription: 'Seguí tu pedido FERUMI con teléfono, correo o cédula. Pagado, preparando, Motobolt o retiro.' }) %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="container" style="max-width:800px;">
+    <h1 style="text-align:center;">Tracking de pedidos</h1>
+    <p style="text-align:center; color: var(--text-muted-color);">Ingresá tu teléfono, correo, cédula o número de ticket. Vas a ver el estado como en AliExpress: pagado, preparando, Motobolt, envío o retiro.</p>
+    <form class="track-search" id="trackForm">
+        <label class="chk-label">Buscar mis compras</label>
+        <input class="chk-input" id="q" placeholder="Ej: 0981..., tu correo o FER-..." value="<%= query.q || '' %>">
+        <button class="btn-shop" type="submit"><i class="fas fa-search"></i> Ver mis pedidos</button>
+        <p class="chk-error" id="err"></p>
+    </form>
+    <div id="results"></div>
+</main>
+<%- include('../partials/footer.html') %>
+<script>
+function money(n){ return new Intl.NumberFormat('es-PY').format(n||0)+' Gs.'; }
+function tone(t){ return (t&&t.tone)||'info'; }
+function render(orders){
+    const box = document.getElementById('results');
+    if (!orders.length) { box.innerHTML = '<p style="text-align:center;color:#888;">No encontramos pedidos con esos datos.</p>'; return; }
+    box.innerHTML = orders.map(o => `
+        <article class="track-card">
+            <div class="track-head">
+                <div>
+                    <strong>${o.orderNumber}</strong>
+                    <div style="font-size:0.85rem;color:#888;">Ticket ${o.ticketCode} · ${new Date(o.createdAt).toLocaleString('es-PY')}</div>
+                </div>
+                <span class="track-badge ${tone(o.tracking)}">${o.tracking.title}</span>
+            </div>
+            <p style="margin:10px 0;">${o.tracking.detail}</p>
+            <ul style="padding-left:18px; font-size:0.95rem;">
+                ${(o.items||[]).map(i => `<li>${i.quantity}x ${i.name}</li>`).join('')}
+            </ul>
+            <p style="font-weight:800;">Total ${money(o.totalAmount)} · ${o.paymentMethod==='efectivo_retiro'?'Efectivo al retirar':'Pagopar'} · ${o.shippingMethod||''}</p>
+            <div class="track-timeline">
+                ${(o.events||[]).map(e => `<div class="track-event"><strong>${e.title}</strong><div style="font-size:0.85rem;color:#666;">${e.detail||''}<br>${new Date(e.at).toLocaleString('es-PY')}</div></div>`).join('')}
+            </div>
+            <a href="/ticket/${o.ticketCode}" class="btn btn-primary" style="margin-top:10px; display:inline-block;">Ver ticket / QR</a>
+        </article>`).join('');
+}
+document.getElementById('trackForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = document.getElementById('q').value.trim();
+    const res = await fetch('/api/tracking/search', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ q }) });
+    const data = await res.json();
+    if (!data.success) { document.getElementById('err').textContent = data.message; return; }
+    document.getElementById('err').textContent = '';
+    render(data.orders);
+});
+const pre = new URLSearchParams(location.search).get('q');
+if (pre) { document.getElementById('q').value = pre; document.getElementById('trackForm').dispatchEvent(new Event('submit')); }
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contacto - FERUMI</title>
-    <meta name="description" content="Contáctanos para consultas sobre maquillaje, uñas y accesorios. Estamos para asesorarte.">
+    <%- include('../partials/seo.html', { pageTitle: 'Contacto', seoDescription: 'WhatsApp, Instagram, TikTok y ubicación de Ferumishop en Google Maps. Atención en Paraguay.' }) %>
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -38,39 +38,33 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" target="_blank" title="Ubicación">
+                    <a href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank" title="Ubicación Ferumishop">
                         <i class="fas fa-map-marker-alt"></i>
                         <span>Ubicación</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" target="_blank" title="Facebook">
+                    <a href="<%= siteConfig.facebookUrl || '#' %>" target="_blank" title="Facebook" class="<%= siteConfig.facebookUrl ? '' : 'shop-hide' %>">
                         <i class="fab fa-facebook-f"></i>
                         <span>Facebook</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" target="_blank" title="Instagram">
+                    <a href="<%= siteConfig.instagramUrl || 'https://instagram.com/ferumishop' %>" target="_blank" title="Instagram">
                         <i class="fab fa-instagram"></i>
                         <span>Instagram</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" target="_blank" title="TikTok">
+                    <a href="<%= siteConfig.tiktokUrl || 'https://tiktok.com/@ferumishop' %>" target="_blank" title="TikTok">
                         <i class="fab fa-tiktok"></i>
                         <span>TikTok</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" target="_blank" title="Pinterest">
-                        <i class="fab fa-pinterest-p"></i>
-                        <span>Pinterest</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" target="_blank" title="YouTube">
-                        <i class="fab fa-youtube"></i>
-                        <span>YouTube</span>
+                    <a href="/tracking" title="Tracking">
+                        <i class="fas fa-truck"></i>
+                        <span>Tracking</span>
                     </a>
                 </li>
                 <li>
@@ -80,6 +74,13 @@
                     </a>
                 </li>
             </ul>
+            <div style="margin-top: 2rem;">
+                <h3 style="text-align:center;">Ferumishop en el mapa</h3>
+                <p style="text-align:center;" class="text-muted"><%= siteConfig.storeAddress || 'Asunción, Paraguay' %></p>
+                <iframe class="about-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=<%= encodeURIComponent(siteConfig.storeAddress || 'Ferumishop Asuncion') %>&output=embed"></iframe>
+                <p style="text-align:center; margin-top: 10px;"><a class="btn btn-primary" href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Abrir en Google Maps</a></p>
+            </div>
         </div>
 
     </div>

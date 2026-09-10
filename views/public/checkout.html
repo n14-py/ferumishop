@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar compra - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Finalizar compra', seoDescription: 'Completá tus datos, elegí envío Motobolt, transportadora o retiro en Ferumishop y pagá con Pagopar.' }) %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="container checkout-wrap">
+    <h1 style="text-align:center; margin-bottom: 0.4rem;">Tu compra, paso a paso</h1>
+    <p class="checkout-help" style="text-align:center;">Pagopar pide tus datos. Después vemos a cuántos km estás de Ferumishop y te mostramos el envío que corresponde.</p>
+
+    <div class="checkout-steps">
+        <div class="checkout-step-pill active" data-step-pill="1">1. Datos</div>
+        <div class="checkout-step-pill" data-step-pill="2">2. Ubicación</div>
+        <div class="checkout-step-pill" data-step-pill="3">3. Envío y pago</div>
+    </div>
+
+    <div class="checkout-panel" id="step1">
+        <h2>Tus datos</h2>
+        <p class="checkout-help">Los mismos que pide Pagopar: nombre, cédula, correo y WhatsApp.</p>
+        <div class="chk-row">
+            <div>
+                <label class="chk-label">Nombre completo *</label>
+                <input class="chk-input" id="customerName" autocomplete="name">
+            </div>
+            <div>
+                <label class="chk-label">Cédula de identidad *</label>
+                <input class="chk-input" id="customerDocument" inputmode="numeric" autocomplete="off">
+            </div>
+        </div>
+        <div class="chk-row">
+            <div>
+                <label class="chk-label">Correo electrónico *</label>
+                <input class="chk-input" id="customerEmail" type="email" autocomplete="email">
+            </div>
+            <div>
+                <label class="chk-label">Teléfono / WhatsApp *</label>
+                <input class="chk-input" id="customerPhone" inputmode="tel" placeholder="0981..." autocomplete="tel">
+            </div>
+        </div>
+        <button type="button" class="btn-shop" onclick="goStep(2)">Continuar a ubicación</button>
+        <p class="chk-error" id="err1"></p>
+    </div>
+
+    <div class="checkout-panel" id="step2" style="display:none;">
+        <h2>¿Dónde te queda?</h2>
+        <p class="checkout-help">Primero tu ubicación. Calculamos los km hasta Ferumishop. Todo Central se cubre con Motobolt; el interior va por transportadora.</p>
+        <div id="map" style="height: 260px; border-radius: 14px; margin-bottom: 12px;"></div>
+        <button type="button" class="btn-shop secondary" style="margin-bottom:12px;" onclick="useMyLocation()"><i class="fas fa-location-arrow"></i> Usar mi ubicación</button>
+        <div class="chk-row">
+            <div>
+                <label class="chk-label">Ciudad</label>
+                <input class="chk-input" id="city" placeholder="Asunción, Luque, Encarnación...">
+            </div>
+            <div>
+                <label class="chk-label">Dirección</label>
+                <input class="chk-input" id="address" placeholder="Calle, número, barrio">
+            </div>
+        </div>
+        <label class="chk-label">Referencia</label>
+        <input class="chk-input" id="reference" placeholder="Portón negro, al lado de...">
+        <label class="chk-label">Foto de tu casa (opcional, ayuda al moto)</label>
+        <input class="chk-input" id="housePhoto" type="file" accept="image/*">
+        <div class="distance-banner" id="distanceBox" style="display:none;"></div>
+        <button type="button" class="btn-shop" onclick="calcShipping()">Ver opciones de envío</button>
+        <p class="chk-error" id="err2"></p>
+    </div>
+
+    <div class="checkout-panel" id="step3" style="display:none;">
+        <h2>Envío, pago y resumen</h2>
+        <div id="shipOptions"></div>
+        <div id="payBox" style="display:none; margin-top: 1rem;">
+            <h3 style="font-size:1.1rem;">Pago</h3>
+            <div class="ship-option selected" id="payPagopar" onclick="selectPay('pagopar')">
+                <input type="radio" name="pay" value="pagopar" checked> <strong>Pagopar</strong>
+                <p>Tarjetas, Tigo Money, Aqui Pago, bancos. Seguro y automático.</p>
+            </div>
+            <div class="ship-option" id="payCash" style="display:none;" onclick="selectPay('efectivo_retiro')">
+                <input type="radio" name="pay" value="efectivo_retiro"> <strong>Efectivo al retirar</strong>
+                <p>Único pago en efectivo: solo si pasás a buscar por Ferumishop.</p>
+            </div>
+        </div>
+        <div id="cartPreview" style="margin-top:1rem;"></div>
+        <button type="button" class="btn-shop" id="btnPay" onclick="placeOrder()"><i class="fas fa-lock"></i> Confirmar y pagar</button>
+        <p class="chk-error" id="err3"></p>
+        <p style="text-align:center; margin-top:12px; font-size:0.85rem; color:var(--text-muted-color);">
+            Local: <%= store.address %> · <a href="<%= store.mapsUrl %>" target="_blank">Ver Ferumishop en Maps</a>
+        </p>
+    </div>
+</main>
+<%- include('../partials/footer.html') %>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const STORE = { lat: <%= store.lat %>, lng: <%= store.lng %> };
+let map, marker, coords = { lat: null, lng: null }, shipping = null, payMethod = 'pagopar';
+let idempotencyKey = sessionStorage.getItem('ferumi_checkout_id') || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+sessionStorage.setItem('ferumi_checkout_id', idempotencyKey);
+
+function cart() { return JSON.parse(localStorage.getItem('ferumi_cart') || '[]'); }
+function money(n) { return new Intl.NumberFormat('es-PY').format(n) + ' Gs.'; }
+
+function goStep(n) {
+    if (n === 2) {
+        const ok = ['customerName','customerEmail','customerDocument','customerPhone'].every(id => document.getElementById(id).value.trim());
+        if (!ok) { document.getElementById('err1').textContent = 'Completá los 4 datos. Pagopar los exige.'; return; }
+        document.getElementById('err1').textContent = '';
+        initMap();
+    }
+    [1,2,3].forEach(i => {
+        document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+        const pill = document.querySelector('[data-step-pill="'+i+'"]');
+        pill.classList.toggle('active', i===n);
+        pill.classList.toggle('done', i<n);
+    });
+}
+
+function initMap() {
+    if (map) { map.invalidateSize(); return; }
+    map = L.map('map').setView([STORE.lat, STORE.lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+    L.marker([STORE.lat, STORE.lng]).addTo(map).bindPopup('Ferumishop');
+    map.on('click', (e) => setCoords(e.latlng.lat, e.latlng.lng));
+}
+
+function setCoords(lat, lng) {
+    coords = { lat, lng };
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    map.setView([lat, lng], 14);
+}
+
+function useMyLocation() {
+    if (!navigator.geolocation) { document.getElementById('err2').textContent = 'Tu navegador no da ubicación.'; return; }
+    navigator.geolocation.getCurrentPosition((pos) => {
+        setCoords(pos.coords.latitude, pos.coords.longitude);
+        document.getElementById('err2').textContent = '';
+    }, () => { document.getElementById('err2').textContent = 'No pudimos leer tu GPS. Tocá el mapa o escribí la ciudad.'; });
+}
+
+async function calcShipping() {
+    const city = document.getElementById('city').value.trim();
+    if (!city && coords.lat == null) {
+        document.getElementById('err2').textContent = 'Usá tu ubicación, tocá el mapa o escribí tu ciudad.';
+        return;
+    }
+    const res = await fetch('/api/checkout/shipping-options', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lat: coords.lat, lng: coords.lng, city })
+    });
+    shipping = await res.json();
+    const box = document.getElementById('distanceBox');
+    box.style.display = 'block';
+    box.innerHTML = shipping.distanceKm != null
+        ? `<strong>Estás a ${shipping.distanceKm} km</strong> de Ferumishop. ${shipping.central ? 'Zona Motobolt (Central).' : 'Queda lejos: Motobolt no llega, usamos transportadora.'}`
+        : `Sin GPS exacto. Según la ciudad ${shipping.central ? 'podemos ofrecer Motobolt.' : 'probablemente va por transportadora.'}`;
+    renderShips();
+    goStep(3);
+    renderCartPreview();
+}
+
+function renderShips() {
+    const wrap = document.getElementById('shipOptions');
+    wrap.innerHTML = shipping.options.map((o, i) => `
+        <label class="ship-option ${i===0?'selected':''}" data-ship="${o.id}">
+            <input type="radio" name="ship" value="${o.id}" ${i===0?'checked':''}>
+            <h4>${o.label}</h4>
+            <p>${o.eta} — ${o.detail}</p>
+        </label>`).join('');
+    wrap.querySelectorAll('.ship-option').forEach(el => {
+        el.addEventListener('click', () => {
+            wrap.querySelectorAll('.ship-option').forEach(x => x.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input').checked = true;
+            toggleCash();
+        });
+    });
+    document.getElementById('payBox').style.display = 'block';
+    toggleCash();
+}
+
+function selectedShip() {
+    return document.querySelector('input[name="ship"]:checked')?.value || 'retiro';
+}
+function selectPay(v) {
+    payMethod = v;
+    document.getElementById('payPagopar').classList.toggle('selected', v==='pagopar');
+    document.getElementById('payCash').classList.toggle('selected', v==='efectivo_retiro');
+    document.querySelectorAll('input[name="pay"]').forEach(i => i.checked = i.value === v);
+    const btn = document.getElementById('btnPay');
+    btn.innerHTML = v === 'efectivo_retiro' ? 'Confirmar retiro en efectivo' : '<i class="fas fa-lock"></i> Ir a Pagopar';
+}
+function toggleCash() {
+    const cash = document.getElementById('payCash');
+    if (selectedShip() === 'retiro') { cash.style.display = 'block'; }
+    else { cash.style.display = 'none'; selectPay('pagopar'); }
+}
+
+function renderCartPreview() {
+    const items = cart();
+    let total = 0;
+    const html = items.map(i => {
+        total += i.price * i.quantity;
+        return `<div class="checkout-summary-item"><img src="${i.image||'/favicon.png'}" alt=""><div><strong>${i.name}</strong><br>${i.quantity} × ${money(i.price)}</div></div>`;
+    }).join('');
+    document.getElementById('cartPreview').innerHTML = html + `<p style="text-align:right;font-weight:800;">Total ${money(total)}</p>`;
+}
+
+async function placeOrder() {
+    const items = cart();
+    if (!items.length) { document.getElementById('err3').textContent = 'El carrito está vacío.'; return; }
+    const btn = document.getElementById('btnPay');
+    btn.disabled = true;
+    btn.textContent = 'Procesando...';
+    const fd = new FormData();
+    fd.append('customerName', document.getElementById('customerName').value.trim());
+    fd.append('customerEmail', document.getElementById('customerEmail').value.trim());
+    fd.append('customerDocument', document.getElementById('customerDocument').value.trim());
+    fd.append('customerPhone', document.getElementById('customerPhone').value.trim());
+    fd.append('city', document.getElementById('city').value.trim());
+    fd.append('address', document.getElementById('address').value.trim());
+    fd.append('reference', document.getElementById('reference').value.trim());
+    fd.append('shippingMethod', selectedShip());
+    fd.append('paymentMethod', payMethod);
+    fd.append('idempotencyKey', idempotencyKey);
+    if (coords.lat != null) { fd.append('lat', coords.lat); fd.append('lng', coords.lng); }
+    fd.append('cartItems', JSON.stringify(items.map(i => ({
+        id: i.id, productId: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image, variantName: i.variantName || ''
+    }))));
+    const photo = document.getElementById('housePhoto').files[0];
+    if (photo) fd.append('housePhoto', photo);
+
+    try {
+        const res = await fetch('/api/checkout/place-order', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || JSON.stringify(data.details || data));
+        localStorage.removeItem('ferumi_cart');
+        sessionStorage.removeItem('ferumi_checkout_id');
+        window.location.href = data.redirectUrl;
+    } catch (e) {
+        document.getElementById('err3').textContent = e.message;
+        btn.disabled = false;
+        toggleCash();
+        selectPay(payMethod);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!cart().length) {
+        document.getElementById('step1').innerHTML = '<h2>Tu carrito está vacío</h2><p>Agregá productos y volvé para pagar.</p><a class="btn-shop" href="/tienda" style="display:inline-block;text-align:center;text-decoration:none;">Ir a la tienda</a>';
+    }
+});
+</script>
+</body>
+</html>

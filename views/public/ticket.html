@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket <%= order.orderNumber %> - FERUMI</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/shop-extras.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="container">
+    <div class="ticket-sheet">
+        <h1 style="margin-bottom:4px;">FERUMI</h1>
+        <p style="color:var(--text-muted-color); margin:0;">Ticket de pedido</p>
+        <h2 style="margin:12px 0 4px;"><%= order.orderNumber %></h2>
+        <p><strong><%= order.tracking.title %></strong></p>
+        <img class="qr" src="<%= qrUrl %>" alt="QR del pedido <%= order.ticketCode %>">
+        <p style="font-family:monospace; font-size:1.1rem; letter-spacing:1px;"><%= order.ticketCode %></p>
+        <hr>
+        <p style="text-align:left;"><strong>Cliente:</strong> <%= order.customerName %><br>
+        <strong>CI:</strong> <%= order.customerDocument || '—' %><br>
+        <strong>Tel:</strong> <%= order.customerPhone %><br>
+        <strong>Pago:</strong> <%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : 'Pagopar' %> (<%= order.paymentStatus %>)<br>
+        <strong>Envío:</strong> <%= order.shippingMethod %><br>
+        <% if (order.shippingAddress) { %><strong>Dir:</strong> <%= order.shippingAddress %>, <%= order.shippingCity %><br><% } %>
+        <% if (order.shippingDistanceKm != null) { %><strong>Distancia:</strong> <%= order.shippingDistanceKm %> km<br><% } %>
+        </p>
+        <ul style="text-align:left;">
+            <% (order.items || []).forEach(i => { %>
+                <li><%= i.quantity %>x <%= i.name %> — <%= formatPrice(i.price) %></li>
+            <% }) %>
+        </ul>
+        <h3>Total <%= formatPrice(order.totalAmount) %></h3>
+        <p style="font-size:0.9rem; color:var(--text-muted-color);">Ferumishop · <%= store.address %><br>
+        <a href="<%= store.mapsUrl %>" target="_blank">Abrir ubicación</a></p>
+        <p class="no-print" style="margin-top:1rem;">
+            <button class="btn-shop" onclick="window.print()"><i class="fas fa-print"></i> Imprimir ticket</button>
+            <a href="/tracking?q=<%= order.ticketCode %>" class="btn-shop secondary" style="display:inline-block; margin-top:8px; text-decoration:none;">Ver tracking</a>
+        </p>
+    </div>
+</main>
+<%- include('../partials/footer.html') %>
+<% if (typeof printNow !== 'undefined' && printNow) { %>
+<script>window.addEventListener('load', () => setTimeout(() => window.print(), 400));</script>
+<% } %>
+</body>
+</html>

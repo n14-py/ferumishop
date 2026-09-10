@@ -16,8 +16,19 @@
             <% if (estado.pagado === true) { %>
                 <i class="fas fa-check-circle" style="font-size: 5rem; color: #25D366; margin-bottom: 1rem;"></i>
                 <h1 style="color: #333; margin-bottom: 10px;">¡Pago Exitoso!</h1>
-                <p style="color: #666; font-size: 1.1rem;">Tu pedido <strong>#<%= estado.numero_pedido %></strong> ha sido procesado correctamente por <%= formatPrice(estado.monto) %> Gs.</p>
-                <p style="color: #888;">Nos comunicaremos pronto contigo para la entrega.</p>
+                <p style="color: #666; font-size: 1.1rem;">Tu pedido <strong>#<%= estado.numero_pedido || (orderView && orderView.orderNumber) %></strong> está pagado<%= estado.monto ? ' por ' + formatPrice(estado.monto) + ' Gs.' : '' %></p>
+                <% if (locals.orderView) { %>
+                    <p>Estado: <strong><%= orderView.tracking.title %></strong> — <%= orderView.tracking.detail %></p>
+                    <% if (locals.qrUrl) { %><img src="<%= qrUrl %>" alt="Ticket QR" style="width:180px;height:180px;margin:12px auto;"><% } %>
+                    <p>Ticket <strong><%= orderView.ticketCode %></strong></p>
+                    <p><a href="/ticket/<%= orderView.ticketCode %>">Imprimir ticket</a> · <a href="/tracking?q=<%= orderView.ticketCode %>">Ver tracking</a></p>
+                    <% if (orderView.shippingMethod === 'motobolt' && locals.store) { %>
+                        <p style="background:#fff0f6; padding:12px; border-radius:12px;">Cuando esté preparado te escribimos para que pidas Motobolt. Ubicación: <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps</a>. Despacho en 1 hora como máximo.</p>
+                    <% } %>
+                    <% if (orderView.shippingMethod === 'retiro' && locals.store) { %>
+                        <p style="background:#fff0f6; padding:12px; border-radius:12px;">Retiro en Ferumishop. Te avisamos cuando esté listo. <a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar</a></p>
+                    <% } %>
+                <% } %>
             
             <% } else if (estado.cancelado === true) { %>
                 <i class="fas fa-times-circle" style="font-size: 5rem; color: #d81b60; margin-bottom: 1rem;"></i>
@@ -38,7 +49,10 @@
             <% } %>
 
             <div style="margin-top: 2rem;">
-                <a href="/tienda" class="btn btn-primary" style="padding: 12px 30px; border-radius: 50px;">Volver a la Tienda</a>
+                <% if (typeof orderView !== 'undefined' && orderView) { %>
+                    <a href="/tracking?q=<%= orderView.ticketCode %>" class="btn btn-primary" style="padding: 12px 30px; border-radius: 50px;">Seguir mi pedido</a>
+                <% } %>
+                <a href="/tienda" class="btn btn-secondary" style="padding: 12px 30px; border-radius: 50px;">Volver a la Tienda</a>
             </div>
         </div>
     </main>

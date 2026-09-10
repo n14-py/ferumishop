@@ -12,12 +12,13 @@
 
         <nav class="navbar-nav">
              <a href="/" class="<%= path === '/' ? 'active' : '' %>">Inicio</a>
-             <a href="/tienda" class="<%= path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') ? 'active' : '' %>">Tienda</a>
+             <a href="/tienda" class="<%= path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') || path.includes('/checkout') ? 'active' : '' %>">Tienda</a>
+             <a href="/tracking" class="<%= path.includes('/tracking') || path.includes('/ticket') ? 'active' : '' %>">Mis pedidos</a>
              <a href="/regalos/crear" class="<%= path.includes('/regalos') ? 'active' : '' %>">Regalos Online</a>
-             <a href="/sorteos" class="<%= path.includes('/sorteos') ? 'active' : '' %>" style="color: #ff4757; font-weight: bold;"><i class="fas fa-gift"></i> Sorteo del Mes</a>
+             <a href="/sorteos" class="shop-hide <%= path.includes('/sorteos') ? 'active' : '' %>" style="display:none; color: #ff4757; font-weight: bold;"><i class="fas fa-gift"></i> Sorteo del Mes</a>
             <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">Sobre Nosotros</a>
              <a href="/contacto" class="<%= path.includes('/contacto') ? 'active' : '' %>">Contacto</a>
-             <a href="/asociate" class="<%= path.includes('/asociate') ? 'active' : '' %>" style="color: #d81b60; font-weight: bold;"><i class="fas fa-handshake"></i> Importa con Nosotros</a>
+             <a href="/asociate" class="shop-hide <%= path.includes('/asociate') ? 'active' : '' %>" style="display:none; color: #d81b60; font-weight: bold;"><i class="fas fa-handshake"></i> Importa con Nosotros</a>
         </nav>
 
         <div class="navbar-actions">
@@ -62,8 +63,8 @@
             <span>Total:</span>
             <span id="cart-total-price">0 Gs.</span>
         </div>
-        <button id="checkout-whatsapp" class="btn btn-primary btn-block" style="background-color: #25D366; border-color: #25D366; display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
-            <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Terminar compra
+        <button id="checkout-whatsapp" class="btn btn-primary btn-block" style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+            <i class="fas fa-lock" style="font-size: 1.1rem;"></i> Finalizar compra
         </button>
     </div>
 </div>
@@ -198,14 +199,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función global para añadir desde cualquier página
-    window.addToCart = function(id, name, price, image) {
+    window.addToCart = function(id, name, price, image, variantName) {
         const cleanPrice = parsePrice(price);
-        const existingItem = cart.find(item => item.id === id);
+        const existingItem = cart.find(item => item.id === id && (item.variantName || '') === (variantName || ''));
         
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
-            cart.push({ id, name, price: cleanPrice, image, quantity: 1 });
+            cart.push({ id, name, price: cleanPrice, image, quantity: 1, variantName: variantName || '' });
         }
         saveCart();
         openCart();
@@ -333,35 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Finalizar por WhatsApp
+    window.openFerumiCart = openCart;
+
+    // Finalizar compra → checkout guiado (Pagopar + envío)
     if (checkoutWhatsappBtn) {
         checkoutWhatsappBtn.addEventListener('click', () => {
             if (cart.length === 0) return alert('El carrito está vacío');
-            
-            let message = '¡Hola FERUMI! Quiero realizar la siguiente compra:%0A%0A';
-            let subtotal = 0;
-            
-            cart.forEach(item => {
-                message += `🛍️ ${item.quantity}x ${item.name} (${formatPrice(item.price)} Gs. c/u)%0A`;
-                subtotal += item.price * item.quantity;
-            });
-            
-            message += `%0A*Subtotal:* ${formatPrice(subtotal)} Gs.`;
-            
-            if (appliedCoupon) {
-                message += `%0A*Cupón aplicado (${appliedCoupon.code}):* -${formatPrice(appliedCoupon.amount)} Gs.`;
-                let total = subtotal - appliedCoupon.amount;
-                if(total < 0) total = 0;
-                message += `%0A*TOTAL A PAGAR:* ${formatPrice(total)} Gs.`;
-            } else {
-                message += `%0A*TOTAL A PAGAR:* ${formatPrice(subtotal)} Gs.`;
-            }
-            
-            message += '%0A%0A¿Cuáles son los métodos de pago o envío?';
-            
-            // Usamos el número guardado en la config
-            const waNumber = '<%= siteConfig.whatsappNumber || "595999999999" %>'.replace(/\+/g, ''); 
-            window.open(`https://wa.me/${waNumber}?text=${message}`, '_blank');
+            window.location.href = '/checkout';
         });
     }
 

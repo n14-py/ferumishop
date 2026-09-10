@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= product.name %> - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: product.name, seoDescription: (product.description || product.name).toString().replace(/<[^>]+>/g, '').slice(0, 160), seoImage: product.photos && product.photos[0] }) %>
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -101,7 +102,14 @@
         <section class="product-info-section">
             
             <h1 class="product-title"><%= product.name %></h1>
+            <% if (product.category) { %><div class="card-category" style="margin-bottom:8px;"><%= product.category.name %></div><% } %>
             <div class="product-price"><%= formatPrice(product.price) %></div>
+            <div class="product-meta-box">
+                <div><i class="fas fa-motorcycle"></i> Motobolt en Central (despacho 1h)</div>
+                <div><i class="fas fa-truck"></i> Interior: transportadora</div>
+                <div><i class="fas fa-store"></i> Retiro en Ferumishop</div>
+                <div><i class="fas fa-lock"></i> Pago seguro Pagopar</div>
+            </div>
             
             <!-- 1. BLOQUE DE VARIANTES (Primero) -->
             <% if (product.hasVariants && product.variants && product.variants.length > 0) { %>
@@ -139,7 +147,6 @@
                 </div>
             <% } %>
 
-            <!-- 2. BLOQUE DE BOTONES SUPERIOR (Antes de la descripción) -->
             <div class="action-buttons">
                 <button data-id="<%= product._id %>" 
                         data-name="<%= product.name %>" 
@@ -149,7 +156,14 @@
                         class="btn-cart btnAddToCart">
                     <i class="fas fa-shopping-cart"></i> Añadir al Carrito
                 </button>
-
+                <button data-id="<%= product._id %>"
+                        data-name="<%= product.name %>"
+                        data-price="<%= product.price %>"
+                        data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>"
+                        onclick="handleBuyNow(this)"
+                        class="btn-whatsapp btnAddToCart" style="background: var(--primary-color-dark, #dd518f);">
+                    <i class="fas fa-bolt"></i> Comprar ahora
+                </button>
                 <button onclick="handleWhatsApp()" class="btn-whatsapp">
                     <i class="fab fa-whatsapp fa-lg"></i> Consultar por WhatsApp
                 </button>
@@ -160,24 +174,6 @@
             <!-- 3. DESCRIPCIÓN SEO (Al medio) -->
             <div class="product-description">
                 <%- product.description %>
-            </div>
-
-            <hr class="divider">
-
-            <!-- 4. BLOQUE DE BOTONES INFERIOR (Después de leer toda la descripción) -->
-<!-- 4. BLOQUE DE BOTONES INFERIOR (Después de leer toda la descripción) -->
-            <div class="action-buttons" style="margin-bottom: 0;">
-                <button data-id="<%= product._id %>"
-                         data-name="<%= product.name %>"
-                         data-price="<%= product.price %>"
-                         data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>"
-                         onclick="abrirModalPagopar(this)"
-                         class="btn-whatsapp" style="background: #d81b60;">
-                    <i class="fas fa-credit-card fa-lg"></i> Comprar con Pagopar
-                </button>
-                <button onclick="handleWhatsApp()" class="btn-whatsapp" style="background: #25D366; margin-top: 10px;">
-                    <i class="fab fa-whatsapp fa-lg"></i> Consultar por WhatsApp
-                </button>
             </div>
 
         </section>
@@ -393,17 +389,18 @@
             const currentImage = clickedBtn.getAttribute('data-image');
             
             const selectedVariant = document.getElementById('selectedVariantName').value;
-            
-            // Si eligió una variante, se lo sumamos al nombre para el carrito
-            const finalId = selectedVariant ? `${baseId}-${selectedVariant.replace(/\s+/g, '')}` : baseId;
             const finalName = selectedVariant ? `${baseName} - ${selectedVariant}` : baseName;
 
-            // Función de tu carrito.js
             if(typeof addToCart === 'function') {
-                addToCart(finalId, finalName, price, currentImage);
+                addToCart(baseId, finalName, price, currentImage, selectedVariant);
             } else {
                 alert("Error: El carrito no está cargado.");
             }
+        }
+
+        function handleBuyNow(btn) {
+            handleAddToCart(btn);
+            window.location.href = '/checkout';
         }
 
         // 5. Botón de WhatsApp
