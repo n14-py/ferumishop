@@ -121,6 +121,10 @@
                         <a href="https://www.google.com/maps/search/?api=1&query=<%= pedido.lat %>,<%= pedido.lng %>" target="_blank" class="btn-action btn-map">
                             <i class="fas fa-map-marker-alt fa-lg"></i> Abrir en Google Maps
                         </a>
+                    <% } else if (pedido.address) { %>
+                        <a href="https://www.google.com/maps/search/?api=1&query=<%= encodeURIComponent(pedido.address) %>" target="_blank" class="btn-action btn-map">
+                            <i class="fas fa-map-marker-alt fa-lg"></i> Abrir en Google Maps
+                        </a>
                     <% } else { %>
                         <button class="btn btn-action btn-secondary" disabled>
                             <i class="fas fa-map-marker-slash"></i> Sin ubicación registrada
