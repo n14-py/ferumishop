@@ -2318,6 +2318,8 @@ app.post('/admin/importaciones/pedidos/status/:id', requireAdmin, async (req, re
 // GESTIÓN DE CAJA Y FINANZAS (ADMIN)
 // =============================================
 
+const shopCaja = require('./lib/orders');
+
 // Ver la caja del mes actual (Con filtros y cálculos históricos)
 app.get('/admin/caja', requireAdmin, async (req, res, next) => {
     try {
@@ -2384,6 +2386,14 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
 
         const gananciaNeta = totalIngresos - totalCostosReposicion - totalEgresosExtra;
 
+        const nowPy = new Date();
+        const { start: startOfTodayPy, end: endOfTodayPy } = shopCaja.paraguayDayBounds(nowPy);
+        const ventasHoyTx = await Transaction.find({
+            type: 'ingreso',
+            date: { $gte: startOfTodayPy, $lt: endOfTodayPy }
+        }).select('amount');
+        const ventasHoy = ventasHoyTx.reduce((sum, t) => sum + (t.amount || 0), 0);
+
         // 5. CÁLCULO DE LA DEUDA HISTÓRICA ACUMULADA 
         // Sumamos TODA la historia hasta fin del mes seleccionado para saber cuánto se les debe
         const lifetimeTx = await Transaction.find({ date: { $lte: endOfMonth } });
@@ -2413,6 +2423,10 @@ app.get('/admin/caja', requireAdmin, async (req, res, next) => {
                 deudaTotalMayu
             },
             mesActual: targetDate.toLocaleString('es-PY', { month: 'long', year: 'numeric' }).toUpperCase(),
+            ventasHoy,
+            ventasHoyFecha: shopCaja.formatParaguayDate(nowPy),
+            ventasHoyHora: shopCaja.formatParaguayTime(nowPy),
+            formatPyDateTime: shopCaja.formatParaguayDateTime,
             success: req.session.success,
             error: req.session.error
         });
@@ -2538,64 +2552,54 @@ app.post('/admin/caja/venta', requireAdmin, async (req, res, next) => {
         if (nowTime - lastTxTime < 3000) return res.redirect('/admin/caja');
         req.session.lastSaleTime = nowTime;
 
-        // AGREGADO: customerPhone
-        const { productId, variantName, sellPrice, quantity, customerName, customerPhone, locationCoords } = req.body;
-        const qty = parseInt(quantity) || 1;
-        
-        const product = await Product.findById(productId);
-        if (!product) throw new Error('Producto no encontrado.');
+        const { customerName, customerPhone, locationCoords } = req.body;
+        const items = shopCaja.parseCajaSaleItems(req.body);
+        if (!items.length) throw new Error('Seleccioná al menos un producto.');
 
-        const totalAmount = parseInt(sellPrice.toString().replace(/\./g, '')) * qty;
-        const unitCost = product.costPrice || 0;
-        const costoReposicion = unitCost * qty;
-        
-        let reinversion = 0;
-        let gananciaRestante = 0;
-        let gananciaNando = 0;
-        let gananciaMayu = 0;
+        const productIds = [...new Set(items.map((item) => item.productId))];
+        const products = await Product.find({ _id: { $in: productIds } });
+        const productMap = new Map(products.map((p) => [String(p._id), p]));
 
-        if (totalAmount > costoReposicion) {
-            const gananciaBruta = totalAmount - costoReposicion;
-            if (gananciaBruta >= costoReposicion) {
-                reinversion = costoReposicion;
-                gananciaRestante = gananciaBruta - reinversion;
-            } else {
-                reinversion = Math.floor(gananciaBruta / 2);
-                gananciaRestante = gananciaBruta - reinversion;
-            }
-            gananciaNando = Math.floor(gananciaRestante / 2);
-            gananciaMayu = gananciaRestante - gananciaNando;
+        const lines = [];
+        let totalAmount = 0;
+        let costoReposicion = 0;
+
+        for (const item of items) {
+            const product = productMap.get(item.productId);
+            if (!product) throw new Error('Producto no encontrado.');
+            const lineTotal = item.sellPrice * item.quantity;
+            totalAmount += lineTotal;
+            costoReposicion += (product.costPrice || 0) * item.quantity;
+            lines.push({
+                name: product.name,
+                quantity: item.quantity,
+                variantName: item.variantName,
+                sellPrice: item.sellPrice
+            });
+            shopCaja.applyManualSaleStock(product, item.quantity, item.variantName);
         }
 
-        let desc = `Venta: ${product.name} (x${qty})`;
-        if (variantName) desc = `Venta: ${product.name} - ${variantName} (x${qty})`;
+        const split = shopCaja.cajaSplit(totalAmount, costoReposicion);
+        const desc = shopCaja.buildCajaSaleDescription(lines);
 
-        // AGREGADO: Guardamos el customerPhone
-        const newTx = new Transaction({ 
-            type: 'ingreso', 
-            description: desc, 
-            amount: totalAmount, 
-            cost: costoReposicion,
-            reinvestment: reinversion,
-            profitNando: gananciaNando,
-            profitMayu: gananciaMayu,
+        const newTx = new Transaction({
+            type: 'ingreso',
+            description: desc,
+            amount: totalAmount,
+            cost: split.cost,
+            reinvestment: split.reinvestment,
+            profitNando: split.profitNando,
+            profitMayu: split.profitMayu,
             customerName: customerName || 'Cliente Local',
             customerPhone: customerPhone || '',
             locationCoords: locationCoords || ''
         });
         await newTx.save();
+        await Promise.all(products.map((p) => p.save()));
 
-        if (product.hasVariants && variantName) {
-            const variantIndex = product.variants.findIndex(v => v.name === variantName);
-            if (variantIndex > -1 && product.variants[variantIndex].stock >= qty) {
-                product.variants[variantIndex].stock -= qty;
-            }
-        } else {
-            if (product.stock >= qty) product.stock -= qty;
-        }
-        await product.save();
-        
-        req.session.success = 'Venta registrada con éxito.';
+        req.session.success = items.length > 1
+            ? `Venta de ${items.length} productos registrada con éxito.`
+            : 'Venta registrada con éxito.';
         res.redirect('/admin/caja');
 
     } catch (err) {

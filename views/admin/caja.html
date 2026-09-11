@@ -46,6 +46,27 @@
         .product-item-info { flex: 1; min-width: 0; }
         .product-item-name { font-weight: 700; font-size: 0.9rem; color: #1e293b; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .product-item-meta { font-size: 0.75rem; color: #64748b; margin: 0; }
+        .product-item-row.selected { background-color: #ecfdf5; border-color: #a7f3d0; }
+        .product-qty-badge { min-width: 22px; height: 22px; border-radius: 999px; background: #10b981; color: #fff; font-size: 0.72rem; font-weight: 800; display: none; align-items: center; justify-content: center; padding: 0 6px; }
+        .product-item-row.selected .product-qty-badge { display: inline-flex; }
+
+        .venta-cart { display: flex; flex-direction: column; gap: 8px; }
+        .venta-cart-item { display: grid; grid-template-columns: 46px 1fr; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+        .venta-cart-item img { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; background: #e2e8f0; }
+        .venta-cart-controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+        .venta-qty-btn { width: 32px; height: 32px; border: none; border-radius: 8px; background: #e2e8f0; font-weight: 800; }
+        .venta-cart-qty { width: 46px; text-align: center; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; height: 32px; }
+        .venta-cart-price { width: 110px; font-weight: 700; border: 1px solid #86efac; border-radius: 8px; height: 32px; padding: 0 8px; }
+        .venta-total-bar { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .confirm-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+        .confirm-item:last-child { border-bottom: none; }
+        .confirm-item img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; background: #e2e8f0; }
+        .caja-tx-card { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+        .caja-tx-card:last-child { border-bottom: none; }
+        .caja-tx-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .caja-tx-desc { font-weight: 700; color: #0f172a; font-size: 0.92rem; margin: 6px 0 4px; word-break: break-word; }
+        .caja-tx-split { font-size: 0.75rem; color: #64748b; line-height: 1.45; }
+        .caja-tx-amount { font-weight: 800; white-space: nowrap; }
 
         @media (min-width: 768px) { .admin-header { display: none; } .stat-value { font-size: 1.6rem; } }
     </style>
@@ -160,9 +181,9 @@
 
                 <div class="col-12 col-md-4">
                     <div class="card app-card h-100 p-3 bg-gradient-reposicion shadow-sm">
-                        <div class="stat-label text-white-50"><i class="fas fa-store"></i> Dinero de la Tienda (Capital)</div>
-                        <div class="stat-value">Gs.<br><%= (stats.totalCostosReposicion + stats.totalReinversion + stats.totalCapitalMes).toLocaleString('es-PY') %></div>
-                        <div class="small text-white-50 mt-1">Capital inyectado: Gs. <%= stats.totalCapitalMes.toLocaleString('es-PY') %></div>
+                        <div class="stat-label text-white-50"><i class="fas fa-calendar-day"></i> Ventas de hoy</div>
+                        <div class="stat-value">Gs.<br><%= (typeof ventasHoy !== 'undefined' ? ventasHoy : 0).toLocaleString('es-PY') %></div>
+                        <div class="small text-white-50 mt-1"><%= typeof ventasHoyFecha !== 'undefined' ? ventasHoyFecha : '' %> · <%= typeof ventasHoyHora !== 'undefined' ? ventasHoyHora : '' %> (hora PY)</div>
                     </div>
                 </div>
 
@@ -213,40 +234,82 @@
                     <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-list me-2 text-primary"></i>Libro de Caja Diario</h6>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive p-2">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
-                            <thead class="table-light d-none d-md-table-header-group">
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Operación</th>
-                                    <th>Detalle Producto / Concepto</th>
-                                    <th>Estructura Interna</th>
-                                    <th>Importe Absoluto</th>
-                                    <th class="no-print text-end">Eliminar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (transactions && transactions.length > 0) { %>
+                    <% if (!transactions || transactions.length === 0) { %>
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-receipt fa-3x mb-2 opacity-25"></i>
+                            <p class="mb-0">No se detectaron transacciones en este periodo.</p>
+                        </div>
+                    <% } else { %>
+                        <div class="d-md-none">
+                            <% transactions.forEach(t => { %>
+                                <div class="caja-tx-card">
+                                    <div class="caja-tx-top">
+                                        <div>
+                                            <% if (t.type === 'ingreso') { %>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">Venta</span>
+                                            <% } else if (t.type === 'capital') { %>
+                                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2">Capital</span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">Gasto</span>
+                                            <% } %>
+                                            <div class="small text-muted mt-1"><%= typeof formatPyDateTime === 'function' ? formatPyDateTime(t.date) : new Date(t.date).toLocaleString('es-PY') %></div>
+                                        </div>
+                                        <div class="text-end">
+                                            <% if (t.type === 'ingreso' || t.type === 'capital') { %>
+                                                <div class="caja-tx-amount text-success">+ <%= t.amount.toLocaleString('es-PY') %></div>
+                                            <% } else { %>
+                                                <div class="caja-tx-amount text-danger">- <%= t.amount.toLocaleString('es-PY') %></div>
+                                            <% } %>
+                                            <form action="/admin/caja/delete/<%= t._id %>" method="POST" onsubmit="return confirm('¿Seguro de remover este registro? Se alterarán los fondos del mes.');" class="d-inline form-delete no-print">
+                                                <button type="submit" class="btn btn-sm text-danger border-0 p-1"><i class="fas fa-trash-alt"></i></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="caja-tx-desc"><%= t.description %></div>
+                                    <div class="caja-tx-split">
+                                        <% if (t.type === 'ingreso') { %>
+                                            Rep: <%= (t.cost || 0).toLocaleString('es-PY') %> · Dup: <%= (t.reinvestment || 0).toLocaleString('es-PY') %><br>
+                                            M: <%= (t.profitMayu || 0).toLocaleString('es-PY') %> · N: <%= (t.profitNando || 0).toLocaleString('es-PY') %>
+                                        <% } else if (t.type === 'capital') { %>
+                                            Inyección directa a tienda
+                                        <% } else { %>
+                                            Desembolso directo
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                        <div class="d-none d-md-block p-2">
+                            <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Operación</th>
+                                        <th>Detalle Producto / Concepto</th>
+                                        <th>Estructura Interna</th>
+                                        <th>Importe Absoluto</th>
+                                        <th class="no-print text-end">Eliminar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                     <% transactions.forEach(t => { %>
                                         <tr>
-                                            <td class="text-muted"><%= new Date(t.date).toLocaleDateString('es-PY', {day: '2-digit', month: '2-digit'}) %></td>
+                                            <td class="text-muted"><%= typeof formatPyDateTime === 'function' ? formatPyDateTime(t.date) : new Date(t.date).toLocaleString('es-PY') %></td>
                                             <td>
                                                 <% if (t.type === 'ingreso') { %>
                                                     <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">Venta</span>
                                                 <% } else if (t.type === 'capital') { %>
-                                                    <!-- NUEVO: BADGE DE CAPITAL -->
                                                     <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2">Capital</span>
                                                 <% } else { %>
                                                     <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">Gasto</span>
                                                 <% } %>
                                             </td>
-                                            <td class="fw-bold text-dark"><%= t.description %></td>
-                                            
+                                            <td class="fw-bold text-dark" style="word-break: break-word; max-width: 280px;"><%= t.description %></td>
                                             <td class="font-monospace text-secondary" style="font-size: 0.78rem;">
                                                 <% if (t.type === 'ingreso') { %>
-                                                    <span class="text-dark">Rep:</span> <%= (t.cost || 0).toLocaleString('es-PY') %> | 
+                                                    <span class="text-dark">Rep:</span> <%= (t.cost || 0).toLocaleString('es-PY') %> |
                                                     <span class="text-primary">Dup:</span> <%= (t.reinvestment || 0).toLocaleString('es-PY') %> <br>
-                                                    <span class="text-danger">M:</span> <%= (t.profitMayu || 0).toLocaleString('es-PY') %> | 
+                                                    <span class="text-danger">M:</span> <%= (t.profitMayu || 0).toLocaleString('es-PY') %> |
                                                     <span class="text-dark">N:</span> <%= (t.profitNando || 0).toLocaleString('es-PY') %>
                                                 <% } else if (t.type === 'capital') { %>
                                                     <span class="text-primary">Inyección directa a tienda</span>
@@ -254,7 +317,6 @@
                                                     <span class="text-muted">Desembolso directo</span>
                                                 <% } %>
                                             </td>
-
                                             <td>
                                                 <% if (t.type === 'ingreso' || t.type === 'capital') { %>
                                                     <span class="text-success fw-bold">+ <%= t.amount.toLocaleString('es-PY') %></span>
@@ -269,17 +331,10 @@
                                             </td>
                                         </tr>
                                     <% }) %>
-                                <% } else { %>
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5 text-muted">
-                                            <i class="fas fa-receipt fa-3x mb-2 opacity-25"></i>
-                                            <p class="mb-0">No se detectaron transacciones en este periodo.</p>
-                                        </td>
-                                    </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
-                    </div>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
                 </div>
             </div>
 
@@ -288,71 +343,80 @@
 </div>
 
 <div class="modal fade no-print" id="modalVenta" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header bg-success text-white rounded-top-4 border-0 py-3">
-                <h5 class="modal-title fw-bold"><i class="fas fa-camera me-1"></i> Nueva Transacción Visual</h5>
+                <h5 class="modal-title fw-bold" id="ventaModalTitle"><i class="fas fa-cart-plus me-1"></i> Nueva venta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/admin/caja/venta" method="POST" class="form-safe-submit">
+            <form action="/admin/caja/venta" method="POST" class="form-safe-submit" id="formVenta">
+                <input type="hidden" name="itemsJson" id="ventaItemsJson" value="">
                 <div class="modal-body p-4">
-                    <!-- DATOS PARA EL TICKET DE DELIVERY -->
-<!-- DATOS PARA EL TICKET DE DELIVERY -->
-<div class="mb-3 border-top pt-3 mt-3">
-    <label class="form-label fw-bold" style="color: #d81b60;">
-        <i class="fas fa-motorcycle"></i> Datos para Delivery (Opcional)
-    </label>
-    <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del Cliente (Ej: María López)">
-    
-    <!-- NUEVO: Campo para el WhatsApp -->
-    <input type="text" name="customerPhone" class="form-control mb-2" placeholder="WhatsApp (Ej: 0981234567)">
-    
-    <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas (Ej: -25.672376, -57.826487)">
-    <small class="text-muted">Pegar las coordenadas de Google Maps aquí para generar el QR.</small>
-</div>
-                    
-                    <input type="hidden" name="productId" id="selectedProductId" required>
+                    <div id="ventaStepPick">
+                        <div class="mb-3 border-bottom pb-3">
+                            <label class="form-label fw-bold" style="color: #d81b60;">
+                                <i class="fas fa-motorcycle"></i> Datos para Delivery (Opcional)
+                            </label>
+                            <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del Cliente (Ej: María López)">
+                            <input type="text" name="customerPhone" class="form-control mb-2" placeholder="WhatsApp (Ej: 0981234567)">
+                            <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas (Ej: -25.672376, -57.826487)">
+                            <small class="text-muted">Pegar las coordenadas de Google Maps aquí para generar el QR.</small>
+                        </div>
 
-                    <div class="mb-3 product-search-container">
-                        <label class="form-label fw-bold text-dark">Buscar Producto (Selección táctil con foto)</label>
-                        <input type="text" id="searchBarProduct" class="form-control mb-2 form-control-lg" placeholder="🔍 Escribe para buscar pestañas, uñas...">
-                        
-                        <div class="product-picker-list" id="pickerProductContainer">
-                            <% products.forEach(p => { %>
-                                <div class="product-item-row" data-id="<%= p._id %>" data-name="<%= p.name.toLowerCase() %>">
-                                    <img src="<%= (p.photos && p.photos.length > 0) ? p.photos[0] : '/images/placeholder.png' %>" class="product-item-img" alt="Foto">
-                                    <div class="product-item-info">
-                                        <p class="product-item-name"><%= p.name %></p>
-                                        <p class="product-item-meta">Stock: <%= p.stock %> | Costo: Gs. <%= (p.costPrice || 0).toLocaleString('es-PY') %></p>
+                        <div class="mb-3 product-search-container">
+                            <label class="form-label fw-bold text-dark">Elegí uno o varios productos</label>
+                            <input type="text" id="searchBarProduct" class="form-control mb-2 form-control-lg" placeholder="🔍 Escribe para buscar pestañas, uñas...">
+                            <div class="product-picker-list" id="pickerProductContainer">
+                                <% products.forEach(p => { %>
+                                    <div class="product-item-row"
+                                         data-id="<%= p._id %>"
+                                         data-name="<%= p.name.toLowerCase() %>"
+                                         data-title="<%= p.name %>"
+                                         data-price="<%= p.price || 0 %>"
+                                         data-stock="<%= p.stock %>"
+                                         data-photo="<%= (p.photos && p.photos.length > 0) ? p.photos[0] : '/images/placeholder.png' %>">
+                                        <img src="<%= (p.photos && p.photos.length > 0) ? p.photos[0] : '/images/placeholder.png' %>" class="product-item-img" alt="Foto">
+                                        <div class="product-item-info">
+                                            <p class="product-item-name"><%= p.name %></p>
+                                            <p class="product-item-meta">Stock: <%= p.stock %> · Gs. <%= (p.price || 0).toLocaleString('es-PY') %></p>
+                                        </div>
+                                        <span class="product-qty-badge">0</span>
                                     </div>
-                                </div>
-                            <% }) %>
+                                <% }) %>
+                            </div>
                         </div>
-                        
-                        <div id="selectedVisualBadge" class="mt-2 d-none">
-                            <span class="badge bg-primary px-3 py-2 rounded-3 w-100 text-start text-wrap"><i class="fas fa-check-circle me-1"></i> Seleccionado: <strong id="selectedVisualName">Ninguno</strong></span>
+
+                        <div id="ventaCartEmpty" class="text-muted small mb-2">Tocá productos para agregarlos a esta venta.</div>
+                        <div id="ventaCart" class="venta-cart mb-3"></div>
+                        <div id="ventaTotalBar" class="venta-total-bar d-none">
+                            <div>
+                                <div class="small text-muted fw-bold text-uppercase">Llevás</div>
+                                <div class="fw-bold" id="ventaCountLabel">0 productos</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="small text-muted fw-bold text-uppercase">Total</div>
+                                <div class="fw-bold text-success fs-5" id="ventaTotalLabel">Gs. 0</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Variante / Opción</label>
-                        <input type="text" name="variantName" class="form-control" placeholder="Ej: 30D, Tono Claro, etc. (Opcional)">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-4 mb-3">
-                            <label class="form-label fw-bold text-dark">Cantidad</label>
-                            <input type="number" name="quantity" class="form-control form-control-lg text-center" value="1" min="1" required>
-                        </div>
-                        <div class="col-8 mb-3">
-                            <label class="form-label fw-bold text-success">Precio Cobrado UNITARIO (Gs.)</label>
-                            <input type="number" name="sellPrice" class="form-control form-control-lg border-success fw-bold" placeholder="Monto unitario" required>
+                    <div id="ventaStepConfirm" class="d-none">
+                        <p class="text-muted mb-3">Revisá lo que se va a cobrar antes de guardar.</p>
+                        <div id="ventaConfirmList"></div>
+                        <div class="venta-total-bar mt-3">
+                            <div>
+                                <div class="small text-muted fw-bold text-uppercase">Total a cobrar</div>
+                                <div class="fw-bold" id="ventaConfirmCount">0 productos</div>
+                            </div>
+                            <div class="fw-bold text-success fs-4" id="ventaConfirmTotal">Gs. 0</div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-3 shadow-sm"><i class="fas fa-save me-1"></i> Guardar Venta</button>
+                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal" id="ventaBtnClose">Cerrar</button>
+                    <button type="button" class="btn btn-outline-secondary rounded-3 px-3 d-none" id="ventaBtnBack">Volver</button>
+                    <button type="button" class="btn btn-success fw-bold px-4 rounded-3 shadow-sm" id="ventaBtnReview"><i class="fas fa-clipboard-check me-1"></i> Revisar venta</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-3 shadow-sm d-none" id="ventaBtnConfirm"><i class="fas fa-check me-1"></i> Confirmar venta</button>
                 </div>
             </form>
         </div>
@@ -469,15 +533,114 @@
 </div>
 
 <script>
-    // LÓGICA DEL BUSCADOR INTEGRADO CON FOTOS
     document.addEventListener('DOMContentLoaded', function() {
         const searchBar = document.getElementById('searchBarProduct');
         const rows = document.querySelectorAll('.product-item-row');
-        const hiddenInput = document.getElementById('selectedProductId');
-        const badgeContainer = document.getElementById('selectedVisualBadge');
-        const badgeName = document.getElementById('selectedVisualName');
+        const cartEl = document.getElementById('ventaCart');
+        const cartEmpty = document.getElementById('ventaCartEmpty');
+        const totalBar = document.getElementById('ventaTotalBar');
+        const countLabel = document.getElementById('ventaCountLabel');
+        const totalLabel = document.getElementById('ventaTotalLabel');
+        const itemsJson = document.getElementById('ventaItemsJson');
+        const stepPick = document.getElementById('ventaStepPick');
+        const stepConfirm = document.getElementById('ventaStepConfirm');
+        const confirmList = document.getElementById('ventaConfirmList');
+        const confirmCount = document.getElementById('ventaConfirmCount');
+        const confirmTotal = document.getElementById('ventaConfirmTotal');
+        const btnReview = document.getElementById('ventaBtnReview');
+        const btnConfirm = document.getElementById('ventaBtnConfirm');
+        const btnBack = document.getElementById('ventaBtnBack');
+        const btnClose = document.getElementById('ventaBtnClose');
+        const titleEl = document.getElementById('ventaModalTitle');
+        const cart = [];
 
-        // Filtrar productos al escribir en el celular
+        function gs(n) {
+            return 'Gs. ' + Number(n || 0).toLocaleString('es-PY');
+        }
+
+        function esc(s) {
+            return String(s || '').replace(/[&<>"']/g, function(c) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+            });
+        }
+
+        function cartTotal() {
+            return cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
+        }
+
+        function cartQty() {
+            return cart.reduce((sum, item) => sum + Number(item.qty), 0);
+        }
+
+        function syncJson() {
+            itemsJson.value = JSON.stringify(cart.map((item) => ({
+                productId: item.id,
+                quantity: item.qty,
+                sellPrice: item.price,
+                variantName: item.variant || ''
+            })));
+        }
+
+        function updateRowBadges() {
+            rows.forEach((row) => {
+                const id = row.getAttribute('data-id');
+                const found = cart.find((item) => item.id === id);
+                const badge = row.querySelector('.product-qty-badge');
+                if (found) {
+                    row.classList.add('selected');
+                    if (badge) badge.textContent = found.qty;
+                } else {
+                    row.classList.remove('selected');
+                    if (badge) badge.textContent = '0';
+                }
+            });
+        }
+
+        function renderCart() {
+            cartEl.innerHTML = cart.map((item, index) => `
+                <div class="venta-cart-item">
+                    <img src="${esc(item.photo)}" alt="">
+                    <div>
+                        <div class="fw-bold text-dark">${esc(item.title)}</div>
+                        <input type="text" class="form-control form-control-sm mt-1" data-variant="${index}" placeholder="Variante (opcional)" value="${esc(item.variant || '')}">
+                        <div class="venta-cart-controls">
+                            <button type="button" class="venta-qty-btn" data-qty="${index}" data-delta="-1">−</button>
+                            <input type="number" min="1" class="venta-cart-qty" data-qty-input="${index}" value="${item.qty}">
+                            <button type="button" class="venta-qty-btn" data-qty="${index}" data-delta="1">+</button>
+                            <input type="number" min="0" class="venta-cart-price" data-price="${index}" value="${item.price}" placeholder="Precio">
+                            <button type="button" class="btn btn-sm text-danger border-0" data-remove="${index}"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            const hasItems = cart.length > 0;
+            cartEmpty.classList.toggle('d-none', hasItems);
+            totalBar.classList.toggle('d-none', !hasItems);
+            const qty = cartQty();
+            countLabel.textContent = qty === 1 ? '1 producto' : qty + ' productos';
+            totalLabel.textContent = gs(cartTotal());
+            updateRowBadges();
+            syncJson();
+        }
+
+        function addProduct(row) {
+            const id = row.getAttribute('data-id');
+            const existing = cart.find((item) => item.id === id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({
+                    id,
+                    title: row.getAttribute('data-title') || row.querySelector('.product-item-name').innerText,
+                    photo: row.getAttribute('data-photo') || '/images/placeholder.png',
+                    price: parseInt(row.getAttribute('data-price'), 10) || 0,
+                    qty: 1,
+                    variant: ''
+                });
+            }
+            renderCart();
+        }
+
         searchBar.addEventListener('input', function(e) {
             const query = e.target.value.toLowerCase().trim();
             rows.forEach(row => {
@@ -490,28 +653,105 @@
             });
         });
 
-        // Evento de selección táctil
         rows.forEach(row => {
             row.addEventListener('click', function() {
-                // Quitar selección previa
-                rows.forEach(r => r.classList.remove('selected'));
-                
-                // Marcar activo
-                this.classList.add('selected');
-                const id = this.getAttribute('data-id');
-                const name = this.querySelector('.product-item-name').innerText;
-                
-                // Asignar al formulario
-                hiddenInput.value = id;
-                
-                // Actualizar badge visual
-                badgeName.innerText = name;
-                badgeContainer.classList.remove('d-none');
+                addProduct(this);
             });
         });
+
+        cartEl.addEventListener('click', function(e) {
+            const qtyBtn = e.target.closest('[data-qty]');
+            const removeBtn = e.target.closest('[data-remove]');
+            if (qtyBtn) {
+                const index = Number(qtyBtn.getAttribute('data-qty'));
+                const delta = Number(qtyBtn.getAttribute('data-delta'));
+                cart[index].qty = Math.max(1, Number(cart[index].qty) + delta);
+                renderCart();
+            }
+            if (removeBtn) {
+                cart.splice(Number(removeBtn.getAttribute('data-remove')), 1);
+                renderCart();
+            }
+        });
+
+        cartEl.addEventListener('input', function(e) {
+            const qtyInput = e.target.closest('[data-qty-input]');
+            const priceInput = e.target.closest('[data-price]');
+            const variantInput = e.target.closest('[data-variant]');
+            if (qtyInput) {
+                const index = Number(qtyInput.getAttribute('data-qty-input'));
+                cart[index].qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+                syncJson();
+                countLabel.textContent = cartQty() === 1 ? '1 producto' : cartQty() + ' productos';
+                totalLabel.textContent = gs(cartTotal());
+            }
+            if (priceInput) {
+                const index = Number(priceInput.getAttribute('data-price'));
+                cart[index].price = parseInt(priceInput.value, 10) || 0;
+                syncJson();
+                totalLabel.textContent = gs(cartTotal());
+            }
+            if (variantInput) {
+                const index = Number(variantInput.getAttribute('data-variant'));
+                cart[index].variant = variantInput.value;
+                syncJson();
+            }
+        });
+
+        function showConfirm(show) {
+            stepPick.classList.toggle('d-none', show);
+            stepConfirm.classList.toggle('d-none', !show);
+            btnReview.classList.toggle('d-none', show);
+            btnConfirm.classList.toggle('d-none', !show);
+            btnBack.classList.toggle('d-none', !show);
+            btnClose.classList.toggle('d-none', show);
+            titleEl.innerHTML = show
+                ? '<i class="fas fa-clipboard-check me-1"></i> Confirmar venta'
+                : '<i class="fas fa-cart-plus me-1"></i> Nueva venta';
+        }
+
+        btnReview.addEventListener('click', function() {
+            if (!cart.length) {
+                alert('⚠️ Seleccioná al menos un producto tocando su foto.');
+                return;
+            }
+            if (cart.some((item) => !item.price || item.price <= 0)) {
+                alert('⚠️ Cada producto necesita un precio cobrado.');
+                return;
+            }
+            const qty = cartQty();
+            confirmCount.textContent = qty === 1 ? '1 producto' : qty + ' productos';
+            confirmTotal.textContent = gs(cartTotal());
+            confirmList.innerHTML = cart.map((item) => `
+                <div class="confirm-item">
+                    <img src="${esc(item.photo)}" alt="">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${esc(item.title)}${item.variant ? ' · ' + esc(item.variant) : ''}</div>
+                        <div class="small text-muted">Lleva ${item.qty} · ${gs(item.price)} c/u</div>
+                    </div>
+                    <div class="fw-bold text-success">${gs(item.price * item.qty)}</div>
+                </div>
+            `).join('');
+            syncJson();
+            showConfirm(true);
+        });
+
+        btnBack.addEventListener('click', function() {
+            showConfirm(false);
+        });
+
+        const modalVenta = document.getElementById('modalVenta');
+        if (modalVenta) {
+            modalVenta.addEventListener('hidden.bs.modal', function() {
+                cart.splice(0, cart.length);
+                renderCart();
+                showConfirm(false);
+                const form = document.getElementById('formVenta');
+                if (form) delete form.dataset.submitted;
+            });
+        }
     });
 
-    // Desvanecer notificaciones automáticas
     setTimeout(() => {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(a => {
@@ -520,15 +760,15 @@
         });
     }, 4000);
 
-    // Sistema Robusto de Protección Anti-Doble Clic
     document.querySelectorAll('.form-safe-submit').forEach(form => {
         form.addEventListener('submit', function(e) {
-            // Validar si realmente se seleccionó un producto en el buscador
-            if (this.id === 'modalVenta' || this.querySelector('#selectedProductId')) {
-                const prodId = document.getElementById('selectedProductId').value;
-                if (!prodId || prodId === "") {
+            if (this.id === 'formVenta') {
+                const raw = document.getElementById('ventaItemsJson').value;
+                let items = [];
+                try { items = JSON.parse(raw || '[]'); } catch (err) { items = []; }
+                if (!items.length) {
                     e.preventDefault();
-                    alert("⚠️ Por favor, selecciona un producto tocando su fila con foto antes de guardar.");
+                    alert('⚠️ Por favor, seleccioná al menos un producto antes de confirmar.');
                     return;
                 }
             }
@@ -540,7 +780,6 @@
                     return;
                 }
                 this.dataset.submitted = true;
-                
                 submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Procesando...';
                 submitBtn.style.opacity = '0.75';
                 submitBtn.style.pointerEvents = 'none';
