@@ -2513,48 +2513,63 @@ app.post('/admin/caja/delete/:id', requireAdmin, async (req, res, next) => {
 // =============================================
 app.get('/pedido/:id', async (req, res, next) => {
     try {
-        const transaccion = await Transaction.findById(req.params.id);
-        if (!transaccion) {
-            return res.status(404).render('public/error', { message: 'Pedido no encontrado.' });
-        }
+        const shop = require('./lib/orders');
+        const rawId = String(req.params.id || '').trim();
+        const validObjectId = mongoose.Types.ObjectId.isValid(rawId) && String(new mongoose.Types.ObjectId(rawId)) === rawId;
 
-        // 1. Separar coordenadas para el mapa
-        let lat = '';
-        let lng = '';
-        if (transaccion.locationCoords) {
-            const coords = transaccion.locationCoords.split(',');
-            if (coords.length === 2) {
-                lat = coords[0].trim();
-                lng = coords[1].trim();
+        if (validObjectId) {
+            const transaccion = await Transaction.findById(rawId);
+            if (transaccion) {
+                let lat = '';
+                let lng = '';
+                if (transaccion.locationCoords) {
+                    const coords = transaccion.locationCoords.split(',');
+                    if (coords.length === 2) {
+                        lat = coords[0].trim();
+                        lng = coords[1].trim();
+                    }
+                }
+                let phone = transaccion.customerPhone || '';
+                phone = phone.replace(/\D/g, '');
+                if (phone.startsWith('09')) {
+                    phone = '595' + phone.substring(1);
+                }
+                return res.render('public/detalle-delivery', {
+                    pageTitle: 'Detalle para Delivery',
+                    pedido: {
+                        id: transaccion._id,
+                        cliente: transaccion.customerName || 'Cliente',
+                        telefonoOriginal: transaccion.customerPhone || 'No especificado',
+                        telefonoWa: phone,
+                        items: [{ nombre: transaccion.description, precio: transaccion.amount }],
+                        total: transaccion.amount,
+                        lat,
+                        lng,
+                        fecha: transaccion.date,
+                        address: '',
+                        housePhotoUrl: ''
+                    }
+                });
             }
         }
 
-        // 2. Limpiar teléfono para que el botón de WhatsApp funcione perfecto
-        let phone = transaccion.customerPhone || '';
-        phone = phone.replace(/\D/g, ''); // Deja solo números
-        if (phone.startsWith('09')) {
-            phone = '595' + phone.substring(1); // Convierte 0981... a 595981...
+        const orderQuery = {
+            deletedAt: { $exists: false },
+            $or: [
+                { ticketCode: rawId.toUpperCase() },
+                { orderNumber: rawId.toUpperCase() }
+            ]
+        };
+        if (validObjectId) orderQuery.$or.push({ _id: rawId });
+        const webOrder = await WebOrder.findOne(orderQuery);
+        if (!webOrder) {
+            return res.status(404).render('public/error', { pageTitle: 'Pedido', message: 'Pedido no encontrado.' });
         }
 
-        // 3. Armar el objeto del pedido
-        const pedido = {
-            id: transaccion._id,
-            cliente: transaccion.customerName || 'Cliente',
-            telefonoOriginal: transaccion.customerPhone || 'No especificado',
-            telefonoWa: phone,
-            items: [{ nombre: transaccion.description, precio: transaccion.amount }],
-            total: transaccion.amount,
-            lat: lat,
-            lng: lng,
-            fecha: transaccion.date
-        };
-
-        // 4. Renderizar la vista móvil para el delivery
         res.render('public/detalle-delivery', {
             pageTitle: 'Detalle para Delivery',
-            pedido: pedido
+            pedido: shop.deliveryPedidoFromWebOrder(webOrder)
         });
-
     } catch (err) {
         next(err);
     }

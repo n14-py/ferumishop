@@ -619,14 +619,16 @@ module.exports = function registerEcommerce(app, deps) {
 
     app.post('/admin/despacho/scan', requireAdmin, async (req, res) => {
         try {
-            let code = String(req.body?.code || '').trim();
-            if (code.includes('|')) {
-                const parts = code.split('|');
-                code = parts[1] || parts[0];
-            }
-            const order = await WebOrder.findOne({
-                $or: [{ ticketCode: code.toUpperCase() }, { orderNumber: code.toUpperCase() }]
-            });
+            let code = shop.extractScanCode(req.body?.code);
+            const validObjectId = mongoose.Types.ObjectId.isValid(code) && String(new mongoose.Types.ObjectId(code)) === code;
+            const orderQuery = {
+                $or: [
+                    { ticketCode: code.toUpperCase() },
+                    { orderNumber: code.toUpperCase() }
+                ]
+            };
+            if (validObjectId) orderQuery.$or.push({ _id: code });
+            const order = await WebOrder.findOne(orderQuery);
             if (!order) return res.status(404).json({ success: false, message: 'Ticket no encontrado' });
 
             const next = shop.nextAfterPrepared(order);

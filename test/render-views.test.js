@@ -80,7 +80,7 @@ test('pago resultado thank you has tracking and no QR', async () => {
     assert.doesNotMatch(html, /qrserver|Ticket QR/i);
 });
 
-test('printed thermal ticket has prepare QR', async () => {
+test('printed thermal ticket has dual-use pedido QR', async () => {
     const html = await ejs.renderFile(path.join(views, 'public/cola-impresion.html'), locals({
         pageTitle: 'Cola',
         autoPrint: false,
@@ -93,14 +93,38 @@ test('printed thermal ticket has prepare QR', async () => {
             orderNumber: 'FER-TEST',
             ticketCode: 'FM-ABC',
             shippingLabel: 'Motobolt',
-            qrPayload: 'FERUMI|FM-ABC',
-            qrHint: 'Escanear al preparar'
+            qrPayload: 'https://www.ferumi.shop/pedido/FM-ABC',
+            qrHint: 'Preparar / Motobolt'
         }
     }));
     assert.match(html, /FER-TEST/);
     assert.match(html, /FM-ABC/);
-    assert.match(html, /FERUMI\|FM-ABC/);
-    assert.match(html, /Escanear al preparar/);
+    assert.match(html, /\/pedido\/FM-ABC/);
+    assert.match(html, /Preparar \/ Motobolt/);
+});
+
+test('delivery detail shows client WhatsApp and map', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/detalle-delivery.html'), locals({
+        filename: path.join(views, 'public/detalle-delivery.html'),
+        pageTitle: 'Detalle para Delivery',
+        pedido: {
+            cliente: 'Ana',
+            telefonoOriginal: '0981123456',
+            telefonoWa: '595981123456',
+            items: [{ nombre: '1x Labial', precio: 25000 }],
+            total: 25000,
+            fecha: new Date(),
+            lat: -25.28,
+            lng: -57.64,
+            address: 'Centro, Asunción',
+            orderNumber: 'FER-1',
+            housePhotoUrl: ''
+        }
+    }));
+    assert.match(html, /Ana/);
+    assert.match(html, /0981123456/);
+    assert.match(html, /Escribir al WhatsApp/);
+    assert.match(html, /Abrir en Google Maps/);
 });
 
 test('despacho admin view renders', async () => {
