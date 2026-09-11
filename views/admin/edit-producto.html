@@ -48,6 +48,7 @@
                 <a href="/admin/productos" class="btn btn-outline-dark rounded-pill fw-bold"><i class="fas fa-arrow-left me-2"></i> Volver</a>
             </div>
 
+            <% if (locals.success) { %><div class="alert alert-success rounded-4"><i class="fas fa-check-circle"></i> <%= success %></div><% } %>
             <% if (locals.error) { %><div class="alert alert-danger rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
 
             <form action="/admin/producto/edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
@@ -178,10 +179,39 @@
                     <input type="hidden" name="isForSale" value="on">
                 </div>
                 
-                <button type="submit" class="btn btn-primary w-100 py-3 mb-5 fw-bold rounded-pill fs-5 shadow" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;">
+                <button type="submit" class="btn btn-primary w-100 py-3 mb-4 fw-bold rounded-pill fs-5 shadow" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;">
                     <i class="fas fa-save me-2"></i> Guardar Cambios
                 </button>
             </form>
+
+                <div class="card app-card mb-4 p-3 p-md-4">
+                    <h6 class="fw-bold mb-2 text-muted border-bottom pb-2"><i class="fas fa-video text-primary"></i> Videos (Cloudflare R2)</h6>
+                    <p class="small text-muted">Podés subir muchos videos para el bot de TikTok (de a 8). En la tienda se muestran solo los 2 primeros.<% if (product.videos && product.videos.length) { %> Ahora hay <%= product.videos.length %>.<% } %></p>
+                    <% if (!locals.r2Configured) { %>
+                        <div class="alert alert-warning rounded-4">Falta configurar R2 en el servidor: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET y R2_PUBLIC_BASE_URL.</div>
+                    <% } %>
+                    <% if (product.videos && product.videos.length) { %>
+                        <div class="d-flex flex-column gap-3 mb-3">
+                            <% product.videos.forEach((video, idx) => { %>
+                                <div class="border rounded-4 p-2">
+                                    <video src="<%= video.url %>" controls playsinline style="width:100%; max-height:180px; border-radius:12px; background:#000;"></video>
+                                    <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
+                                        <small class="text-muted text-truncate">#<%= idx + 1 %> <%= video.originalName || video.key %></small>
+                                        <form action="/admin/producto/<%= product._id %>/videos/<%= video._id %>/delete" method="POST" class="m-0">
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill" type="submit">Borrar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p class="small text-muted">Todavía no hay videos.</p>
+                    <% } %>
+                    <form action="/admin/producto/<%= product._id %>/videos" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="videos" class="form-control bg-light mb-2" multiple accept="video/mp4,video/webm,video/quicktime,video/x-m4v">
+                        <button class="btn btn-dark rounded-pill fw-bold" type="submit" <%= locals.r2Configured ? '' : 'disabled' %>>Subir videos a R2</button>
+                    </form>
+                </div>
         </main>
     </div>
 </div>

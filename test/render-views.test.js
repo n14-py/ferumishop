@@ -35,9 +35,35 @@ test('checkout view renders', async () => {
         pageTitle: 'Checkout',
         store: { lat: -25.28, lng: -57.64, mapsUrl: 'https://share.google/39F8jWwL96lFY65Th', address: 'Ferumishop' }
     }));
-    assert.match(html, /Usar mi ubicación/);
+    assert.match(html, /Permitir que Ferumishop vea tu ubicación/);
+    assert.match(html, /Copiar link para abrir en Safari o Chrome/);
+    assert.match(html, /Instagram, TikTok o WhatsApp/);
     assert.match(html, /Pagopar/);
     assert.match(html, /Pedir por WhatsApp/);
+});
+
+test('product detail shows at most two videos', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/producto-detalle.html'), locals({
+        pageTitle: 'Labial',
+        product: {
+            _id: '65f000000000000000000001',
+            name: 'Labial',
+            description: 'Rosa',
+            price: 25000,
+            photos: ['https://img/a.jpg'],
+            videos: [
+                { url: 'https://r2/v1.mp4' },
+                { url: 'https://r2/v2.mp4' },
+                { url: 'https://r2/v3.mp4' }
+            ],
+            hasVariants: false,
+            category: { name: 'Labiales' }
+        },
+        recommendedProducts: []
+    }));
+    assert.match(html, /https:\/\/r2\/v1\.mp4/);
+    assert.match(html, /https:\/\/r2\/v2\.mp4/);
+    assert.doesNotMatch(html, /https:\/\/r2\/v3\.mp4/);
 });
 
 test('tracking view renders', async () => {
@@ -163,6 +189,43 @@ test('despacho admin view renders', async () => {
     assert.match(html, /FER-1/);
     assert.match(html, /Escanear para marcar PREPARADO/);
     assert.match(html, /Marcar PREPARADO/);
+    assert.match(html, /ya está preparado o entregado/);
+    assert.match(html, /alreadyDone/);
+});
+
+test('edit product shows R2 video uploader', async () => {
+    const html = await ejs.renderFile(path.join(views, 'admin/edit-producto.html'), {
+        filename: path.join(views, 'admin/edit-producto.html'),
+        path: '/admin/producto/edit/1',
+        pageTitle: 'Editar',
+        r2Configured: true,
+        success: null,
+        error: null,
+        categories: [{ _id: 'c1', name: 'Labiales' }],
+        product: {
+            _id: '65f000000000000000000001',
+            name: 'Labial',
+            description: 'Rosa',
+            costPrice: 10000,
+            price: 25000,
+            stock: 4,
+            hasVariants: false,
+            variants: [],
+            photos: [],
+            videos: [
+                { _id: 'v1', url: 'https://r2/v1.mp4', key: 'k1', originalName: 'a.mp4' },
+                { _id: 'v2', url: 'https://r2/v2.mp4', key: 'k2', originalName: 'b.mp4' }
+            ],
+            category: { _id: 'c1' },
+            isFeatured: false,
+            isForSale: true,
+            isForRent: false
+        }
+    });
+    assert.match(html, /Videos \(Cloudflare R2\)/);
+    assert.match(html, /Subir videos a R2/);
+    assert.match(html, /https:\/\/r2\/v1\.mp4/);
+    assert.match(html, /Ahora hay 2/);
 });
 
 test('webhook extract + echo shape', () => {

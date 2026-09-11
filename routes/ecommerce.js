@@ -559,13 +559,43 @@ module.exports = function registerEcommerce(app, deps) {
             const siteConfig = res.locals.siteConfig;
 
             if (action === 'preparando') {
+                const canPrepare = ['pendiente_pago', 'pagado', 'preparando'].includes(order.fulfillmentStatus);
+                if (!canPrepare) {
+                    const msg = `El pedido ${order.orderNumber} ya avanzó. No se vuelve a marcar en preparando.`;
+                    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                        return res.json({ success: true, alreadyDone: true, message: msg, order: shop.publicOrderView(order) });
+                    }
+                    req.session.success = msg;
+                    return res.redirect('/admin/despacho');
+                }
                 shop.appendEvent(order, shop.FULFILLMENT.PREPARANDO);
             } else if (action === 'preparado' || action === 'scan') {
+                const outcome = shop.scanQrOutcome(order);
+                if (!outcome.apply) {
+                    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                        return res.json({
+                            success: true,
+                            alreadyDone: true,
+                            message: outcome.message,
+                            order: shop.publicOrderView(order)
+                        });
+                    }
+                    req.session.success = outcome.message;
+                    return res.redirect('/admin/despacho');
+                }
                 const next = shop.nextAfterPrepared(order);
                 shop.appendEvent(order, shop.FULFILLMENT.PREPARADO, 'Pedido armado y verificado.');
                 shop.appendEvent(order, next);
                 order.preparedAt = new Date();
             } else if (action === 'entregado') {
+                if (order.fulfillmentStatus === shop.FULFILLMENT.ENTREGADO) {
+                    const msg = `El pedido ${order.orderNumber} ya fue entregado. No se vuelve a marcar.`;
+                    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                        return res.json({ success: true, alreadyDone: true, message: msg, order: shop.publicOrderView(order) });
+                    }
+                    req.session.success = msg;
+                    return res.redirect('/admin/despacho');
+                }
                 shop.appendEvent(order, shop.FULFILLMENT.ENTREGADO);
                 order.deliveredAt = new Date();
                 if (order.paymentMethod === 'efectivo_retiro' && order.paymentStatus !== 'pagado') {
@@ -630,6 +660,16 @@ module.exports = function registerEcommerce(app, deps) {
             if (validObjectId) orderQuery.$or.push({ _id: code });
             const order = await WebOrder.findOne(orderQuery);
             if (!order) return res.status(404).json({ success: false, message: 'Ticket no encontrado' });
+
+            const outcome = shop.scanQrOutcome(order);
+            if (!outcome.apply) {
+                return res.json({
+                    success: true,
+                    alreadyDone: true,
+                    message: outcome.message,
+                    order: shop.publicOrderView(order)
+                });
+            }
 
             const next = shop.nextAfterPrepared(order);
             shop.appendEvent(order, shop.FULFILLMENT.PREPARADO, 'Marcado preparado al escanear el QR del ticket.');
