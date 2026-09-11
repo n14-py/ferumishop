@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const shop = require('../lib/orders');
 const pagopar = require('../lib/pagopar');
+const r2 = require('../lib/r2');
 
 test('haversine Asunción to Luque is within Motobolt range', () => {
     const km = shop.haversineKm(-25.28646, -57.647, -25.267, -57.484);
@@ -84,4 +85,45 @@ test('motobolt ready WhatsApp asks to order moto without 1 hour', () => {
     }, {}, 'preparado_motobolt');
     assert.match(text, /Pedí tu Motobolt ahora/);
     assert.doesNotMatch(text, /1 hora/);
+});
+
+test('scanning QR does not rewind delivered or already prepared orders', () => {
+    const delivered = shop.scanQrOutcome({ orderNumber: 'FER-1', fulfillmentStatus: 'entregado' });
+    assert.equal(delivered.apply, false);
+    assert.match(delivered.message, /ya fue entregado/);
+    const ready = shop.scanQrOutcome({ orderNumber: 'FER-1', fulfillmentStatus: 'esperando_motobolt' });
+    assert.equal(ready.apply, false);
+    assert.match(ready.message, /ya está preparado/);
+    const packed = shop.scanQrOutcome({ orderNumber: 'FER-1', fulfillmentStatus: 'preparado' });
+    assert.equal(packed.apply, false);
+    const cancelled = shop.scanQrOutcome({ orderNumber: 'FER-1', fulfillmentStatus: 'cancelado' });
+    assert.equal(cancelled.apply, false);
+    const pending = shop.scanQrOutcome({ orderNumber: 'FER-1', fulfillmentStatus: 'pagado' });
+    assert.equal(pending.apply, true);
+    const packing = shop.scanQrOutcome({ orderNumber: 'FER-1', fulfillmentStatus: 'preparando' });
+    assert.equal(packing.apply, true);
+});
+
+test('bot catalog JSON includes name stock price and all videos', () => {
+    const json = r2.botProductJson({
+        _id: '65f000000000000000000001',
+        name: 'Labial',
+        description: '<p>Rosa</p>',
+        price: 25000,
+        stock: 4,
+        hasVariants: false,
+        variants: [],
+        photos: ['https://img/a.jpg'],
+        videos: [
+            { url: 'https://r2/v1.mp4', key: 'k1', originalName: 'a.mp4' },
+            { url: 'https://r2/v2.mp4', key: 'k2', originalName: 'b.mp4' },
+            { url: 'https://r2/v3.mp4', key: 'k3', originalName: 'c.mp4' }
+        ]
+    });
+    assert.equal(json.name, 'Labial');
+    assert.equal(json.stock, 4);
+    assert.equal(json.price, 25000);
+    assert.equal(json.videos.length, 3);
+    assert.equal(r2.shopVideos({ videos: json.videos }, 2).length, 2);
+    assert.equal(r2.r2Config().ok, false);
 });

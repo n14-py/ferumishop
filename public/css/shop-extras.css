@@ -200,7 +200,20 @@
 .btn-checkout-wa { background: #25D366; }
 .btn-checkout { background: var(--primary-color, #f25aa4) !important; }
 
-.card-actions { display: flex; gap: 8px; margin-top: 1rem; }
+.product-videos { display: grid; gap: 10px; margin: 12px 0 8px; }
+.product-videos video {
+    width: 100%; border-radius: 14px; max-height: 280px; background: #000;
+}
+.loc-permit {
+    background: var(--primary-color-light);
+    border-radius: 16px; padding: 14px; margin-bottom: 12px;
+}
+.loc-permit p { margin: 0 0 10px; color: var(--text-muted-color); font-size: 0.95rem; }
+.loc-permit-actions { display: flex; flex-direction: column; gap: 8px; }
+.btn-loc-copy {
+    width: 100%; min-height: 48px; border-radius: 50px; border: 2px solid var(--primary-color, #f25aa4);
+    background: #fff; color: var(--primary-color, #f25aa4); font-weight: 800; cursor: pointer;
+}
 
 @media (max-width: 700px) {
     .chk-row, .product-meta-box { grid-template-columns: 1fr; }

@@ -18,6 +18,7 @@ const { JSDOM } = require('jsdom');
 const DOMPurify = require('dompurify');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const r2 = require('./lib/r2');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy; // APP: Login con Google
@@ -35,6 +36,10 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 const PORT = process.env.PORT || 3000;
+app.use((req, res, next) => {
+    res.setHeader('Permissions-Policy', 'geolocation=(self)');
+    next();
+});
 const window = new JSDOM('').window;
 const purify = DOMPurify(window);
 
@@ -72,6 +77,15 @@ const storage = new CloudinaryStorage({
     }
 });
 const upload = multer({ storage: storage });
+const videoUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 80 * 1024 * 1024, files: 8 },
+    fileFilter: (req, file, cb) => {
+        const ok = /^video\//.test(file.mimetype) || /\.(mp4|mov|webm|m4v)$/i.test(file.originalname || '');
+        if (ok) cb(null, true);
+        else cb(new Error('Solo se aceptan videos (mp4, mov, webm).'));
+    }
+});
 
 // Helper para extraer el public_id de una URL de Cloudinary
 const getPublicId = (url) => {
@@ -176,6 +190,12 @@ const productSchema = new mongoose.Schema({
     hasVariants: { type: Boolean, default: false }, // NUEVO: Indica si usa las opciones de abajo
     variants: [variantSchema], // NUEVO: Lista de variantes disponibles
     photos: [{ type: String }], // Array de URLs de Cloudinary (Fotos generales)
+    videos: [{
+        url: { type: String, required: true },
+        key: { type: String, default: '' },
+        originalName: { type: String, default: '' },
+        createdAt: { type: Date, default: Date.now }
+    }],
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     isFeatured: { type: Boolean, default: false }, 
     isForRent: { type: Boolean, default: false }, 
@@ -912,6 +932,41 @@ require('./routes/ecommerce')(app, {
     requireAdmin,
     upload,
     purify
+});
+
+function requireBotToken(req, res, next) {
+    const expected = String(process.env.BOT_API_TOKEN || '').trim();
+    if (!expected) {
+        return res.status(503).json({ success: false, message: 'Falta BOT_API_TOKEN en el servidor.' });
+    }
+    const got = String(req.get('X-Bot-Token') || req.query.token || '').trim();
+    if (!got || got !== expected) {
+        return res.status(401).json({ success: false, message: 'Token inválido.' });
+    }
+    next();
+}
+
+app.get('/api/bot/productos', requireBotToken, async (req, res, next) => {
+    try {
+        const products = await Product.find({ isForSale: true }).sort({ updatedAt: -1 });
+        res.json({
+            success: true,
+            count: products.length,
+            products: products.map((p) => r2.botProductJson(p))
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/bot/productos/:id', requireBotToken, async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ success: false, message: 'Producto no encontrado' });
+        res.json({ success: true, product: r2.botProductJson(product) });
+    } catch (err) {
+        next(err);
+    }
 });
 
 // =============================================
@@ -1670,6 +1725,7 @@ app.get('/admin/producto/edit/:id', requireAdmin, async (req, res, next) => {
             pageTitle: `Editar: ${product.name}`,
             product,
             categories,
+            r2Configured: r2.r2Config().ok,
             success: req.session.success,
             error: req.session.error
         });
@@ -1757,6 +1813,56 @@ app.post('/admin/producto/edit/:id', requireAdmin, upload.any(), async (req, res
     }
 });
 
+app.post('/admin/producto/:id/videos', requireAdmin, (req, res, next) => {
+    videoUpload.array('videos', 8)(req, res, (err) => {
+        if (err) {
+            req.session.error = err.message || 'No se pudo subir el video.';
+            return req.session.save(() => res.redirect(`/admin/producto/edit/${req.params.id}`));
+        }
+        next();
+    });
+}, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) throw new Error('Producto no encontrado.');
+        const files = req.files || [];
+        if (!files.length) throw new Error('Elegí al menos un video.');
+        product.videos = product.videos || [];
+        for (const file of files) {
+            const uploaded = await r2.uploadProductVideo({
+                productId: String(product._id),
+                buffer: file.buffer,
+                filename: file.originalname,
+                contentType: file.mimetype
+            });
+            product.videos.push(uploaded);
+        }
+        await product.save();
+        req.session.success = files.length === 1
+            ? 'Video subido a Cloudflare R2.'
+            : `${files.length} videos subidos a Cloudflare R2.`;
+    } catch (err) {
+        req.session.error = err.message;
+    }
+    req.session.save(() => res.redirect(`/admin/producto/edit/${req.params.id}`));
+});
+
+app.post('/admin/producto/:id/videos/:videoId/delete', requireAdmin, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) throw new Error('Producto no encontrado.');
+        const video = (product.videos || []).id(req.params.videoId);
+        if (!video) throw new Error('Video no encontrado.');
+        await r2.deleteProductVideo(video.key);
+        video.deleteOne();
+        await product.save();
+        req.session.success = 'Video eliminado.';
+    } catch (err) {
+        req.session.error = err.message;
+    }
+    req.session.save(() => res.redirect(`/admin/producto/edit/${req.params.id}`));
+});
+
 // --- Eliminar un producto (POST) ---
 app.post('/admin/producto/delete/:id', requireAdmin, async (req, res, next) => {
     try {
@@ -1767,6 +1873,9 @@ app.post('/admin/producto/delete/:id', requireAdmin, async (req, res, next) => {
         for (const url of product.photos) {
             const publicId = getPublicId(url);
             if (publicId) await cloudinary.uploader.destroy(publicId);
+        }
+        for (const video of product.videos || []) {
+            if (video.key) await r2.deleteProductVideo(video.key);
         }
 
         // Eliminar el producto de la base de datos

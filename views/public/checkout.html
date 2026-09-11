@@ -53,7 +53,14 @@
         <h2>¿Dónde te queda?</h2>
         <p class="checkout-help">Primero tu ubicación. Calculamos los km hasta Ferumishop. Todo Central se cubre con Motobolt; el interior va por transportadora.</p>
         <div id="map" style="height: 220px; border-radius: 14px; margin-bottom: 12px;"></div>
-        <button type="button" class="btn-shop secondary" style="margin-bottom:12px;" onclick="useMyLocation()"><i class="fas fa-location-arrow"></i> Usar mi ubicación</button>
+        <div class="loc-permit" id="locPermit">
+            <p>Ferumishop pide tu ubicación solo para calcular si te llega Motobolt o encomienda. Tocá Permitir cuando el celular lo pregunte.</p>
+            <div class="loc-permit-actions">
+                <button type="button" class="btn-shop" onclick="useMyLocation()"><i class="fas fa-location-arrow"></i> Permitir que Ferumishop vea tu ubicación</button>
+                <button type="button" class="btn-loc-copy" onclick="copyCheckoutLink()">Copiar link para abrir en Safari o Chrome</button>
+            </div>
+        </div>
+        <p class="checkout-help" id="locHint" style="display:none;"></p>
         <div class="chk-row">
             <div>
                 <label class="chk-label">Ciudad</label>
@@ -120,6 +127,7 @@ function goStep(n) {
         if (!ok) { document.getElementById('err1').textContent = 'Completá los 4 datos. Pagopar los exige.'; return; }
         document.getElementById('err1').textContent = '';
         initMap();
+        showLocationHints();
     }
     [1,2,3].forEach(i => {
         document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
@@ -144,12 +152,86 @@ function setCoords(lat, lng) {
     map.setView([lat, lng], 14);
 }
 
-function useMyLocation() {
-    if (!navigator.geolocation) { document.getElementById('err2').textContent = 'Tu navegador no da ubicación.'; return; }
+function isInAppBrowser() {
+    const ua = navigator.userAgent || '';
+    return /Instagram|FBAN|FBAV|FB_IAB|FBOS|TikTok|musical_ly|Bytedance|WhatsApp|Line\//i.test(ua);
+}
+
+function showHint(html) {
+    const hint = document.getElementById('locHint');
+    hint.style.display = 'block';
+    hint.innerHTML = html;
+}
+
+function showLocationHints() {
+    if (isInAppBrowser()) {
+        showHint('Estás dentro de Instagram, TikTok o WhatsApp. Ahí el GPS casi no funciona.<br><strong>Abrí Ferumishop en Safari o Chrome</strong> (los 3 puntitos → Abrir en el navegador), tocá “Permitir que Ferumishop vea tu ubicación” y aceptá cuando el celular pregunte.');
+    }
+}
+
+async function copyCheckoutLink() {
+    const url = (location.origin && location.protocol !== 'file:' ? location.origin : 'https://www.ferumi.shop') + '/checkout';
+    try {
+        await navigator.clipboard.writeText(url);
+        showHint('Link copiado. Pegalo en Safari o Chrome, abrí Ferumishop y tocá Permitir ubicación.');
+    } catch (e) {
+        window.prompt('Copiá este link y abrilo en Safari o Chrome:', url);
+    }
+}
+
+function geoFailHelp(geoErr) {
+    const code = geoErr && geoErr.code;
+    if (isInAppBrowser()) {
+        return 'Este navegador interno (Instagram / TikTok / WhatsApp) no deja ver la ubicación.<br><strong>Abrí ferumi.shop en Safari o Chrome</strong> y tocá “Permitir que Ferumishop vea tu ubicación”.';
+    }
+    if (code === 1) {
+        return 'El celular bloqueó la ubicación. <strong>Permití que Ferumishop vea tu ubicación</strong> y volvé a tocar el botón.<br><br>iPhone: Ajustes → Safari o Chrome → Ubicación → Permitir.<br>Android: candado en la barra de la web → Permisos → Ubicación → Permitir.<br><br>Si abriste el link desde Instagram o WhatsApp, abrilo en el navegador y tocá de nuevo.';
+    }
+    if (code === 3) {
+        return 'El GPS tardó demasiado. Tocá de nuevo “Permitir que Ferumishop vea tu ubicación”, o marcá tu casa en el mapa.';
+    }
+    return 'No pudimos leer el GPS. Tocá de nuevo “Permitir que Ferumishop vea tu ubicación”, marcá el mapa o escribí tu ciudad.';
+}
+
+function askGeo(highAccuracy) {
+    const err = document.getElementById('err2');
     navigator.geolocation.getCurrentPosition((pos) => {
         setCoords(pos.coords.latitude, pos.coords.longitude);
-        document.getElementById('err2').textContent = '';
-    }, () => { document.getElementById('err2').textContent = 'No pudimos leer tu GPS. Tocá el mapa o escribí la ciudad.'; });
+        err.textContent = '';
+        document.getElementById('locHint').style.display = 'none';
+    }, (geoErr) => {
+        if (highAccuracy && geoErr && (geoErr.code === 2 || geoErr.code === 3)) {
+            err.textContent = 'Reintentando ubicación…';
+            askGeo(false);
+            return;
+        }
+        err.textContent = '';
+        showHint(geoFailHelp(geoErr));
+    }, {
+        enableHighAccuracy: highAccuracy,
+        timeout: highAccuracy ? 12000 : 20000,
+        maximumAge: 60000
+    });
+}
+
+function useMyLocation() {
+    const err = document.getElementById('err2');
+    const hint = document.getElementById('locHint');
+    err.textContent = '';
+    hint.style.display = 'none';
+    if (!navigator.geolocation) {
+        showHint('Este celular no da GPS. Marcá tu casa en el mapa o escribí la ciudad.');
+        return;
+    }
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        showHint('El GPS solo funciona en una web segura. Abrí <strong>https://www.ferumi.shop</strong> en Safari o Chrome (no desde Instagram o TikTok).');
+        return;
+    }
+    if (isInAppBrowser()) {
+        showLocationHints();
+    }
+    err.textContent = 'Buscando tu ubicación…';
+    askGeo(true);
 }
 
 async function calcShipping() {

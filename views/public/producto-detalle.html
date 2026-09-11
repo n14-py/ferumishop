@@ -96,6 +96,15 @@
                     <% }); %>
                 </div>
             <% } %>
+
+            <% const shopVideos = (product.videos || []).filter(v => v && v.url).slice(0, 2); %>
+            <% if (shopVideos.length) { %>
+                <div class="product-videos">
+                    <% shopVideos.forEach((video) => { %>
+                        <video src="<%= video.url %>" controls playsinline preload="metadata"></video>
+                    <% }); %>
+                </div>
+            <% } %>
         </section>
 
         <!-- COLUMNA DERECHA: INFORMACIÓN Y BOTONES -->
