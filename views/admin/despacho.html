@@ -63,7 +63,7 @@
 
             <div class="card app-card p-3 mb-4 scan-box">
                 <h5 class="fw-bold mb-1"><i class="fas fa-qrcode me-2"></i>Escanear para marcar PREPARADO</h5>
-                <p class="mb-2">Tocá el botón y apuntá al QR del ticket impreso. Eso pasa el pedido a Preparado y abre WhatsApp.</p>
+                <p class="mb-2">El mismo QR del ticket: acá marca PREPARADO y abre WhatsApp. Si lo escanea el moto, ve nombre, WhatsApp y ubicación del cliente.</p>
                 <button class="btn btn-dark btn-big" type="button" id="btnScan"><i class="fas fa-camera"></i> Abrir cámara</button>
                 <div id="reader" class="mt-3"></div>
                 <p class="small mt-2 mb-0" id="scanMsg"></p>
@@ -82,7 +82,7 @@
                 const itemsTxt = (order.items||[]).map(i => `${i.quantity}x ${i.name}`).join(', ');
                 let waMsg = `Hola ${order.customerName}! Tu pedido ${order.orderNumber} de FERUMI.`;
                 if (order.shippingMethod === 'motobolt') {
-                    waMsg = `Hola ${order.customerName}! 💖 Tu pedido ${order.orderNumber} ya está PREPARADO.\nPedí tu Motobolt ahora. En 1 hora como máximo se despacha.\nUbicación Ferumishop:\n${store.mapsUrl}\n${itemsTxt}\nTotal: ${order.totalAmount} Gs.\nTicket: ${order.ticketCode}`;
+                    waMsg = `Hola ${order.customerName}! 💖 Tu pedido ${order.orderNumber} ya está PREPARADO.\nPedí tu Motobolt ahora.\nUbicación Ferumishop:\n${store.mapsUrl}\n${itemsTxt}\nTotal: ${order.totalAmount} Gs.`;
                 } else if (order.shippingMethod === 'retiro') {
                     waMsg = `Hola ${order.customerName}! Tu pedido ${order.orderNumber} está listo para RETIRAR en Ferumishop.\n${store.mapsUrl}\n${itemsTxt}\n${order.paymentMethod==='efectivo_retiro'?'Pagás en efectivo al retirar.':'Ya está pagado.'}`;
                 } else {

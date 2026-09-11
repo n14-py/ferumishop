@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="/css/style.css">
     <style>
         body { background-color: #f8f9fa; }
+        body.delivery-page .floating-cart-btn,
+        body.delivery-page .cart-icon { display: none !important; }
         .delivery-card {
             background: white;
             border-radius: 20px;
@@ -49,7 +51,7 @@
         .btn-map:hover { background-color: #3367D6; color: white; }
     </style>
 </head>
-<body>
+<body class="delivery-page">
     <%- include('../partials/header.html') %>
     
     <main class="container" style="max-width: 600px;">
@@ -57,6 +59,9 @@
             <div class="delivery-header">
                 <h2 style="color: #d81b60; margin: 0; font-weight: 900;">Detalle de Entrega</h2>
                 <p style="margin: 5px 0 0 0; color: #666; font-size: 1.1rem;">FERUMI SHOP</p>
+                <% if (pedido.orderNumber) { %>
+                <p style="margin: 6px 0 0; font-weight: 800;"><%= pedido.orderNumber %></p>
+                <% } %>
             </div>
             
             <div class="delivery-body">
@@ -64,6 +69,18 @@
                     <div class="info-label"><i class="fas fa-user text-primary"></i> Cliente</div>
                     <div class="info-value"><%= pedido.cliente %></div>
                 </div>
+
+                <div class="info-group">
+                    <div class="info-label"><i class="fab fa-whatsapp text-success"></i> WhatsApp</div>
+                    <div class="info-value"><%= pedido.telefonoOriginal || 'No especificado' %></div>
+                </div>
+
+                <% if (pedido.address) { %>
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-home text-primary"></i> Dirección</div>
+                    <div class="info-value"><%= pedido.address %></div>
+                </div>
+                <% } %>
                 
                 <div class="info-group">
                     <div class="info-label"><i class="fas fa-clock text-warning"></i> Fecha y Hora</div>
@@ -72,10 +89,20 @@
 
                 <div class="info-group">
                     <div class="info-label"><i class="fas fa-box text-success"></i> Detalle del Pedido</div>
-                    <% pedido.items.forEach(item => { %>
+                    <% (pedido.items || []).forEach(item => { %>
                         <div class="info-value"><%= item.nombre %></div>
                     <% }) %>
+                    <% if (pedido.total) { %>
+                        <div class="info-value" style="font-weight:800; margin-top:6px;">Total <%= Number(pedido.total).toLocaleString('es-PY') %> Gs.</div>
+                    <% } %>
                 </div>
+
+                <% if (pedido.housePhotoUrl) { %>
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-camera"></i> Foto de la casa</div>
+                    <a href="<%= pedido.housePhotoUrl %>" target="_blank"><img src="<%= pedido.housePhotoUrl %>" alt="Casa" style="width:100%; max-height:220px; object-fit:cover; border-radius:14px;"></a>
+                </div>
+                <% } %>
 
 
 

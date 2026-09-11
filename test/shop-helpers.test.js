@@ -51,7 +51,7 @@ test('parsePrice strips thousand dots', () => {
     assert.equal(shop.parsePrice(25000), 25000);
 });
 
-test('thermal ticket QR marks prepared', () => {
+test('thermal ticket QR is dual-use pedido URL', () => {
     const pedido = shop.thermalPedidoFromWebOrder({
         _id: '65f000000000000000000001',
         customerName: 'Ana',
@@ -63,7 +63,25 @@ test('thermal ticket QR marks prepared', () => {
         orderNumber: 'FER-1',
         shippingMethod: 'motobolt'
     });
-    assert.equal(pedido.qrPayload, 'FERUMI|FM-ABC');
-    assert.match(pedido.qrHint, /preparar/i);
+    assert.match(pedido.qrPayload, /\/pedido\/FM-ABC/);
+    assert.match(pedido.qrHint, /Motobolt/i);
     assert.equal(pedido.shippingLabel, 'Motobolt');
+});
+
+test('scan extracts ticket from URL or FERUMI code', () => {
+    assert.equal(shop.extractScanCode('FERUMI|FM-ABC'), 'FM-ABC');
+    assert.equal(shop.extractScanCode('https://www.ferumi.shop/pedido/FM-ABC'), 'FM-ABC');
+    assert.equal(shop.extractScanCode('https://ferumi.shop/pedido/FM-ABC?x=1'), 'FM-ABC');
+});
+
+test('motobolt ready WhatsApp asks to order moto without 1 hour', () => {
+    const text = shop.customerWhatsAppText({
+        customerName: 'Ana',
+        orderNumber: 'FER-1',
+        ticketCode: 'FM-ABC',
+        totalAmount: 25000,
+        items: [{ quantity: 1, name: 'Labial' }]
+    }, {}, 'preparado_motobolt');
+    assert.match(text, /Pedí tu Motobolt ahora/);
+    assert.doesNotMatch(text, /1 hora/);
 });
