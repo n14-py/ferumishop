@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de privacidad - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Política de privacidad', seoDescription: 'Política de privacidad de Ferumishop: datos de la tienda, Pagopar y el asistente de WhatsApp. Eliminación de datos por ferumishop@gmail.com.' }) %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="container">
+    <div class="static-page-container legal-doc">
+        <h1>Política de privacidad</h1>
+        <p class="legal-updated">Vigente desde el 12 de septiembre de 2026 · Ferumishop, Paraguay</p>
+        <nav class="legal-nav">
+            <a href="/terminos">Términos</a>
+            <a href="/privacidad">Privacidad</a>
+            <a href="/eliminacion-de-datos">Eliminación de datos</a>
+        </nav>
+
+        <h2>1. Responsable</h2>
+        <p>
+            FERUMI / Ferumishop (Paraguay) es responsable del tratamiento de tus datos en
+            <strong>ferumi.shop</strong> y en el WhatsApp Business de la tienda.
+            Correo: <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a>.
+            Local: <%= typeof siteConfig !== 'undefined' && siteConfig.storeAddress ? siteConfig.storeAddress : 'Ferumishop, Asunción - Paraguay' %>.
+        </p>
+
+        <h2>2. Qué datos juntamos</h2>
+        <h3>En la tienda web</h3>
+        <ul>
+            <li>Nombre, cédula, correo y teléfono (los pide Pagopar para cobrar).</li>
+            <li>Dirección, ciudad, referencia, ubicación (mapa) y, si la mandás, foto de la casa para el moto.</li>
+            <li>Productos del carrito, cupones, y el historial del pedido (pago, preparación, entrega).</li>
+            <li>Datos técnicos básicos de navegación (cookies de sesión, carrito en tu celular).</li>
+        </ul>
+        <h3>En WhatsApp (incluido el asistente con IA)</h3>
+        <ul>
+            <li>Número de WhatsApp, nombre de perfil y mensajes que nos escribís.</li>
+            <li>Fotos, videos o ubicación que compartís en el chat.</li>
+            <li>Los mismos datos de Pagopar si comprás por WhatsApp (nombre, CI, correo, teléfono, dirección).</li>
+            <li>El carrito y el pedido que arma el asistente.</li>
+        </ul>
+        <p>No pedimos datos de tarjetas: eso queda en Pagopar.</p>
+
+        <h2>3. Para qué los usamos</h2>
+        <ul>
+            <li>Atender consultas y vender (web o WhatsApp).</li>
+            <li>Crear el pedido, cobrar con Pagopar, descontar stock y despachar.</li>
+            <li>Calcular si te llega Motobolt o encomienda, y avisar el tracking.</li>
+            <li>Cumplir obligaciones legales (facturación / comprobantes).</li>
+            <li>Mejorar la atención, sin vender tu lista a terceros para publicidad ajena.</li>
+        </ul>
+
+        <h2>4. Inteligencia artificial del WhatsApp</h2>
+        <p>
+            El chat de WhatsApp Business puede ser respondido por nuestro asistente de IA
+            (modelo DeepSeek, procesado a través de DeepInfra) para entender tu mensaje,
+            buscar productos, mandar fotos/videos del catálogo y armar el pedido.
+            El texto de la conversación se envía a ese proveedor solo para generar la respuesta
+            de FERUMI. No usamos tus chats para entrenar modelos públicos ni para publicitarte a otras marcas.
+        </p>
+        <p>
+            WhatsApp / Meta entrega y transporta los mensajes. FERUMI es quien decide qué se responde
+            y cómo se guarda el pedido. Al escribirnos por WhatsApp aceptás este tratamiento.
+        </p>
+
+        <h2>5. Con quién se comparte</h2>
+        <ul>
+            <li><strong>Pagopar:</strong> nombre, CI, correo, teléfono, monto e ítems, para cobrar.</li>
+            <li><strong>Meta / WhatsApp:</strong> el canal del mensaje (ellos tienen su propia política).</li>
+            <li><strong>DeepInfra:</strong> el texto del chat, para que el asistente pueda contestarte.</li>
+            <li><strong>Hosting, base de datos y Cloudflare R2 / Cloudinary:</strong> para guardar la tienda, fotos, videos y pedidos.</li>
+            <li><strong>Motobolt / transportadora / despachante:</strong> nombre, WhatsApp, dirección y ubicación, solo para entregar.</li>
+        </ul>
+        <p>No vendemos tu base de datos.</p>
+
+        <h2>6. Conservación</h2>
+        <p>
+            Pedidos y pagos se guardan el tiempo que exija la ley y la operación de la tienda.
+            El historial del chat de WhatsApp se guarda para atenderte (seguimiento del pedido, consultas).
+            Si pedís borrar tus datos, lo hacemos según la sección 8, salvo lo que debamos conservar por ley.
+        </p>
+
+        <h2>7. Tus derechos</h2>
+        <p>
+            Podés pedir acceso, corrección o eliminación de tus datos, y preguntar qué tenemos de vos.
+            Escribinos a <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a> desde el correo
+            o el WhatsApp que usaste para comprar.
+        </p>
+
+        <h2>8. Eliminación de datos (Meta / WhatsApp y tienda)</h2>
+        <p>
+            Para borrar tus datos personales (cuenta de chat, mensajes del asistente, fotos que mandaste,
+            y datos de contacto que no sean obligatorios de un pedido ya facturado):
+        </p>
+        <ol>
+            <li>Escribí a <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a> con el asunto <strong>Eliminar mis datos</strong>.</li>
+            <li>Indicá tu número de WhatsApp, correo y, si tenés, cédula o número de pedido.</li>
+            <li>Confirmamos la identidad y borramos o anonimizamos lo que corresponda en un plazo razonable (como máximo 30 días).</li>
+        </ol>
+        <p>
+            No podemos borrar comprobantes o pedidos que la ley nos obliga a conservar.
+            Tampoco borramos lo que Meta guarda en tu propia app de WhatsApp: eso lo administrás vos en WhatsApp.
+            Instrucciones cortas también en <a href="/eliminacion-de-datos">Eliminación de datos</a>.
+        </p>
+
+        <h2>9. Cookies y ubicación</h2>
+        <p>
+            La web usa cookies de sesión y el carrito en tu navegador. En el checkout podemos pedir
+            tu ubicación (con tu permiso) solo para calcular Motobolt vs encomienda. En WhatsApp,
+            la ubicación la compartís vos cuando tocás el botón.
+        </p>
+
+        <h2>10. Menores</h2>
+        <p>La tienda está pensada para mayores de 18 años. Si un menor usó el servicio, el tutor puede pedir la eliminación por correo.</p>
+
+        <h2>11. Cambios</h2>
+        <p>Si actualizamos esta política, la fecha de arriba cambia. El uso posterior implica que la leíste.</p>
+
+        <h2>12. Contacto</h2>
+        <p>
+            Privacidad y eliminación: <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a><br>
+            <a href="/terminos">Términos y condiciones</a> ·
+            <a href="/contacto">Contacto</a>
+        </p>
+    </div>
+</main>
+<%- include('../partials/footer.html') %>
+</body>
+</html>
