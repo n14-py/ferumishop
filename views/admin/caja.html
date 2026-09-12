@@ -101,26 +101,27 @@
         #formVenta {
             flex: 1 1 0%;
             min-height: 0;
-            position: relative;
+            height: 0;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
-            display: block;
         }
         #ventaModalScroll {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
+            flex: 1 1 0%;
+            min-height: 0;
+            height: 0;
             overflow-x: hidden;
             overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
             touch-action: pan-y;
         }
-        #modalVenta .modal-body,
-        #modalVenta .modal-footer {
+        #modalVenta .modal-body {
             overflow: visible;
             max-height: none;
+        }
+        #modalVenta .modal-footer {
+            flex: 0 0 auto;
         }
 
         .venta-cart { display: flex; flex-direction: column; gap: 8px; }
@@ -499,12 +500,12 @@
                         </div>
                     </div>
                 </div>
+                </div>
                 <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
                     <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal" id="ventaBtnClose">Cerrar</button>
                     <button type="button" class="btn btn-outline-secondary rounded-3 px-3 d-none" id="ventaBtnBack">Volver</button>
                     <button type="button" class="btn btn-success fw-bold px-4 rounded-3 shadow-sm" id="ventaBtnReview"><i class="fas fa-clipboard-check me-1"></i> Revisar venta</button>
                     <button type="submit" class="btn btn-success fw-bold px-4 rounded-3 shadow-sm d-none" id="ventaBtnConfirm"><i class="fas fa-check me-1"></i> Confirmar venta</button>
-                </div>
                 </div>
             </form>
         </div>
