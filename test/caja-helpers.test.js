@@ -135,5 +135,9 @@ test('caja view shows today sales, confirmation and mobile cash book cards', asy
     assert.match(html, /Datos para Delivery \(Opcional\)/);
     assert.match(html, /Quitar/);
     assert.match(html, /product-picker-list/);
-    assert.match(html, /modal-dialog-scrollable/);
+    assert.match(html, /ventaModalScroll/);
+    assert.match(html, /overflow-y: scroll/);
+    assert.match(html, /flex: 1 1 0%/);
+    assert.match(html, /height: 0/);
+    assert.doesNotMatch(html, /modal-dialog-scrollable/);
 });
