@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y condiciones - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Términos y condiciones', seoDescription: 'Términos y condiciones de Ferumishop: compras en la tienda, Pagopar, envíos y atención por WhatsApp.' }) %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="container">
+    <div class="static-page-container legal-doc">
+        <h1>Términos y condiciones</h1>
+        <p class="legal-updated">Vigente desde el 12 de septiembre de 2026 · Ferumishop, Paraguay</p>
+        <nav class="legal-nav">
+            <a href="/terminos">Términos</a>
+            <a href="/privacidad">Privacidad</a>
+            <a href="/eliminacion-de-datos">Eliminación de datos</a>
+        </nav>
+
+        <h2>1. Quiénes somos</h2>
+        <p>
+            Estos términos rigen el uso de <strong>ferumi.shop</strong>, la tienda FERUMI / Ferumishop
+            y el canal de ventas por WhatsApp Business (incluido el asistente de atención).
+            Local: <%= typeof siteConfig !== 'undefined' && siteConfig.storeAddress ? siteConfig.storeAddress : 'Ferumishop, Asunción - Paraguay' %>.
+            Contacto: <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a>.
+        </p>
+
+        <h2>2. Aceptación</h2>
+        <p>
+            Al navegar la web, crear un pedido, pagar con Pagopar o escribirnos por WhatsApp
+            aceptás estos términos y la <a href="/privacidad">Política de privacidad</a>.
+            Si no estás de acuerdo, no uses la tienda ni el chat.
+        </p>
+
+        <h2>3. Productos y stock</h2>
+        <p>
+            Vendemos maquillaje, uñas, accesorios y productos de belleza. Precios en guaraníes (Gs.).
+            El stock se actualiza en el sistema: si un ítem se agota mientras armás el pedido, te avisamos
+            y no se cobra. Fotos y videos son de referencia; puede haber leves diferencias de tono.
+        </p>
+
+        <h2>4. Pedidos en la web</h2>
+        <p>
+            En el checkout pedimos nombre, cédula, correo y teléfono (los exige Pagopar),
+            ubicación o dirección, y el modo de entrega. El pedido se confirma al pagar
+            (o, si retirás en el local y elegís efectivo, al registrarse el retiro).
+        </p>
+
+        <h2>5. Pedidos por WhatsApp e inteligencia artificial</h2>
+        <p>
+            El número de WhatsApp Business de FERUMI puede ser atendido por una vendedora del equipo
+            o por nuestro <strong>asistente de WhatsApp</strong>, que usa inteligencia artificial para
+            consultar stock, mostrar fotos/videos, armar el carrito y generar un enlace privado de pago.
+            Ese asistente:
+        </p>
+        <ul>
+            <li>Actúa en nombre de Ferumishop, no es un tercero independiente.</li>
+            <li>No inventa precios ni stock: lee el catálogo real de la tienda.</li>
+            <li>Te pide confirmación (datos, envío y total) antes de crear el pedido.</li>
+            <li>Te manda un enlace único (ejemplo: ferumi.shop/0981mariapedido) solo con botón de Pagopar.</li>
+            <li>No reemplaza el despacho humano: el equipo prepara, imprime y coordina el envío.</li>
+        </ul>
+        <p>
+            Meta (WhatsApp) es el canal. El contenido de la conversación se usa únicamente para atenderte y venderte.
+            Detalle de datos: <a href="/privacidad">Política de privacidad</a>.
+        </p>
+
+        <h2>6. Pagos</h2>
+        <p>
+            El pago online es con <strong>Pagopar</strong> (tarjetas, Tigo Money, Aquí Pago, bancos y cobranzas).
+            Es un medio de pago de terceros, seguro y ajeno a FERUMI. El efectivo solo está disponible
+            si retirás en Ferumishop. Hasta que Pagopar confirma el pago, el pedido puede quedar pendiente.
+        </p>
+
+        <h2>7. Envíos</h2>
+        <ul>
+            <li><strong>Motobolt (Gran Asunción / Central):</strong> si estás cerca de Ferumishop. Vos pedís el Motobolt cuando te avisemos que el pedido está preparado. El costo del moto lo pagás al conductor. Casi siempre tenemos pedidos en curso: no se puede pedir Motobolt dos veces. Esperá nuestro aviso.</li>
+            <li><strong>Interior:</strong> encomienda / transportadora. El despachante se comunica para coordinar agencia. Puede demorar si hay muchos pedidos.</li>
+            <li><strong>Retiro en local:</strong> pasás a buscar por Ferumishop cuando te avisemos.</li>
+        </ul>
+        <p>El envío de FERUMI (armado y despacho) no incluye el costo del Motobolt ni de la encomienda, salvo que se indique lo contrario.</p>
+
+        <h2>8. Tracking</h2>
+        <p>
+            Podés seguir el pedido en <a href="/tracking">ferumi.shop/tracking</a> con teléfono, correo, cédula o número de pedido.
+            También te podemos pasar el enlace por WhatsApp cuando el pago está confirmado.
+        </p>
+
+        <h2>9. Cambios y devoluciones</h2>
+        <p>
+            Productos de higiene y cosmética abiertos o usados no se devuelven. Si llegó fallado, incompleto
+            o no es lo que pediste, escribinos a <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a>
+            o por WhatsApp con fotos y el número de pedido. Resolvemos caso por caso.
+        </p>
+
+        <h2>10. Uso aceptable</h2>
+        <p>
+            No está permitido usar la web o el WhatsApp para fraude, acoso, spam, o para intentar
+            acceder a pedidos o datos de otras personas. Podemos cancelar pedidos de mala fe.
+        </p>
+
+        <h2>11. Propiedad intelectual</h2>
+        <p>Marca, fotos, videos y textos de FERUMI son de Ferumishop. No se pueden copiar para revender como propios.</p>
+
+        <h2>12. Limitación</h2>
+        <p>
+            FERUMI no responde por cortes de internet, de Pagopar, de WhatsApp/Meta, del Motobolt o de transportadoras,
+            ni por demoras de fuerza mayor. El asistente de IA puede equivocarse: el pedido válido es el que queda
+            confirmado en el sistema después de tu “sí” y del pago.
+        </p>
+
+        <h2>13. Ley aplicable</h2>
+        <p>Se rigen por las leyes de la República del Paraguay. Cualquier reclamo se tramita en Asunción.</p>
+
+        <h2>14. Contacto</h2>
+        <p>
+            <a href="mailto:ferumishop@gmail.com">ferumishop@gmail.com</a> ·
+            WhatsApp del local ·
+            <a href="/contacto">Contacto</a> ·
+            <a href="/privacidad">Privacidad</a> ·
+            <a href="/eliminacion-de-datos">Eliminación de datos</a>
+        </p>
+    </div>
+</main>
+<%- include('../partials/footer.html') %>
+</body>
+</html>

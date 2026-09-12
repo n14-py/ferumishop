@@ -919,6 +919,24 @@ app.get('/contacto', (req, res) => {
     });
 });
 
+app.get(['/terminos', '/terminos-y-condiciones', '/terms'], (req, res) => {
+    res.render('public/terminos', {
+        pageTitle: 'Términos y condiciones'
+    });
+});
+
+app.get(['/privacidad', '/politica-de-privacidad', '/privacy'], (req, res) => {
+    res.render('public/privacidad', {
+        pageTitle: 'Política de privacidad'
+    });
+});
+
+app.get(['/eliminacion-de-datos', '/data-deletion'], (req, res) => {
+    res.render('public/eliminacion-datos', {
+        pageTitle: 'Eliminación de datos'
+    });
+});
+
 // Ruta para la página de Enlaces (Bio Links)
 app.get('/links', (req, res) => {
     res.render('public/enlaces', { pageTitle: 'FERUMI - Enlaces' });
@@ -2788,7 +2806,10 @@ app.get('/sitemap.xml', async (req, res, next) => {
             { url: '/tracking', priority: '0.7' },
             { url: '/regalos/crear', priority: '0.8' },
             { url: '/sobre-nosotros', priority: '0.8' },
-            { url: '/contacto', priority: '0.8' }
+            { url: '/contacto', priority: '0.8' },
+            { url: '/terminos', priority: '0.5' },
+            { url: '/privacidad', priority: '0.5' },
+            { url: '/eliminacion-de-datos', priority: '0.4' }
         ];
 
         staticPages.forEach(page => {

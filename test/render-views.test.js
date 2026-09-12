@@ -234,3 +234,34 @@ test('webhook extract + echo shape', () => {
     assert.equal(info.hash_pedido, 'abc');
     assert.equal(info.numero_pedido, 29008559);
 });
+
+test('legal pages cover store, WhatsApp AI and data deletion email', async () => {
+    const terms = await ejs.renderFile(path.join(views, 'public/terminos.html'), locals({
+        pageTitle: 'Términos',
+        path: '/terminos'
+    }));
+    assert.match(terms, /Términos y condiciones/);
+    assert.match(terms, /asistente de WhatsApp/);
+    assert.match(terms, /Pagopar/);
+    assert.match(terms, /ferumishop@gmail.com/);
+    assert.match(terms, /Motobolt/);
+
+    const privacy = await ejs.renderFile(path.join(views, 'public/privacidad.html'), locals({
+        pageTitle: 'Privacidad',
+        path: '/privacidad'
+    }));
+    assert.match(privacy, /Política de privacidad/);
+    assert.match(privacy, /DeepSeek/);
+    assert.match(privacy, /Eliminar mis datos/);
+    assert.match(privacy, /ferumishop@gmail.com/);
+    assert.match(privacy, /WhatsApp/);
+
+    const deletion = await ejs.renderFile(path.join(views, 'public/eliminacion-datos.html'), locals({
+        pageTitle: 'Eliminación',
+        path: '/eliminacion-de-datos'
+    }));
+    assert.match(deletion, /Eliminación de datos/);
+    assert.match(deletion, /ferumishop@gmail.com/);
+    assert.match(deletion, /30 días/);
+    assert.match(deletion, /User Data Deletion/);
+});
