@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title><%= paid ? 'Pedido pagado' : 'Pagar con Pagopar' %> - FERUMI</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/shop-extras.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+<main class="thanks-wrap">
+    <div class="thanks-card">
+        <% if (typeof siteConfig !== 'undefined' && siteConfig.logoUrl) { %>
+            <img src="<%= siteConfig.logoUrl %>" alt="FERUMI" style="height:52px; margin:0 auto 12px; display:block;">
+        <% } else { %>
+            <div class="thanks-emoji">💖</div>
+        <% } %>
+
+        <% if (cancelled) { %>
+            <h1>Este enlace ya no está activo</h1>
+            <p>El pedido <strong><%= order.orderNumber %></strong> fue cancelado. Escribinos por WhatsApp y lo rearmamos.</p>
+        <% } else if (paid) { %>
+            <h1>¡Pago recibido!</h1>
+            <p>Pedido <strong><%= order.orderNumber %></strong></p>
+            <p>Ya lo estamos preparando. El despachante se comunica con vos en unos instantes.</p>
+            <div class="thanks-actions">
+                <a class="btn-shop" href="<%= trackingUrl %>"><i class="fas fa-map-marker-alt"></i> Ver mi tracking</a>
+            </div>
+        <% } else { %>
+            <h1>Hola <%= order.customerName.split(' ')[0] %> 💖</h1>
+            <p>Tu pedido <strong><%= order.orderNumber %></strong> ya está listo para pagar.</p>
+            <div class="thanks-note" style="text-align:left;">
+                <% (order.items || []).forEach(i => { %>
+                    <div>• <%= i.quantity %>x <%= i.name %></div>
+                <% }) %>
+                <p style="margin-top:10px;"><strong>Total <%= Number(order.totalAmount).toLocaleString('es-PY') %> Gs.</strong></p>
+                <p style="margin:0; font-size:0.92rem;">
+                    Envío:
+                    <%= order.shippingMethod === 'motobolt' ? 'Motobolt' : (order.shippingMethod === 'retiro' ? 'Retiro en Ferumishop' : 'Encomienda') %>
+                </p>
+            </div>
+            <p style="font-size:0.95rem; color:#555;">
+                Pago 100% seguro con <strong>Pagopar</strong>: tarjetas, Tigo Money, Aquí Pago, bancos y cobranzas.
+            </p>
+            <div class="thanks-actions">
+                <a class="btn-shop" href="<%= payUrl %>"><i class="fas fa-lock"></i> Pagar con Pagopar</a>
+            </div>
+            <p style="font-size:0.8rem; color:#888; margin-top:14px;">Enlace privado de WhatsApp FERUMI. No lo compartas.</p>
+        <% } %>
+    </div>
+</main>
+</body>
+</html>

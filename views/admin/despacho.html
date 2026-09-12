@@ -108,7 +108,7 @@
             <div class="card order-card">
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div>
-                        <div class="fw-bold" style="font-size:1.15rem;"><%= order.orderNumber %></div>
+                        <div class="fw-bold" style="font-size:1.15rem;"><%= order.orderNumber %><% if (order.source === 'whatsapp') { %> <span class="badge rounded-pill" style="background:#25D366; font-size:0.7rem; vertical-align:middle;">WhatsApp</span><% } %></div>
                         <div class="text-muted"><%= order.ticketCode %> · <%= new Date(order.createdAt).toLocaleString('es-PY', { timeZone: 'America/Asuncion', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) %></div>
                     </div>
                     <span class="status-pill"><%= statusLabel %></span>
@@ -118,6 +118,7 @@
                     <%= order.customerPhone %> · CI <%= order.customerDocument %><br>
                     Pago: <strong><%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : 'Pagopar' %></strong>
                     (<%= order.paymentStatus || order.status %>)<br>
+                    <% if (order.source === 'whatsapp' && order.checkoutSlug) { %>Canal: WhatsApp · /<%= order.checkoutSlug %><br><% } %>
                     Envío: <strong><%= shipMap[order.shippingMethod] || order.shippingMethod || '—' %></strong>
                     <% if (order.shippingDistanceKm != null) { %> · <%= order.shippingDistanceKm %> km<% } %><br>
                     <% if (order.shippingAddress) { %><%= order.shippingAddress %>, <%= order.shippingCity %> <% if (order.shippingReference) { %>(<%= order.shippingReference %>)<% } %><br><% } %>
