@@ -35,10 +35,22 @@
         .info-panel { background-color: #f0fdf4; border-left: 5px solid #10b981; border-radius: 14px; padding: 12px; font-size: 0.85rem; color: #065f46; }
 
         /* LISTA COMPONENTES VISUALES DE PRODUCTOS (MODAL) */
-        .product-search-container { position: relative; }
-        .product-picker-list { max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 5px; }
+        .product-search-container { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }
+        .product-picker-list {
+            flex: 1;
+            min-height: 160px;
+            max-height: none;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+            padding: 5px;
+        }
         
-        .product-item-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f1f5f9; }
+        .product-item-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f1f5f9; touch-action: manipulation; }
         .product-item-row:last-child { border-bottom: none; }
         .product-item-row:hover, .product-item-row.selected { background-color: #f0f9ff; border-color: #bae6fd; }
         
@@ -49,18 +61,94 @@
         .product-item-row.selected { background-color: #ecfdf5; border-color: #a7f3d0; }
         .product-qty-badge { min-width: 22px; height: 22px; border-radius: 999px; background: #10b981; color: #fff; font-size: 0.72rem; font-weight: 800; display: none; align-items: center; justify-content: center; padding: 0 6px; }
         .product-item-row.selected .product-qty-badge { display: inline-flex; }
+        .product-row-remove {
+            display: none;
+            border: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.72rem;
+            font-weight: 800;
+            border-radius: 8px;
+            padding: 8px 10px;
+            white-space: nowrap;
+        }
+        .product-item-row.selected .product-row-remove { display: inline-flex; align-items: center; }
 
-        .venta-cart { display: flex; flex-direction: column; gap: 8px; }
-        .venta-cart-item { display: grid; grid-template-columns: 46px 1fr; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
-        .venta-cart-item img { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; background: #e2e8f0; }
-        .venta-cart-controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+        #formVenta { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+        #modalVenta .modal-content { max-height: min(96dvh, 100%); display: flex; flex-direction: column; }
+        #modalVenta .modal-body {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        #ventaStepPick { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+        .venta-selected-panel {
+            flex-shrink: 0;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+            padding: 8px 16px;
+            max-height: 40vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+        }
+        .venta-delivery-details summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #d81b60;
+            list-style: none;
+            padding: 4px 0;
+        }
+        .venta-delivery-details summary::-webkit-details-marker { display: none; }
+        .venta-delivery-details[open] { margin-bottom: 8px; }
+
+        .venta-cart { display: flex; flex-direction: column; gap: 6px; }
+        .venta-cart-item { display: grid; grid-template-columns: 40px 1fr; gap: 8px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+        .venta-cart-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; background: #e2e8f0; }
+        .venta-cart-controls { display: flex; align-items: center; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
         .venta-qty-btn { width: 32px; height: 32px; border: none; border-radius: 8px; background: #e2e8f0; font-weight: 800; }
-        .venta-cart-qty { width: 46px; text-align: center; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; height: 32px; }
-        .venta-cart-price { width: 110px; font-weight: 700; border: 1px solid #86efac; border-radius: 8px; height: 32px; padding: 0 8px; }
+        .venta-cart-qty { width: 40px; text-align: center; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; height: 32px; }
+        .venta-cart-price { width: 88px; font-weight: 700; border: 1px solid #86efac; border-radius: 8px; height: 32px; padding: 0 6px; }
+        .venta-remove-btn { border: 1px solid #fecaca; background: #fff; color: #b91c1c; font-weight: 700; font-size: 0.75rem; border-radius: 8px; padding: 6px 8px; }
         .venta-total-bar { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .confirm-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .confirm-item:last-child { border-bottom: none; }
         .confirm-item img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; background: #e2e8f0; }
+
+        @media (max-width: 767.98px) {
+            #modalVenta.modal { padding: 0 !important; align-items: stretch !important; }
+            #modalVenta .modal-dialog {
+                margin: 0;
+                max-width: 100%;
+                width: 100%;
+                height: 100%;
+                min-height: 100%;
+            }
+            #modalVenta .modal-content {
+                height: 100%;
+                min-height: 100dvh;
+                max-height: 100dvh;
+                border-radius: 0;
+            }
+            #modalVenta .modal-body { flex: 1 1 auto; padding: 12px 16px; }
+            #modalVenta .modal-footer {
+                flex-shrink: 0;
+                position: sticky;
+                bottom: 0;
+                z-index: 3;
+                background: #f8fafc;
+            }
+            .venta-selected-panel { padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+        }
+        @media (min-width: 768px) {
+            .product-picker-list { max-height: 280px; flex: 0 1 280px; }
+            #modalVenta .modal-dialog { max-width: 540px; }
+        }
         .caja-tx-card { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
         .caja-tx-card:last-child { border-bottom: none; }
         .caja-tx-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
@@ -343,7 +431,7 @@
 </div>
 
 <div class="modal fade no-print" id="modalVenta" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-dialog modal-fullscreen-sm-down">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header bg-success text-white rounded-top-4 border-0 py-3">
                 <h5 class="modal-title fw-bold" id="ventaModalTitle"><i class="fas fa-cart-plus me-1"></i> Nueva venta</h5>
@@ -353,18 +441,18 @@
                 <input type="hidden" name="itemsJson" id="ventaItemsJson" value="">
                 <div class="modal-body p-4">
                     <div id="ventaStepPick">
-                        <div class="mb-3 border-bottom pb-3">
-                            <label class="form-label fw-bold" style="color: #d81b60;">
-                                <i class="fas fa-motorcycle"></i> Datos para Delivery (Opcional)
-                            </label>
-                            <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del Cliente (Ej: María López)">
-                            <input type="text" name="customerPhone" class="form-control mb-2" placeholder="WhatsApp (Ej: 0981234567)">
-                            <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas (Ej: -25.672376, -57.826487)">
-                            <small class="text-muted">Pegar las coordenadas de Google Maps aquí para generar el QR.</small>
-                        </div>
+                        <details class="venta-delivery-details mb-2">
+                            <summary><i class="fas fa-motorcycle me-1"></i> Datos para Delivery (Opcional)</summary>
+                            <div class="pt-2">
+                                <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del Cliente (Ej: María López)">
+                                <input type="text" name="customerPhone" class="form-control mb-2" placeholder="WhatsApp (Ej: 0981234567)">
+                                <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas (Ej: -25.672376, -57.826487)">
+                                <small class="text-muted">Pegar las coordenadas de Google Maps aquí para generar el QR.</small>
+                            </div>
+                        </details>
 
-                        <div class="mb-3 product-search-container">
-                            <label class="form-label fw-bold text-dark">Elegí uno o varios productos</label>
+                        <div class="product-search-container">
+                            <label class="form-label fw-bold text-dark mb-1">Elegí uno o varios productos</label>
                             <input type="text" id="searchBarProduct" class="form-control mb-2 form-control-lg" placeholder="🔍 Escribe para buscar pestañas, uñas...">
                             <div class="product-picker-list" id="pickerProductContainer">
                                 <% products.forEach(p => { %>
@@ -381,21 +469,9 @@
                                             <p class="product-item-meta">Stock: <%= p.stock %> · Gs. <%= (p.price || 0).toLocaleString('es-PY') %></p>
                                         </div>
                                         <span class="product-qty-badge">0</span>
+                                        <button type="button" class="product-row-remove" data-remove-id="<%= p._id %>">Quitar</button>
                                     </div>
                                 <% }) %>
-                            </div>
-                        </div>
-
-                        <div id="ventaCartEmpty" class="text-muted small mb-2">Tocá productos para agregarlos a esta venta.</div>
-                        <div id="ventaCart" class="venta-cart mb-3"></div>
-                        <div id="ventaTotalBar" class="venta-total-bar d-none">
-                            <div>
-                                <div class="small text-muted fw-bold text-uppercase">Llevás</div>
-                                <div class="fw-bold" id="ventaCountLabel">0 productos</div>
-                            </div>
-                            <div class="text-end">
-                                <div class="small text-muted fw-bold text-uppercase">Total</div>
-                                <div class="fw-bold text-success fs-5" id="ventaTotalLabel">Gs. 0</div>
                             </div>
                         </div>
                     </div>
@@ -409,6 +485,20 @@
                                 <div class="fw-bold" id="ventaConfirmCount">0 productos</div>
                             </div>
                             <div class="fw-bold text-success fs-4" id="ventaConfirmTotal">Gs. 0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="venta-selected-panel" id="ventaSelectedPanel">
+                    <div id="ventaCartEmpty" class="text-muted small mb-0">Tocá un producto para agregarlo. Si te equivocás, tocá <strong>Quitar</strong>.</div>
+                    <div id="ventaCart" class="venta-cart mb-2"></div>
+                    <div id="ventaTotalBar" class="venta-total-bar d-none">
+                        <div>
+                            <div class="small text-muted fw-bold text-uppercase">Llevás</div>
+                            <div class="fw-bold" id="ventaCountLabel">0 productos</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted fw-bold text-uppercase">Total</div>
+                            <div class="fw-bold text-success fs-5" id="ventaTotalLabel">Gs. 0</div>
                         </div>
                     </div>
                 </div>
@@ -552,6 +642,8 @@
         const btnBack = document.getElementById('ventaBtnBack');
         const btnClose = document.getElementById('ventaBtnClose');
         const titleEl = document.getElementById('ventaModalTitle');
+        const selectedPanel = document.getElementById('ventaSelectedPanel');
+        const pickerList = document.getElementById('pickerProductContainer');
         const cart = [];
 
         function gs(n) {
@@ -601,14 +693,16 @@
                 <div class="venta-cart-item">
                     <img src="${esc(item.photo)}" alt="">
                     <div>
-                        <div class="fw-bold text-dark">${esc(item.title)}</div>
-                        <input type="text" class="form-control form-control-sm mt-1" data-variant="${index}" placeholder="Variante (opcional)" value="${esc(item.variant || '')}">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div class="fw-bold text-dark text-truncate">${esc(item.title)}</div>
+                            <button type="button" class="venta-remove-btn" data-remove="${index}"><i class="fas fa-trash-alt me-1"></i>Quitar</button>
+                        </div>
                         <div class="venta-cart-controls">
                             <button type="button" class="venta-qty-btn" data-qty="${index}" data-delta="-1">−</button>
                             <input type="number" min="1" class="venta-cart-qty" data-qty-input="${index}" value="${item.qty}">
                             <button type="button" class="venta-qty-btn" data-qty="${index}" data-delta="1">+</button>
                             <input type="number" min="0" class="venta-cart-price" data-price="${index}" value="${item.price}" placeholder="Precio">
-                            <button type="button" class="btn btn-sm text-danger border-0" data-remove="${index}"><i class="fas fa-trash-alt"></i></button>
+                            <input type="text" class="form-control form-control-sm" data-variant="${index}" placeholder="Variante (opc.)" value="${esc(item.variant || '')}" style="min-width: 90px; flex: 1;">
                         </div>
                     </div>
                 </div>
@@ -621,6 +715,14 @@
             totalLabel.textContent = gs(cartTotal());
             updateRowBadges();
             syncJson();
+        }
+
+        function removeFromCart(id) {
+            const index = cart.findIndex((item) => item.id === id);
+            if (index > -1) {
+                cart.splice(index, 1);
+                renderCart();
+            }
         }
 
         function addProduct(row) {
@@ -654,10 +756,21 @@
         });
 
         rows.forEach(row => {
-            row.addEventListener('click', function() {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('[data-remove-id]')) return;
                 addProduct(this);
             });
         });
+
+        if (pickerList) {
+            pickerList.addEventListener('click', function(e) {
+                const removeBtn = e.target.closest('[data-remove-id]');
+                if (!removeBtn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                removeFromCart(removeBtn.getAttribute('data-remove-id'));
+            });
+        }
 
         cartEl.addEventListener('click', function(e) {
             const qtyBtn = e.target.closest('[data-qty]');
@@ -665,7 +778,12 @@
             if (qtyBtn) {
                 const index = Number(qtyBtn.getAttribute('data-qty'));
                 const delta = Number(qtyBtn.getAttribute('data-delta'));
-                cart[index].qty = Math.max(1, Number(cart[index].qty) + delta);
+                const nextQty = Number(cart[index].qty) + delta;
+                if (nextQty < 1) {
+                    cart.splice(index, 1);
+                } else {
+                    cart[index].qty = nextQty;
+                }
                 renderCart();
             }
             if (removeBtn) {
@@ -705,6 +823,9 @@
             btnConfirm.classList.toggle('d-none', !show);
             btnBack.classList.toggle('d-none', !show);
             btnClose.classList.toggle('d-none', show);
+            if (selectedPanel) selectedPanel.classList.toggle('d-none', show);
+            const body = document.querySelector('#modalVenta .modal-body');
+            if (body) body.scrollTop = 0;
             titleEl.innerHTML = show
                 ? '<i class="fas fa-clipboard-check me-1"></i> Confirmar venta'
                 : '<i class="fas fa-cart-plus me-1"></i> Nueva venta';
