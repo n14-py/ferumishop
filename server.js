@@ -338,6 +338,12 @@ const webOrderSchema = new mongoose.Schema({
     preparedAt: Date,
     deliveredAt: Date,
     isPrinted: { type: Boolean, default: false },
+    source: { type: String, default: 'web' },
+    checkoutSlug: { type: String, unique: true, sparse: true },
+    waFrom: { type: String, default: '', index: true },
+    waPaidNotifiedAt: Date,
+    waPrepNotifiedAt: Date,
+    waDeliveredNotifiedAt: Date,
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -409,7 +415,13 @@ const ImportOrder = mongoose.model('ImportOrder', importOrderSchema);
 // Middlewares básicos de Express
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json({
+    verify: (req, _res, buf) => {
+        if (req.originalUrl && req.originalUrl.split('?')[0] === '/api/whatsapp/webhook') {
+            req.rawBody = buf;
+        }
+    }
+}));
 app.use(require('cookie-parser')());
 
 app.set('trust proxy', 1);
@@ -923,7 +935,8 @@ app.get('/links', (req, res) => {
 // =============================================
 // RUTAS DE CHECKOUT, PAGOPAR, TRACKING Y DESPACHO
 // =============================================
-require('./routes/ecommerce')(app, {
+const registerEcommerce = require('./routes/ecommerce');
+registerEcommerce(app, {
     WebOrder,
     Product,
     Transaction,
@@ -931,7 +944,9 @@ require('./routes/ecommerce')(app, {
     Gift,
     requireAdmin,
     upload,
-    purify
+    purify,
+    onOrderPaid: (order) => require('./lib/wa-agent').notifyPaid(order),
+    onOrderFulfillment: (order, action) => require('./lib/wa-agent').notifyFulfillment(order, action)
 });
 
 function requireBotToken(req, res, next) {
@@ -2814,6 +2829,19 @@ app.get('/sitemap.xml', async (req, res, next) => {
 // MANEJADORES DE ERROR Y ARRANQUE
 // =============================================
 
+require('./routes/whatsapp')(app, {
+    WebOrder,
+    Product,
+    Transaction,
+    SiteConfig,
+    Gift,
+    cloudinary,
+    applyPaidOrder: (order, info) => registerEcommerce.applyPaidOrder({
+        WebOrder, Product, Transaction, SiteConfig, Gift,
+        onOrderPaid: (paidOrder) => require('./lib/wa-agent').notifyPaid(paidOrder)
+    }, order, info)
+});
+
 // Manejador de error 404 (Página no encontrada)
 app.use((req, res, next) => {
     res.status(404).render('public/error', { 
@@ -2839,6 +2867,14 @@ app.use((err, req, res, next) => {
 // Iniciar el servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor FERUMI corriendo en ${process.env.BASE_URL}`);
+    const waCfg = require('./lib/whatsapp').config();
+    const diCfg = require('./lib/deepinfra').config();
+    console.log(waCfg.ok
+        ? '✅ Agente WhatsApp listo (webhook /api/whatsapp/webhook)'
+        : 'ℹ️ Agente WhatsApp en espera: faltan WHATSAPP_TOKEN y WHATSAPP_PHONE_NUMBER_ID');
+    console.log(diCfg.ok
+        ? `✅ DeepInfra listo (${diCfg.model})`
+        : 'ℹ️ DeepInfra en espera: falta DEEPINFRA_API_KEY');
     
     // --- Script para crear el admin por primera vez ---
     const createAdmin = async () => {

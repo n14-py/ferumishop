@@ -14,6 +14,7 @@ function jsonResultado(res, body) {
 async function applyPaidOrder(deps, order, pagoInfo) {
     const { Product, Transaction } = deps;
     if (!order) return order;
+    const alreadyPaid = order.paymentStatus === 'pagado';
 
     if (pagoInfo) {
         if (pagoInfo.numero_pedido) order.pagoparNumero = String(pagoInfo.numero_pedido);
@@ -43,7 +44,7 @@ async function applyPaidOrder(deps, order, pagoInfo) {
             const split = shop.cajaSplit(order.totalAmount, itemsCost);
             const tx = await Transaction.create({
                 type: 'ingreso',
-                description: `Pedido web ${order.orderNumber} (${order.shippingMethod || 'envio'})`,
+                description: `Pedido ${order.source === 'whatsapp' ? 'WhatsApp' : 'web'} ${order.orderNumber} (${order.shippingMethod || 'envio'})`,
                 amount: order.totalAmount,
                 cost: split.cost,
                 reinvestment: split.reinvestment,
@@ -64,6 +65,13 @@ async function applyPaidOrder(deps, order, pagoInfo) {
     }
 
     await order.save();
+    if (paid && !alreadyPaid && order.paymentStatus === 'pagado' && typeof deps.onOrderPaid === 'function') {
+        setImmediate(() => {
+            Promise.resolve(deps.onOrderPaid(order)).catch((err) => {
+                console.error('[whatsapp] onOrderPaid', err);
+            });
+        });
+    }
     return order;
 }
 
@@ -623,6 +631,14 @@ module.exports = function registerEcommerce(app, deps) {
             }
             await order.save();
 
+            if (typeof deps.onOrderFulfillment === 'function') {
+                setImmediate(() => {
+                    Promise.resolve(deps.onOrderFulfillment(order, action)).catch((err) => {
+                        console.error('[whatsapp] onOrderFulfillment', err);
+                    });
+                });
+            }
+
             let waKind = 'preparado_envio';
             if (order.shippingMethod === 'motobolt') waKind = 'preparado_motobolt';
             if (order.shippingMethod === 'retiro') waKind = 'preparado_retiro';
@@ -676,6 +692,14 @@ module.exports = function registerEcommerce(app, deps) {
             shop.appendEvent(order, next);
             order.preparedAt = new Date();
             await order.save();
+
+            if (typeof deps.onOrderFulfillment === 'function') {
+                setImmediate(() => {
+                    Promise.resolve(deps.onOrderFulfillment(order, 'scan')).catch((err) => {
+                        console.error('[whatsapp] onOrderFulfillment scan', err);
+                    });
+                });
+            }
 
             const waKind = order.shippingMethod === 'motobolt' ? 'preparado_motobolt'
                 : order.shippingMethod === 'retiro' ? 'preparado_retiro' : 'preparado_envio';
@@ -774,3 +798,5 @@ module.exports = function registerEcommerce(app, deps) {
         }
     }, 7000);
 };
+
+module.exports.applyPaidOrder = applyPaidOrder;
