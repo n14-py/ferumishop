@@ -130,7 +130,10 @@ test('caja view shows today sales, confirmation and mobile cash book cards', asy
     assert.match(html, /Confirmar venta/);
     assert.match(html, /ventaItemsJson/);
     assert.match(html, /d-md-none/);
-    assert.match(html, /venta-selected-panel/);
+    assert.match(html, /customerName/);
+    assert.match(html, /customerPhone/);
+    assert.match(html, /Datos para Delivery \(Opcional\)/);
     assert.match(html, /Quitar/);
     assert.match(html, /product-picker-list/);
+    assert.match(html, /modal-dialog-scrollable/);
 });
