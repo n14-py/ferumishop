@@ -90,8 +90,8 @@
             flex-shrink: 0;
             border-top: 1px solid #e2e8f0;
             background: #fff;
-            padding: 10px 16px 8px;
-            max-height: 34vh;
+            padding: 8px 16px;
+            max-height: 40vh;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
@@ -107,14 +107,14 @@
         .venta-delivery-details summary::-webkit-details-marker { display: none; }
         .venta-delivery-details[open] { margin-bottom: 8px; }
 
-        .venta-cart { display: flex; flex-direction: column; gap: 8px; }
-        .venta-cart-item { display: grid; grid-template-columns: 46px 1fr; gap: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
-        .venta-cart-item img { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; background: #e2e8f0; }
-        .venta-cart-controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-        .venta-qty-btn { width: 36px; height: 36px; border: none; border-radius: 8px; background: #e2e8f0; font-weight: 800; }
-        .venta-cart-qty { width: 46px; text-align: center; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; height: 36px; }
-        .venta-cart-price { width: 110px; font-weight: 700; border: 1px solid #86efac; border-radius: 8px; height: 36px; padding: 0 8px; }
-        .venta-remove-btn { border: 1px solid #fecaca; background: #fff; color: #b91c1c; font-weight: 700; font-size: 0.8rem; border-radius: 8px; padding: 6px 10px; }
+        .venta-cart { display: flex; flex-direction: column; gap: 6px; }
+        .venta-cart-item { display: grid; grid-template-columns: 40px 1fr; gap: 8px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+        .venta-cart-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; background: #e2e8f0; }
+        .venta-cart-controls { display: flex; align-items: center; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+        .venta-qty-btn { width: 32px; height: 32px; border: none; border-radius: 8px; background: #e2e8f0; font-weight: 800; }
+        .venta-cart-qty { width: 40px; text-align: center; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; height: 32px; }
+        .venta-cart-price { width: 88px; font-weight: 700; border: 1px solid #86efac; border-radius: 8px; height: 32px; padding: 0 6px; }
+        .venta-remove-btn { border: 1px solid #fecaca; background: #fff; color: #b91c1c; font-weight: 700; font-size: 0.75rem; border-radius: 8px; padding: 6px 8px; }
         .venta-total-bar { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .confirm-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .confirm-item:last-child { border-bottom: none; }
@@ -674,14 +674,16 @@
                 <div class="venta-cart-item">
                     <img src="${esc(item.photo)}" alt="">
                     <div>
-                        <div class="fw-bold text-dark">${esc(item.title)}</div>
-                        <input type="text" class="form-control form-control-sm mt-1" data-variant="${index}" placeholder="Variante (opcional)" value="${esc(item.variant || '')}">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div class="fw-bold text-dark text-truncate">${esc(item.title)}</div>
+                            <button type="button" class="venta-remove-btn" data-remove="${index}"><i class="fas fa-trash-alt me-1"></i>Quitar</button>
+                        </div>
                         <div class="venta-cart-controls">
                             <button type="button" class="venta-qty-btn" data-qty="${index}" data-delta="-1">−</button>
                             <input type="number" min="1" class="venta-cart-qty" data-qty-input="${index}" value="${item.qty}">
                             <button type="button" class="venta-qty-btn" data-qty="${index}" data-delta="1">+</button>
                             <input type="number" min="0" class="venta-cart-price" data-price="${index}" value="${item.price}" placeholder="Precio">
-                            <button type="button" class="venta-remove-btn" data-remove="${index}"><i class="fas fa-trash-alt me-1"></i>Quitar</button>
+                            <input type="text" class="form-control form-control-sm" data-variant="${index}" placeholder="Variante (opc.)" value="${esc(item.variant || '')}" style="min-width: 90px; flex: 1;">
                         </div>
                     </div>
                 </div>
