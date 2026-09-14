@@ -68,8 +68,6 @@
             .product-info-section { min-width: 0; width: 100%; max-width: 100%; flex: 1 1 100%; }
             .product-title { font-size: 1.8rem; }
             .btn-cart, .btn-whatsapp { font-size: 1.1rem; padding: 14px; }
-            .product-swipe { max-width: 100%; width: 100%; margin: 0 0 8px; }
-            .product-swipe-viewport { width: 100%; max-height: none; aspect-ratio: 9 / 16; }
         }
 
         .product-swipe { position: relative; max-width: 420px; margin: 0 auto 8px; }
@@ -91,6 +89,11 @@
         .product-swipe-dot { width: 8px; height: 8px; border: none; border-radius: 50%; background: #d9d9d9; padding: 0; cursor: pointer; }
         .product-swipe-dot.active { background: var(--primary-color, #ff4757); }
         .product-swipe-hint { text-align: center; color: #888; font-size: 0.82rem; margin: 8px 0 0; }
+
+        @media (max-width: 768px) {
+            .product-swipe { max-width: 100%; width: 100%; margin: 0 0 8px; }
+            .product-swipe-viewport { width: 100%; max-width: 100%; max-height: none; aspect-ratio: 9 / 16; }
+        }
     </style>
 </head>
 
