@@ -66,6 +66,7 @@
                 <strong id="botLiveState"><%= cfg.enabled ? 'ENCENDIDO' : 'APAGADO' %></strong>
                 · Hoy <span id="botLiveQuota"><%= q.used %> / <%= q.quota %></span> aceptados
                 · Buffer <span id="botLiveBuffer"><%= (locals.buffer && buffer.ready) || 0 %> / 15</span> JSON listos
+                · Prioridad: <span id="botLivePrio"><%= cfg.priorityProductId ? (cfg.priorityProductName || 'un producto') : 'cualquiera' %></span>
                 · Último tick: <span id="botLiveTick"><%= cfg.lastTickResult || 'todavía no corrió (espera ~20s al arrancar el server)' %></span>
             </div>
             <% if (cfg.lastError) { %>
@@ -127,11 +128,26 @@
                             <label class="form-check-label" for="autoDispatch">Enviar solo al VPS</label>
                         </div>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Prioridad de producto</label>
+                        <select name="priorityProductId" class="form-select form-select-lg bg-light">
+                            <option value="">Cualquiera — mezcla todos, puede repetir (clips distintos)</option>
+                            <% const prioId = String(cfg.priorityProductId || ''); let prioInList = false; %>
+                            <% (eligible || []).forEach(function(p) { %>
+                                <% if (String(p._id) === prioId) prioInList = true; %>
+                                <option value="<%= p._id %>" <%= String(p._id) === prioId ? 'selected' : '' %>><%= p.name %></option>
+                            <% }); %>
+                            <% if (prioId && !prioInList) { %>
+                                <option value="<%= prioId %>" selected><%= cfg.priorityProductName || 'Producto en prioridad' %> (sin stock ahora)</option>
+                            <% } %>
+                        </select>
+                        <div class="form-text">Si no elegís nada, toma cualquiera con stock. Si elegís uno, todos los Shorts son de ese producto. Los clips se mezclan, así que puede repetir y no sale igual.</div>
+                    </div>
                     <div class="col-12 col-md-3">
                         <button class="btn btn-dark w-100 py-3 rounded-pill fw-bold" type="submit">Guardar</button>
                     </div>
                 </form>
-                <p class="small text-muted mt-3 mb-0">Si está encendido, junta hasta 15 JSON de productos con stock (clips al azar). Gemma insiste 5 veces si el JSON sale mal; si no, cambia de producto. Cada minuto intenta mandar uno al VPS ferumishopvideos; si está ocupado no pasa nada, el JSON sigue guardado. Recién cuando el bot ACEPTA suma 1 a la cuota. Cuando el bot avisa que terminó, manda el siguiente y recién ahí arma otro JSON para rellenar el buffer. Los JSON viejos se borran solos.</p>
+                <p class="small text-muted mt-3 mb-0">Si está encendido, junta hasta 15 JSON. Puede repetir el mismo producto: los clips de R2 se mezclan y el guion cambia, no sale el mismo video. Gemma insiste 5 veces si el JSON sale mal. Cada minuto intenta mandar uno al VPS; si está ocupado el JSON sigue guardado. Recién cuando el bot ACEPTA suma 1 a la cuota. Si ponés prioridad, solo hace ese producto.</p>
             </div>
 
             <div class="card app-card p-4 mb-4">
@@ -199,17 +215,34 @@
                                         <div class="product-img bg-light d-flex align-items-center justify-content-center text-muted"><i class="fas fa-video"></i></div>
                                     <% } %>
                                     <div class="flex-grow-1 min-width-0">
-                                        <h6 class="mb-1 fw-bold text-dark"><%= product.name %></h6>
+                                        <h6 class="mb-1 fw-bold text-dark">
+                                            <%= product.name %>
+                                            <% if (String(cfg.priorityProductId || '') === String(product._id)) { %>
+                                                <span class="badge bg-warning text-dark rounded-pill">prioridad</span>
+                                            <% } %>
+                                        </h6>
                                         <div class="small text-muted">
                                             <%= product.category ? product.category.name : 'Sin categoría' %>
                                             · stock <%= product.hasVariants ? (product.variants || []).reduce((s,v)=>s+(v.stock||0),0) : (product.stock || 0) %>
                                             · <%= (product.videos || []).length %> clip(s) R2
                                         </div>
                                     </div>
-                                    <form action="/admin/videos/generar" method="POST" class="m-0">
-                                        <input type="hidden" name="productId" value="<%= product._id %>">
-                                        <button class="btn btn-sm btn-primary rounded-pill px-3" <%= gemmaOk ? '' : 'disabled' %>>JSON</button>
-                                    </form>
+                                    <div class="d-flex flex-column flex-sm-row gap-2">
+                                        <form action="/admin/videos/prioridad" method="POST" class="m-0">
+                                            <% const isPrio = String(cfg.priorityProductId || '') === String(product._id); %>
+                                            <% if (isPrio) { %>
+                                                <input type="hidden" name="productId" value="">
+                                                <button class="btn btn-sm btn-warning rounded-pill px-3" type="submit">Quitar prioridad</button>
+                                            <% } else { %>
+                                                <input type="hidden" name="productId" value="<%= product._id %>">
+                                                <button class="btn btn-sm btn-outline-warning rounded-pill px-3" type="submit">Prioridad</button>
+                                            <% } %>
+                                        </form>
+                                        <form action="/admin/videos/generar" method="POST" class="m-0">
+                                            <input type="hidden" name="productId" value="<%= product._id %>">
+                                            <button class="btn btn-sm btn-primary rounded-pill px-3" <%= gemmaOk ? '' : 'disabled' %>>JSON</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         <% }) %>
@@ -353,6 +386,12 @@
                 if (quota) quota.textContent = (q.used || 0) + ' / ' + (q.quota || 0);
                 const liveBuffer = document.getElementById('botLiveBuffer');
                 if (liveBuffer && data.buffer) liveBuffer.textContent = (data.buffer.ready || 0) + ' / ' + (data.buffer.limit || 15);
+                const livePrio = document.getElementById('botLivePrio');
+                if (livePrio && data.settings) {
+                    livePrio.textContent = data.settings.priorityProductId
+                        ? (data.settings.priorityProductName || 'un producto')
+                        : 'cualquiera';
+                }
                 if (tick) tick.textContent = settings.lastTickResult || 'todavía no corrió';
                 if (quotaLabel) quotaLabel.textContent = (q.used || 0) + ' / ' + (q.quota || 0);
                 if (quotaBar && q.quota) quotaBar.style.width = Math.min(100, Math.round((q.used / q.quota) * 100)) + '%';
