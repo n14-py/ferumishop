@@ -42,6 +42,7 @@ async function adminPageLocals(Product) {
         r2Base: dash.r2.publicBase,
         scheduler: dash.scheduler,
         counts: dash.counts,
+        buffer: dash.buffer || { ready: 0, limit: 15 },
         batchRunning: dash.scheduler.batchRunning || dash.scheduler.ticking
     };
 }
@@ -85,7 +86,7 @@ function registerVideos(app, deps) {
             const enabled = !current.enabled;
             await videoBot.saveSettings({ enabled });
             req.session.success = enabled
-                ? 'Bot ENCENDIDO. Va a armar JSON solo, de productos con stock y clips R2 al azar.'
+                ? 'Bot ENCENDIDO. Junta 15 JSON, insiste con Gemma y despacha solo cuando el VPS acepta.'
                 : 'Bot APAGADO. No va a generar más JSON hasta que lo enciendas.';
         } catch (err) {
             req.session.error = err.message;
@@ -100,7 +101,7 @@ function registerVideos(app, deps) {
                 keepDays: req.body.keepDays,
                 autoDispatch: truthy(req.body.autoDispatch)
             });
-            req.session.success = `Guardado: ${saved.dailyQuota} JSON por día, se borran a los ${saved.keepDays} días.`;
+            req.session.success = `Guardado: ${saved.dailyQuota} videos aceptados por día, se borran a los ${saved.keepDays} días.`;
         } catch (err) {
             req.session.error = err.message;
         }
@@ -112,9 +113,11 @@ function registerVideos(app, deps) {
             const out = await videoBot.runTick({ Product, SiteConfig, force: true });
             req.session.success = out.skipped
                 ? `No corrió: ${out.reason}. ${out.purged ? `JSON viejos borrados: ${out.purged.purged}.` : ''}`
-                : (out.batch
-                    ? `Lote: ${out.batch.generated} JSON, ${out.batch.failed} errores, ${out.batch.skipped} saltados.`
-                    : (out.error || 'Tick listo.'));
+                : (out.dispatched?.sent
+                    ? `El bot aceptó un JSON. Buffer ${out.ready || 0}/15. Cuota ${out.quota?.used || 0}/${out.quota?.quota || 0}.`
+                    : (out.batch
+                        ? `Buffer ${out.ready || 0}/15. Lote: ${out.batch.generated} JSON, ${out.batch.failed} errores. Despacho: ${out.dispatched?.reason || 'no'}.`
+                        : (out.error || 'Tick listo.')));
             if (out.error) req.session.error = out.error;
         } catch (err) {
             req.session.error = err.message;

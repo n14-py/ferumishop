@@ -44,7 +44,7 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="fw-bold text-dark mb-1">Bot de Shorts FERUMI</h2>
-                    <p class="text-muted mb-0">Elige solo productos con stock, toma clips de R2 al azar, arma el JSON y lo manda al VPS. Acá ves logs, errores y cada JSON.</p>
+                    <p class="text-muted mb-0">Junta hasta 15 JSON listos, insiste 5 veces con Gemma y si no cambia de producto. Cada minuto manda uno al VPS; si el bot está ocupado el JSON queda. Recién cuando el bot acepta suma 1 a la cuota.</p>
                 </div>
                 <form action="/admin/videos/toggle" method="POST" class="m-0">
                     <% if (cfg.enabled) { %>
@@ -64,7 +64,8 @@
 
             <div class="alert <%= cfg.enabled ? 'alert-success' : 'alert-secondary' %> rounded-4" id="botLiveBanner">
                 <strong id="botLiveState"><%= cfg.enabled ? 'ENCENDIDO' : 'APAGADO' %></strong>
-                · Hoy <span id="botLiveQuota"><%= q.used %> / <%= q.quota %></span> JSON
+                · Hoy <span id="botLiveQuota"><%= q.used %> / <%= q.quota %></span> aceptados
+                · Buffer <span id="botLiveBuffer"><%= (locals.buffer && buffer.ready) || 0 %> / 15</span> JSON listos
                 · Último tick: <span id="botLiveTick"><%= cfg.lastTickResult || 'todavía no corrió (espera ~20s al arrancar el server)' %></span>
             </div>
             <% if (cfg.lastError) { %>
@@ -107,13 +108,13 @@
 
             <div class="card app-card p-4 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="fw-bold mb-0">Cuota de hoy</h5>
+                    <h5 class="fw-bold mb-0">Cuota de hoy (videos que el bot aceptó)</h5>
                     <span class="fw-bold" id="quotaLabel"><%= q.used %> / <%= q.quota %></span>
                 </div>
                 <div class="quota-bar mb-3"><span id="quotaBar" style="width: <%= pct %>%"></span></div>
                 <form action="/admin/videos/config" method="POST" class="row g-3 align-items-end">
                     <div class="col-6 col-md-3">
-                        <label class="form-label fw-bold">JSON por día</label>
+                        <label class="form-label fw-bold">Videos aceptados por día</label>
                         <input type="number" name="dailyQuota" class="form-control form-control-lg bg-light" min="1" max="200" value="<%= cfg.dailyQuota %>">
                     </div>
                     <div class="col-6 col-md-3">
@@ -130,7 +131,7 @@
                         <button class="btn btn-dark w-100 py-3 rounded-pill fw-bold" type="submit">Guardar</button>
                     </div>
                 </form>
-                <p class="small text-muted mt-3 mb-0">Si está encendido, cada 10 minutos arma hasta 5 JSON de productos con stock (clips al azar). Cuando llega a la cuota del día, para. Los JSON viejos se borran solos para siempre tener videos nuevos.</p>
+                <p class="small text-muted mt-3 mb-0">Si está encendido, junta hasta 15 JSON de productos con stock (clips al azar). Gemma insiste 5 veces si el JSON sale mal; si no, cambia de producto. Cada minuto intenta mandar uno al VPS ferumishopvideos; si está ocupado no pasa nada, el JSON sigue guardado. Recién cuando el bot ACEPTA suma 1 a la cuota. Cuando el bot avisa que terminó, manda el siguiente y recién ahí arma otro JSON para rellenar el buffer. Los JSON viejos se borran solos.</p>
             </div>
 
             <div class="card app-card p-4 mb-4">
@@ -350,6 +351,8 @@
                 const quotaBar = document.getElementById('quotaBar');
                 if (state) state.textContent = settings.enabled ? 'ENCENDIDO' : 'APAGADO';
                 if (quota) quota.textContent = (q.used || 0) + ' / ' + (q.quota || 0);
+                const liveBuffer = document.getElementById('botLiveBuffer');
+                if (liveBuffer && data.buffer) liveBuffer.textContent = (data.buffer.ready || 0) + ' / ' + (data.buffer.limit || 15);
                 if (tick) tick.textContent = settings.lastTickResult || 'todavía no corrió';
                 if (quotaLabel) quotaLabel.textContent = (q.used || 0) + ' / ' + (q.quota || 0);
                 if (quotaBar && q.quota) quotaBar.style.width = Math.min(100, Math.round((q.used / q.quota) * 100)) + '%';
