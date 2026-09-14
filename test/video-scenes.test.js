@@ -66,6 +66,27 @@ test('extractJsonObject strips markdown fences', () => {
     assert.equal(parsed.youtube_title, 'Hola');
 });
 
+test('extractJsonObject accepts trailing commas from Gemma', () => {
+    const parsed = gemma.extractJsonObject('{"youtube_title":"Hola","scenes":[{"text":"a",},],}');
+    assert.equal(parsed.youtube_title, 'Hola');
+    assert.equal(parsed.scenes[0].text, 'a');
+});
+
+test('botAccepted and botBusy match ferumishopvideos lock', () => {
+    assert.equal(videoBot.botAccepted(202), true);
+    assert.equal(videoBot.botAccepted(200), true);
+    assert.equal(videoBot.botAccepted(503), false);
+    assert.equal(videoBot.botBusy(503), true);
+    assert.equal(videoBot.botBusy(429), true);
+    assert.equal(videoBot.botBusy(202), false);
+});
+
+test('buffer of 15, 5 Gemma retries, dispatch every minute', () => {
+    assert.equal(videoBot.BUFFER_SIZE_LIMIT, 15);
+    assert.equal(videoBot.JSON_ATTEMPTS, 5);
+    assert.equal(videoBot.DISPATCH_MS, 60 * 1000);
+});
+
 test('finalizePayload matches ferumishopvideos: type video, texto_pantalla, no mapa, max 85s', () => {
     const product = sampleProduct();
     const shop = scenes.shopContext(siteConfig);
@@ -256,6 +277,7 @@ test('videos admin view renders eligible products', async () => {
         r2Base: 'https://videos.ferumi.shop',
         settings: { enabled: true, dailyQuota: 50, keepDays: 2, autoDispatch: true, lastTickResult: '', lastError: '' },
         quota: { used: 0, remaining: 50, quota: 50 },
+        buffer: { ready: 4, limit: 15 },
         logs: [{ level: 'info', event: 'scheduler_start', message: 'Bot de Shorts en marcha', createdAt: new Date() }],
         pings: [],
         scheduler: { started: true, ticking: false, batchRunning: false },
@@ -269,9 +291,10 @@ test('videos admin view renders eligible products', async () => {
     assert.match(html, /VIDEO_BOT_URL/);
     assert.match(html, /Videos Shorts/);
     assert.match(html, /Apagar bot/);
-    assert.match(html, /JSON por día/);
+    assert.match(html, /Videos aceptados por día/);
     assert.match(html, /Logs en vivo/);
     assert.match(html, /Correr ahora/);
     assert.match(html, /Clips R2 al azar/);
+    assert.match(html, /15 JSON/);
     assert.match(html, /50/);
 });
