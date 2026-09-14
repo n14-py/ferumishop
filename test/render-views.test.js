@@ -67,6 +67,7 @@ test('product detail shows at most two videos', async () => {
     assert.match(html, /product-swipe/);
     assert.match(html, /product-swipe-slide is-video/);
     assert.match(html, /Deslizá: primero las fotos, después los videos/);
+    assert.match(html, /max-width: 100%/);
     assert.equal((html.match(/product-swipe-slide is-video/g) || []).length, 2);
 });
 
