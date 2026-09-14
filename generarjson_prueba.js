@@ -43,8 +43,8 @@ function printCheck(check) {
 async function main() {
     const cfg = gemma.config();
     console.log('=== FERUMI · generar JSON de prueba para ferumishopvideos ===');
-    console.log(`Modelo: ${cfg.model}`);
-    console.log(`Claves: ${cfg.keyCount}`);
+    console.log(`Modelos: ${cfg.models.join(' → ')}`);
+    console.log(`Claves Google: ${cfg.keyCount}`);
 
     if (!cfg.ok) {
         console.error('\nFalta GEMINI_API_KEY en el .env (podés sumar GEMINI_API_KEY_2 … _5).');
@@ -79,6 +79,13 @@ async function main() {
 }
 
 main().catch((err) => {
-    console.error('\nError generando el JSON:', err.message || err);
+    console.error('\nNo se pudo generar el JSON. Eso lo mandó Google/la IA, no el armado del archivo.');
+    console.error(err.message || err);
+    if (err.model) console.error(`Modelo: ${err.model}`);
+    if (err.status) console.error(`HTTP: ${err.status}`);
+    if (Array.isArray(err.tried) && err.tried.length) {
+        console.error('Intentos:');
+        err.tried.forEach((line) => console.error(`  - ${line}`));
+    }
     process.exit(1);
 });

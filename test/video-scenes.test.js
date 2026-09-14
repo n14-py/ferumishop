@@ -66,6 +66,19 @@ test('extractJsonObject strips markdown fences', () => {
     assert.equal(parsed.youtube_title, 'Hola');
 });
 
+test('Gemma REST retries 500 Internal error and does not send safety settings', () => {
+    assert.equal(gemma.isRetryableError({ message: 'Internal error encountered.', status: 500 }), true);
+    assert.equal(gemma.isQuotaError({ message: 'Internal error encountered.', status: 500 }), false);
+    assert.ok(gemma.listedModels().includes('gemma-4-26b-a4b-it'));
+    assert.ok(gemma.listedModels().includes('gemma-4-31b-it'));
+    const body = gemma.restBody('hola linda');
+    assert.equal(body.contents[0].parts[0].text, 'hola linda');
+    assert.equal(body.contents[0].role, undefined);
+    assert.equal(body.safetySettings, undefined);
+    assert.equal(body.generationConfig.thinkingConfig.thinkingLevel, 'minimal');
+    assert.equal(gemma.restBody('x', { thinking: false }).generationConfig.thinkingConfig, undefined);
+});
+
 test('finalizePayload matches ferumishopvideos: type video, texto_pantalla, no mapa, max 85s', () => {
     const product = sampleProduct();
     const shop = scenes.shopContext(siteConfig);
