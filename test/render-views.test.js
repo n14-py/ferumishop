@@ -64,6 +64,10 @@ test('product detail shows at most two videos', async () => {
     assert.match(html, /https:\/\/r2\/v1\.mp4/);
     assert.match(html, /https:\/\/r2\/v2\.mp4/);
     assert.doesNotMatch(html, /https:\/\/r2\/v3\.mp4/);
+    assert.match(html, /product-swipe/);
+    assert.match(html, /product-swipe-slide is-video/);
+    assert.match(html, /Deslizá: primero las fotos, después los videos/);
+    assert.equal((html.match(/product-swipe-slide is-video/g) || []).length, 2);
 });
 
 test('tracking view renders', async () => {
@@ -192,6 +196,26 @@ test('despacho admin view renders', async () => {
     assert.match(html, /Marcar PREPARADO/);
     assert.match(html, /ya está preparado o entregado/);
     assert.match(html, /alreadyDone/);
+});
+
+test('dashboard shows shorts bot status', async () => {
+    const html = await ejs.renderFile(path.join(views, 'admin/dashboard.html'), {
+        filename: path.join(views, 'admin/dashboard.html'),
+        path: '/admin/dashboard',
+        pageTitle: 'Dashboard',
+        mostViewedProducts: [],
+        stats: {
+            totalProducts: 3,
+            totalCategories: 2,
+            pendingGifts: 0,
+            pendingDispatch: 1,
+            paidToday: 2,
+            videoBot: { enabled: true, used: 12, quota: 50, last: 'ok' }
+        }
+    });
+    assert.match(html, /Bot Shorts/);
+    assert.match(html, /12\/50 JSON hoy/);
+    assert.match(html, /\/admin\/videos/);
 });
 
 test('edit product shows R2 video uploader', async () => {

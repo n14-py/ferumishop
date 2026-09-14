@@ -165,11 +165,48 @@ test('clampDuration never exceeds 85 seconds', () => {
     assert.equal(payload.scenes.some((s) => s.type === 'mapa'), false);
 });
 
-test('clampBatch stays between 1 and 30', () => {
+test('quota helpers use Paraguay day and default 50 JSON', () => {
+    const start = videoBot.startOfAsuncionDay();
+    assert.ok(start instanceof Date);
+    assert.ok(Date.now() - start.getTime() < 24 * 60 * 60 * 1000 + 2000);
+    const s = videoBot.publicSettings({ enabled: false, dailyQuota: 80, keepDays: 2, autoDispatch: true });
+    assert.equal(s.enabled, false);
+    assert.equal(s.dailyQuota, 80);
+    assert.equal(s.keepDays, 2);
     assert.equal(videoBot.clampBatch(20), 20);
-    assert.equal(videoBot.clampBatch(50), 30);
-    assert.equal(videoBot.clampBatch(0), 20);
+    assert.equal(videoBot.clampBatch(50), 50);
+    assert.equal(videoBot.clampBatch(0), 5);
     assert.equal(videoBot.clampBatch('7'), 7);
+    assert.equal(videoBot.clampQuota(50), 50);
+    assert.equal(videoBot.clampQuota(0), 50);
+    assert.equal(videoBot.clampQuota(999), 200);
+    assert.equal(videoBot.clampKeepDays(2), 2);
+    assert.equal(videoBot.clampKeepDays(0), 2);
+});
+
+test('assignProductMedia can pick random clips from the whole R2 list', () => {
+    const videos = Array.from({ length: 20 }, (_, i) => ({
+        url: `https://videos.ferumi.shop/productos/1/clip-${i}.mp4`
+    }));
+    const product = sampleProduct({ videos });
+    const seen = new Set();
+    for (let i = 0; i < 30; i += 1) {
+        const payload = { scenes: eightScenes().map((s) => ({ ...s })) };
+        scenes.assignProductMedia(payload, product, { random: true });
+        payload.video_urls_used.forEach((url) => seen.add(url));
+        payload.scenes.forEach((s) => {
+            assert.match(s.video_url, /videos\.ferumi\.shop\/productos\/1\/clip-\d+\.mp4/);
+        });
+    }
+    assert.ok(seen.size > 2, 'should not stay stuck on the first two clips');
+});
+
+test('shuffleArray keeps the same items', () => {
+    const input = [1, 2, 3, 4, 5, 6, 7, 8];
+    const out = scenes.shuffleArray(input);
+    assert.equal(out.length, 8);
+    assert.deepEqual([...out].sort((a, b) => a - b), input);
+    assert.deepEqual(input, [1, 2, 3, 4, 5, 6, 7, 8]);
 });
 
 test('prompt talks about overlay, no map, 85s and ferumishopvideos', () => {
@@ -203,6 +240,8 @@ test('videos admin view renders eligible products', async () => {
             status: 'json_ready',
             sceneCount: 8,
             metrics: { words: 180, estimatedSeconds: 78 },
+            videoUrlsUsed: ['https://videos.ferumi.shop/a.mp4'],
+            hasJson: true,
             error: ''
         }],
         gemmaOk: true,
@@ -211,6 +250,14 @@ test('videos admin view renders eligible products', async () => {
         botUrl: '',
         botReady: false,
         batchRunning: false,
+        r2Ok: true,
+        r2Base: 'https://videos.ferumi.shop',
+        settings: { enabled: true, dailyQuota: 50, keepDays: 2, autoDispatch: true, lastTickResult: '', lastError: '' },
+        quota: { used: 0, remaining: 50, quota: 50 },
+        logs: [{ level: 'info', event: 'scheduler_start', message: 'Bot de Shorts en marcha', createdAt: new Date() }],
+        pings: [],
+        scheduler: { started: true, ticking: false, batchRunning: false },
+        counts: {},
         success: null,
         error: null
     });
@@ -219,5 +266,10 @@ test('videos admin view renders eligible products', async () => {
     assert.match(html, /gemma-4-31b-it/);
     assert.match(html, /VIDEO_BOT_URL/);
     assert.match(html, /Videos Shorts/);
-    assert.match(html, /texto en pantalla/);
+    assert.match(html, /Apagar bot/);
+    assert.match(html, /JSON por día/);
+    assert.match(html, /Logs en vivo/);
+    assert.match(html, /Correr ahora/);
+    assert.match(html, /Clips R2 al azar/);
+    assert.match(html, /50/);
 });

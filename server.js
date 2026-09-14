@@ -1639,12 +1639,26 @@ app.get('/admin/dashboard', requireAdmin, async (req, res, next) => {
             .limit(5)
             .populate('category');
         
+        let videoBotStats = { enabled: false, used: 0, quota: 50, last: '' };
+        try {
+            const dash = await require('./lib/video-bot').dashboard({ Product });
+            videoBotStats = {
+                enabled: dash.settings.enabled,
+                used: dash.quota.used,
+                quota: dash.quota.quota,
+                last: dash.settings.lastTickResult || ''
+            };
+        } catch (err) {
+            console.warn('[videos] dashboard stats:', err.message);
+        }
+
         const stats = {
             totalProducts: totalProducts,
             totalCategories: totalCategories,
             pendingGifts: pendingGifts,
             pendingDispatch,
-            paidToday
+            paidToday,
+            videoBot: videoBotStats
         };
 
         res.render('admin/dashboard', {
@@ -2906,6 +2920,7 @@ app.listen(PORT, () => {
     console.log(videoCfg.ok
         ? `✅ VPS ferumishopvideos: ${videoCfg.urls.join(', ')}`
         : 'ℹ️ VPS ferumishopvideos en espera: falta VIDEO_BOT_URL');
+    require('./lib/video-bot').startScheduler({ Product, SiteConfig });
     
     // --- Script para crear el admin por primera vez ---
     const createAdmin = async () => {

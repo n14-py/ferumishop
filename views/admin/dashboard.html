@@ -110,6 +110,20 @@
                         </div>
                     </a>
                 </div>
+
+                <div class="col-12">
+                    <a href="/admin/videos" class="text-decoration-none">
+                        <div class="card app-card h-100 p-3 d-flex flex-row align-items-center justify-content-between">
+                            <div>
+                                <div class="stat-value"><%= stats.videoBot ? (stats.videoBot.enabled ? 'ON' : 'OFF') : '—' %></div>
+                                <div class="stat-label">Bot Shorts · <%= stats.videoBot ? (stats.videoBot.used + '/' + stats.videoBot.quota + ' JSON hoy') : 'Videos' %></div>
+                            </div>
+                            <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                                <i class="fas fa-clapperboard"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
                 
             </div>
 
