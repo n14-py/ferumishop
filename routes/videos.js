@@ -99,9 +99,28 @@ function registerVideos(app, deps) {
             const saved = await videoBot.saveSettings({
                 dailyQuota: req.body.dailyQuota,
                 keepDays: req.body.keepDays,
-                autoDispatch: truthy(req.body.autoDispatch)
+                autoDispatch: truthy(req.body.autoDispatch),
+                priorityProductId: req.body.priorityProductId
             });
-            req.session.success = `Guardado: ${saved.dailyQuota} videos aceptados por día, se borran a los ${saved.keepDays} días.`;
+            const prio = videoBot.normalizePriorityProductId(saved.priorityProductId);
+            req.session.success = prio
+                ? `Guardado: ${saved.dailyQuota} videos/día. Prioridad fija en un producto.`
+                : `Guardado: ${saved.dailyQuota} videos/día. Prioridad cualquiera (puede repetir productos, clips mezclados).`;
+        } catch (err) {
+            req.session.error = err.message;
+        }
+        req.session.save(() => res.redirect('/admin/videos'));
+    });
+
+    app.post('/admin/videos/prioridad', requireAdmin, async (req, res) => {
+        try {
+            const saved = await videoBot.saveSettings({
+                priorityProductId: req.body.productId || ''
+            });
+            const prio = videoBot.normalizePriorityProductId(saved.priorityProductId);
+            req.session.success = prio
+                ? 'Prioridad fijada. El bot va a hacer Shorts solo de ese producto (clips mezclados).'
+                : 'Prioridad cualquiera. El bot mezcla todos los productos con stock, y puede repetir.';
         } catch (err) {
             req.session.error = err.message;
         }
