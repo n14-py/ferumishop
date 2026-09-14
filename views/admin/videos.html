@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Videos Shorts - Panel FERUMI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        body { background-color: #f8f9fc; }
+        .app-card { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-title { font-weight: 800; color: var(--admin-primary-dark); margin: 0; font-size: 1.2rem; }
+        .product-img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; }
+        .json-box { max-height: 70vh; overflow: auto; background: #111827; color: #e5e7eb; border-radius: 12px; padding: 16px; font-size: 12px; }
+        .status-pill { font-size: 0.75rem; }
+        @media (min-width: 768px) { .admin-header { display: none; } }
+    </style>
+</head>
+<body>
+<div class="admin-wrapper">
+    <%- include('./partials/sidebar.html') %>
+    <div class="main-content-wrapper">
+        <header class="admin-header bg-white px-3 py-3 sticky-top">
+            <button class="menu-toggle" id="menu-toggle" style="border:none; background:none; font-size:1.5rem; color:var(--admin-primary);"><i class="fas fa-bars"></i></button>
+            <h1 class="header-title">Videos Shorts</h1>
+            <div style="width: 24px;"></div>
+        </header>
+
+        <main class="main-content p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">Bot de Shorts FERUMI</h2>
+                    <p class="text-muted mb-0">Gemma arma el JSON: voz TTS + texto en pantalla por escena + 1 clip R2. Sin mapa. Máximo 85 segundos. Después lo mandamos al VPS de ferumishopvideos.</p>
+                </div>
+            </div>
+
+            <% if (locals.success) { %><div class="alert alert-success alert-dismissible fade show rounded-4"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
+            <% if (locals.error) { %><div class="alert alert-danger alert-dismissible fade show rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card app-card p-3 h-100">
+                        <div class="small text-muted text-uppercase fw-bold">Gemma 4</div>
+                        <div class="fw-bold mt-1"><%= gemmaOk ? 'Lista · ' + gemmaModel : 'Falta GEMINI_API_KEY' %></div>
+                        <div class="small text-muted"><%= gemmaKeys || 0 %> clave(s) rotativa(s)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card app-card p-3 h-100">
+                        <div class="small text-muted text-uppercase fw-bold">VPS ferumishopvideos</div>
+                        <div class="fw-bold mt-1"><%= botReady ? botUrl : 'Todavía no configurado' %></div>
+                        <div class="small text-muted"><%= botReady ? 'Se envía a /generate_video' : 'Poné VIDEO_BOT_URL cuando el VPS esté vivo' %></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card app-card p-3 h-100">
+                        <div class="small text-muted text-uppercase fw-bold">Elegibles ahora</div>
+                        <div class="fw-bold mt-1"><%= eligible ? eligible.length : 0 %> productos</div>
+                        <div class="small text-muted">Con stock y video en Cloudflare R2</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card app-card p-4 mb-4">
+                <h5 class="fw-bold mb-2">Generar lote viral (20 a 30)</h5>
+                <p class="text-muted small mb-3">Gemma elige productos con stock, verifica los clips de R2 y escribe un Short de venta (Paraguay, Motobolt, WhatsApp) con texto en pantalla en cada escena. Sin mapa. El video no pasa de 85s.</p>
+                <form action="/admin/videos/generar" method="POST" class="row g-2 align-items-end">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-bold">Cantidad</label>
+                        <input type="number" name="count" class="form-control form-control-lg bg-light" min="1" max="30" value="20">
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" name="dispatch" value="1" id="dispatchBatch" <%= botReady ? '' : 'disabled' %>>
+                            <label class="form-check-label" for="dispatchBatch">Enviar al VPS ahora</label>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;" <%= (!gemmaOk || batchRunning) ? 'disabled' : '' %>>
+                            <i class="fas fa-wand-magic-sparkles me-2"></i>
+                            <%= batchRunning ? 'Lote en curso...' : 'Generar lote con Gemma' %>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card app-card overflow-hidden mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-clapperboard me-2 text-primary"></i> Productos listos para Short</h6>
+                    <span class="badge bg-primary rounded-pill"><%= eligible ? eligible.length : 0 %></span>
+                </div>
+                <div class="list-group list-group-flush">
+                    <% if (eligible && eligible.length) { %>
+                        <% eligible.forEach(product => { %>
+                            <div class="list-group-item border-0 border-bottom p-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <% if (product.photos && product.photos[0]) { %>
+                                        <img src="<%= product.photos[0] %>" alt="" class="product-img">
+                                    <% } else { %>
+                                        <div class="product-img bg-light d-flex align-items-center justify-content-center text-muted"><i class="fas fa-video"></i></div>
+                                    <% } %>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <h6 class="mb-1 fw-bold text-dark"><%= product.name %></h6>
+                                        <div class="small text-muted">
+                                            <%= product.category ? product.category.name : 'Sin categoría' %>
+                                            · stock <%= product.hasVariants ? (product.variants || []).reduce((s,v)=>s+(v.stock||0),0) : (product.stock || 0) %>
+                                            · <%= (product.videos || []).length %> clip(s) R2
+                                        </div>
+                                    </div>
+                                    <form action="/admin/videos/generar" method="POST" class="m-0">
+                                        <input type="hidden" name="productId" value="<%= product._id %>">
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3" <%= gemmaOk ? '' : 'disabled' %>>JSON</button>
+                                    </form>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="p-5 text-center text-muted">
+                            <i class="fas fa-video-slash fa-3x mb-3 opacity-50"></i>
+                            <h5 class="fw-bold">Nadie tiene stock + video R2</h5>
+                            <p class="mb-0">Subí clips en el producto y que tenga stock. Gemma no inventa videos.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="card app-card overflow-hidden mb-5">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i> JSON generados</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <% if (jobs && jobs.length) { %>
+                        <% jobs.forEach(job => { %>
+                            <div class="list-group-item border-0 border-bottom p-3">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold"><%= job.productName || 'Producto' %></h6>
+                                        <div class="small text-muted">
+                                            <%= job.youtubeTitle || 'Sin título todavía' %><br>
+                                            <%= job.sceneCount || 0 %> escenas
+                                            <% if (job.metrics) { %> · <%= job.metrics.words %> palabras · ~<%= job.metrics.estimatedSeconds %>s<% } %>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        <span class="badge rounded-pill status-pill
+                                            <%= job.status === 'json_ready' ? 'bg-success' : '' %>
+                                            <%= job.status === 'processing' || job.status === 'sending' ? 'bg-info' : '' %>
+                                            <%= job.status === 'completed' ? 'bg-primary' : '' %>
+                                            <%= job.status === 'failed' || String(job.status).startsWith('skipped') ? 'bg-danger' : '' %>
+                                            <%= job.status === 'pending' ? 'bg-secondary' : '' %>"><%= job.status %></span>
+                                        <% if (job.sceneCount || job.status === 'json_ready' || job.status === 'processing' || job.status === 'completed') { %>
+                                            <button class="btn btn-sm btn-outline-dark rounded-pill" data-json="<%= job.id %>">Ver JSON</button>
+                                            <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/admin/videos/<%= job.id %>.json" target="_blank">Abrir</a>
+                                        <% } %>
+                                        <% if (job.status === 'json_ready' || job.status === 'failed') { %>
+                                            <form action="/admin/videos/<%= job.id %>/enviar" method="POST" class="m-0">
+                                                <button class="btn btn-sm btn-outline-primary rounded-pill" <%= botReady ? '' : 'disabled' %>>Enviar VPS</button>
+                                            </form>
+                                            <form action="/admin/videos/<%= job.id %>/regenerar" method="POST" class="m-0">
+                                                <button class="btn btn-sm btn-light rounded-pill">Regenerar</button>
+                                            </form>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <% if (job.error) { %><div class="small text-danger mt-2"><%= job.error %></div><% } %>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="p-5 text-center text-muted">Todavía no hay JSON. Generá uno de un producto para verlo.</div>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="jsonModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">JSON de escenas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre class="json-box mb-0" id="jsonBox">Cargando...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('admin-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+
+        const modalEl = document.getElementById('jsonModal');
+        const box = document.getElementById('jsonBox');
+        const modal = new bootstrap.Modal(modalEl);
+        async function showJson(id) {
+            box.textContent = 'Cargando...';
+            modal.show();
+            try {
+                const res = await fetch('/admin/videos/' + id + '.json');
+                const data = await res.json();
+                box.textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                box.textContent = 'No se pudo leer el JSON: ' + err.message;
+            }
+        }
+        document.querySelectorAll('[data-json]').forEach((btn) => {
+            btn.addEventListener('click', () => showJson(btn.getAttribute('data-json')));
+        });
+        const params = new URLSearchParams(location.search);
+        if (params.get('ver')) showJson(params.get('ver'));
+    });
+</script>
+</body>
+</html>
