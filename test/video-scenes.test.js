@@ -186,6 +186,19 @@ test('clampDuration never exceeds 85 seconds', () => {
     assert.equal(payload.scenes.some((s) => s.type === 'mapa'), false);
 });
 
+test('fillProductSlots repeats products so few SKUs still fill the buffer', () => {
+    const pool = [{ id: 'a' }, { id: 'b' }];
+    const slots = videoBot.fillProductSlots(pool, 5);
+    assert.equal(slots.length, 5);
+    assert.deepEqual(slots.map((p) => p.id), ['a', 'b', 'a', 'b', 'a']);
+    assert.deepEqual(videoBot.fillProductSlots([], 5), []);
+    assert.equal(videoBot.normalizePriorityProductId(''), '');
+    assert.equal(videoBot.normalizePriorityProductId('cualquiera'), '');
+    assert.equal(videoBot.normalizePriorityProductId('  abc123  '), 'abc123');
+    const s = videoBot.publicSettings({ enabled: true, dailyQuota: 50, keepDays: 2, autoDispatch: true });
+    assert.equal(s.priorityProductId, '');
+});
+
 test('quota helpers use Paraguay day and default 50 JSON', () => {
     const start = videoBot.startOfAsuncionDay();
     assert.ok(start instanceof Date);
@@ -194,6 +207,7 @@ test('quota helpers use Paraguay day and default 50 JSON', () => {
     assert.equal(s.enabled, false);
     assert.equal(s.dailyQuota, 80);
     assert.equal(s.keepDays, 2);
+    assert.equal(s.priorityProductId, '');
     assert.equal(videoBot.clampBatch(20), 20);
     assert.equal(videoBot.clampBatch(50), 50);
     assert.equal(videoBot.clampBatch(0), 5);
@@ -295,6 +309,7 @@ test('videos admin view renders eligible products', async () => {
     assert.match(html, /Logs en vivo/);
     assert.match(html, /Correr ahora/);
     assert.match(html, /Clips R2 al azar/);
-    assert.match(html, /15 JSON/);
-    assert.match(html, /50/);
+    assert.match(html, /Prioridad de producto/);
+    assert.match(html, /Cualquiera/);
+    assert.match(html, /puede repetir/);
 });
