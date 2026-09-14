@@ -186,6 +186,7 @@ test('despacho admin view renders', async () => {
         }]
     });
     assert.match(html, /Despachar/);
+    assert.match(html, /Videos Shorts/);
     assert.match(html, /FER-1/);
     assert.match(html, /Escanear para marcar PREPARADO/);
     assert.match(html, /Marcar PREPARADO/);

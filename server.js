@@ -967,6 +967,8 @@ registerEcommerce(app, {
     onOrderFulfillment: (order, action) => require('./lib/wa-agent').notifyFulfillment(order, action)
 });
 
+require('./routes/videos')(app, { Product, SiteConfig, requireAdmin });
+
 function requireBotToken(req, res, next) {
     const expected = String(process.env.BOT_API_TOKEN || '').trim();
     if (!expected) {
@@ -2896,6 +2898,14 @@ app.listen(PORT, () => {
     console.log(diCfg.ok
         ? `✅ DeepInfra listo (${diCfg.model})`
         : 'ℹ️ DeepInfra en espera: falta DEEPINFRA_API_KEY');
+    const gemmaCfg = require('./lib/gemma').config();
+    const videoCfg = require('./lib/video-bot').botConfig();
+    console.log(gemmaCfg.ok
+        ? `✅ Gemma listo (${gemmaCfg.model}, ${gemmaCfg.keyCount} key${gemmaCfg.keyCount === 1 ? '' : 's'})`
+        : 'ℹ️ Gemma en espera: falta GEMINI_API_KEY (shorts de productos)');
+    console.log(videoCfg.ok
+        ? `✅ VPS ferumishopvideos: ${videoCfg.urls.join(', ')}`
+        : 'ℹ️ VPS ferumishopvideos en espera: falta VIDEO_BOT_URL');
     
     // --- Script para crear el admin por primera vez ---
     const createAdmin = async () => {
