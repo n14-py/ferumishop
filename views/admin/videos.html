@@ -15,6 +15,14 @@
         .product-img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; }
         .json-box { max-height: 70vh; overflow: auto; background: #111827; color: #e5e7eb; border-radius: 12px; padding: 16px; font-size: 12px; }
         .status-pill { font-size: 0.75rem; }
+        .log-line { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; border-bottom: 1px solid #f1f1f1; padding: 10px 0; }
+        .log-error { color: #b42318; }
+        .log-warn { color: #b54708; }
+        .log-info { color: #344054; }
+        .power-btn { min-height: 56px; font-weight: 800; }
+        .clip-chip { display: inline-block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+        .quota-bar { height: 10px; border-radius: 99px; background: #eee; overflow: hidden; }
+        .quota-bar > span { display: block; height: 100%; background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); }
         @media (min-width: 768px) { .admin-header { display: none; } }
     </style>
 </head>
@@ -29,61 +37,149 @@
         </header>
 
         <main class="main-content p-3 p-md-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <% const cfg = locals.settings || { enabled: true, dailyQuota: 50, keepDays: 2, autoDispatch: true }; %>
+            <% const q = locals.quota || { used: 0, remaining: cfg.dailyQuota, quota: cfg.dailyQuota }; %>
+            <% const pct = q.quota ? Math.min(100, Math.round((q.used / q.quota) * 100)) : 0; %>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                 <div>
                     <h2 class="fw-bold text-dark mb-1">Bot de Shorts FERUMI</h2>
-                    <p class="text-muted mb-0">Gemma arma el JSON: voz TTS + texto en pantalla por escena + 1 clip R2. Sin mapa. Máximo 85 segundos. Después lo mandamos al VPS de ferumishopvideos.</p>
+                    <p class="text-muted mb-0">Elige solo productos con stock, toma clips de R2 al azar, arma el JSON y lo manda al VPS. Acá ves logs, errores y cada JSON.</p>
                 </div>
+                <form action="/admin/videos/toggle" method="POST" class="m-0">
+                    <% if (cfg.enabled) { %>
+                        <button class="btn btn-danger rounded-pill px-4 power-btn" type="submit">
+                            <i class="fas fa-power-off me-2"></i> Apagar bot
+                        </button>
+                    <% } else { %>
+                        <button class="btn btn-success rounded-pill px-4 power-btn" type="submit">
+                            <i class="fas fa-play me-2"></i> Encender bot
+                        </button>
+                    <% } %>
+                </form>
             </div>
 
             <% if (locals.success) { %><div class="alert alert-success alert-dismissible fade show rounded-4"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
             <% if (locals.error) { %><div class="alert alert-danger alert-dismissible fade show rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
 
+            <div class="alert <%= cfg.enabled ? 'alert-success' : 'alert-secondary' %> rounded-4" id="botLiveBanner">
+                <strong id="botLiveState"><%= cfg.enabled ? 'ENCENDIDO' : 'APAGADO' %></strong>
+                · Hoy <span id="botLiveQuota"><%= q.used %> / <%= q.quota %></span> JSON
+                · Último tick: <span id="botLiveTick"><%= cfg.lastTickResult || 'todavía no corrió (espera ~20s al arrancar el server)' %></span>
+            </div>
+            <% if (cfg.lastError) { %>
+                <div class="alert alert-danger rounded-4"><i class="fas fa-bug me-1"></i> <strong>Último error:</strong> <%= cfg.lastError %></div>
+            <% } %>
+
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
+                <div class="col-6 col-md-3">
                     <div class="card app-card p-3 h-100">
                         <div class="small text-muted text-uppercase fw-bold">Gemma 4</div>
                         <div class="fw-bold mt-1"><%= gemmaOk ? 'Lista · ' + gemmaModel : 'Falta GEMINI_API_KEY' %></div>
-                        <div class="small text-muted"><%= gemmaKeys || 0 %> clave(s) rotativa(s)</div>
+                        <div class="small text-muted"><%= gemmaKeys || 0 %> clave(s)</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-6 col-md-3">
                     <div class="card app-card p-3 h-100">
                         <div class="small text-muted text-uppercase fw-bold">VPS ferumishopvideos</div>
-                        <div class="fw-bold mt-1"><%= botReady ? botUrl : 'Todavía no configurado' %></div>
-                        <div class="small text-muted"><%= botReady ? 'Se envía a /generate_video' : 'Poné VIDEO_BOT_URL cuando el VPS esté vivo' %></div>
+                        <div class="fw-bold mt-1"><%= botReady ? 'Conectado' : 'Sin VIDEO_BOT_URL' %></div>
+                        <div class="small text-muted text-break"><%= botUrl || 'Poné VIDEO_BOT_URL cuando el VPS esté vivo' %></div>
+                        <% if (locals.pings && pings.length) { %>
+                            <div class="small mt-1"><%= pings.map(p => p.ok ? ('OK ' + p.ms + 'ms') : ('ERROR ' + (p.error || p.status))).join(' · ') %></div>
+                        <% } %>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-6 col-md-3">
+                    <div class="card app-card p-3 h-100">
+                        <div class="small text-muted text-uppercase fw-bold">Cloudflare R2</div>
+                        <div class="fw-bold mt-1"><%= locals.r2Ok ? 'Listo' : 'Falta configurar' %></div>
+                        <div class="small text-muted text-break"><%= locals.r2Base || 'R2_PUBLIC_BASE_URL' %></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
                     <div class="card app-card p-3 h-100">
                         <div class="small text-muted text-uppercase fw-bold">Elegibles ahora</div>
                         <div class="fw-bold mt-1"><%= eligible ? eligible.length : 0 %> productos</div>
-                        <div class="small text-muted">Con stock y video en Cloudflare R2</div>
+                        <div class="small text-muted">Con stock y video en R2</div>
                     </div>
                 </div>
             </div>
 
             <div class="card app-card p-4 mb-4">
-                <h5 class="fw-bold mb-2">Generar lote viral (20 a 30)</h5>
-                <p class="text-muted small mb-3">Gemma elige productos con stock, verifica los clips de R2 y escribe un Short de venta (Paraguay, Motobolt, WhatsApp) con texto en pantalla en cada escena. Sin mapa. El video no pasa de 85s.</p>
-                <form action="/admin/videos/generar" method="POST" class="row g-2 align-items-end">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0">Cuota de hoy</h5>
+                    <span class="fw-bold" id="quotaLabel"><%= q.used %> / <%= q.quota %></span>
+                </div>
+                <div class="quota-bar mb-3"><span id="quotaBar" style="width: <%= pct %>%"></span></div>
+                <form action="/admin/videos/config" method="POST" class="row g-3 align-items-end">
                     <div class="col-6 col-md-3">
-                        <label class="form-label fw-bold">Cantidad</label>
-                        <input type="number" name="count" class="form-control form-control-lg bg-light" min="1" max="30" value="20">
+                        <label class="form-label fw-bold">JSON por día</label>
+                        <input type="number" name="dailyQuota" class="form-control form-control-lg bg-light" min="1" max="200" value="<%= cfg.dailyQuota %>">
                     </div>
-                    <div class="col-6 col-md-4">
-                        <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" name="dispatch" value="1" id="dispatchBatch" <%= botReady ? '' : 'disabled' %>>
-                            <label class="form-check-label" for="dispatchBatch">Enviar al VPS ahora</label>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-bold">Borrar JSON a los (días)</label>
+                        <input type="number" name="keepDays" class="form-control form-control-lg bg-light" min="1" max="14" value="<%= cfg.keepDays %>">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="autoDispatch" value="1" id="autoDispatch" <%= cfg.autoDispatch ? 'checked' : '' %> <%= botReady ? '' : 'disabled' %>>
+                            <label class="form-check-label" for="autoDispatch">Enviar solo al VPS</label>
                         </div>
                     </div>
-                    <div class="col-12 col-md-5">
-                        <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;" <%= (!gemmaOk || batchRunning) ? 'disabled' : '' %>>
-                            <i class="fas fa-wand-magic-sparkles me-2"></i>
-                            <%= batchRunning ? 'Lote en curso...' : 'Generar lote con Gemma' %>
-                        </button>
+                    <div class="col-12 col-md-3">
+                        <button class="btn btn-dark w-100 py-3 rounded-pill fw-bold" type="submit">Guardar</button>
                     </div>
                 </form>
+                <p class="small text-muted mt-3 mb-0">Si está encendido, cada 10 minutos arma hasta 5 JSON de productos con stock (clips al azar). Cuando llega a la cuota del día, para. Los JSON viejos se borran solos para siempre tener videos nuevos.</p>
+            </div>
+
+            <div class="card app-card p-4 mb-4">
+                <h5 class="fw-bold mb-2">Forzar ahora</h5>
+                <p class="text-muted small mb-3">Si no ves movimiento, tocá “Correr ahora”. El bot igual arranca solo ~20 segundos después de que el server levante.</p>
+                <div class="row g-2">
+                    <div class="col-12 col-md-4">
+                        <form action="/admin/videos/tick" method="POST" class="m-0">
+                            <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border:none;" <%= gemmaOk ? '' : 'disabled' %>>
+                                <i class="fas fa-bolt me-2"></i> Correr ahora
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form action="/admin/videos/generar" method="POST" class="d-flex gap-2 m-0">
+                            <input type="number" name="count" class="form-control bg-light" min="1" max="80" value="5">
+                            <input type="hidden" name="dispatch" value="<%= botReady && cfg.autoDispatch ? '1' : '' %>">
+                            <button class="btn btn-outline-dark rounded-pill px-4 fw-bold" <%= (!gemmaOk || batchRunning) ? 'disabled' : '' %>>
+                                <%= batchRunning ? 'En curso...' : 'Lote' %>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <form action="/admin/videos/purgar" method="POST" class="m-0">
+                            <button class="btn btn-outline-danger w-100 py-3 rounded-pill fw-bold">Borrar JSON viejos</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card app-card overflow-hidden mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-scroll me-2 text-primary"></i> Logs en vivo</h6>
+                    <span class="small text-muted">Se actualiza solo</span>
+                </div>
+                <div class="p-3" id="logsBox" style="max-height: 360px; overflow: auto;">
+                    <% if (locals.logs && logs.length) { %>
+                        <% logs.forEach(log => { %>
+                            <div class="log-line log-<%= log.level || 'info' %>">
+                                <strong><%= log.createdAt ? new Date(log.createdAt).toLocaleString('es-PY') : '' %></strong>
+                                · <%= log.event || 'log' %>
+                                · <%= log.message %>
+                                <% if (log.productName) { %> <span class="text-muted">(<%= log.productName %>)</span><% } %>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="text-muted p-4 text-center" id="logsEmpty">Todavía no hay logs. Encendé el bot o tocá “Correr ahora”.</div>
+                    <% } %>
+                </div>
             </div>
 
             <div class="card app-card overflow-hidden mb-4">
@@ -128,9 +224,9 @@
 
             <div class="card app-card overflow-hidden mb-5">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i> JSON generados</h6>
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i> Trabajos, JSON y videos tomados</h6>
                 </div>
-                <div class="list-group list-group-flush">
+                <div class="list-group list-group-flush" id="jobsBox">
                     <% if (jobs && jobs.length) { %>
                         <% jobs.forEach(job => { %>
                             <div class="list-group-item border-0 border-bottom p-3">
@@ -141,7 +237,23 @@
                                             <%= job.youtubeTitle || 'Sin título todavía' %><br>
                                             <%= job.sceneCount || 0 %> escenas
                                             <% if (job.metrics) { %> · <%= job.metrics.words %> palabras · ~<%= job.metrics.estimatedSeconds %>s<% } %>
+                                            · <%= job.source || 'manual' %>
+                                            <% if (job.createdAt) { %> · <%= new Date(job.createdAt).toLocaleString('es-PY') %><% } %>
                                         </div>
+                                        <% if (job.videoUrlsUsed && job.videoUrlsUsed.length) { %>
+                                            <div class="small mt-2">
+                                                <strong>Clips R2 al azar:</strong>
+                                                <% job.videoUrlsUsed.forEach((url, i) => { %>
+                                                    <a class="clip-chip d-inline-block me-1" href="<%= url %>" target="_blank">video <%= i + 1 %></a>
+                                                <% }) %>
+                                            </div>
+                                        <% } %>
+                                        <% if (job.generatedVideoUrl) { %>
+                                            <div class="small mt-1"><a href="<%= job.generatedVideoUrl %>" target="_blank">Video generado</a></div>
+                                        <% } %>
+                                        <% if (job.youtubeId) { %>
+                                            <div class="small mt-1">YouTube: <%= job.youtubeId %></div>
+                                        <% } %>
                                     </div>
                                     <div class="d-flex flex-wrap gap-2 align-items-center">
                                         <span class="badge rounded-pill status-pill
@@ -150,7 +262,7 @@
                                             <%= job.status === 'completed' ? 'bg-primary' : '' %>
                                             <%= job.status === 'failed' || String(job.status).startsWith('skipped') ? 'bg-danger' : '' %>
                                             <%= job.status === 'pending' ? 'bg-secondary' : '' %>"><%= job.status %></span>
-                                        <% if (job.sceneCount || job.status === 'json_ready' || job.status === 'processing' || job.status === 'completed') { %>
+                                        <% if (job.hasJson || job.sceneCount || job.status === 'json_ready' || job.status === 'processing' || job.status === 'completed') { %>
                                             <button class="btn btn-sm btn-outline-dark rounded-pill" data-json="<%= job.id %>">Ver JSON</button>
                                             <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/admin/videos/<%= job.id %>.json" target="_blank">Abrir</a>
                                         <% } %>
@@ -164,11 +276,12 @@
                                         <% } %>
                                     </div>
                                 </div>
-                                <% if (job.error) { %><div class="small text-danger mt-2"><%= job.error %></div><% } %>
+                                <% if (job.error) { %><div class="small text-danger mt-2"><i class="fas fa-exclamation-triangle me-1"></i><%= job.error %></div><% } %>
+                                <% if (job.jsonPurgedAt) { %><div class="small text-muted mt-1">JSON ya borrado automáticamente.</div><% } %>
                             </div>
                         <% }) %>
                     <% } else { %>
-                        <div class="p-5 text-center text-muted">Todavía no hay JSON. Generá uno de un producto para verlo.</div>
+                        <div class="p-5 text-center text-muted">Todavía no hay JSON. Encendé el bot o tocá “Correr ahora”.</div>
                     <% } %>
                 </div>
             </div>
@@ -222,6 +335,38 @@
         });
         const params = new URLSearchParams(location.search);
         if (params.get('ver')) showJson(params.get('ver'));
+
+        async function refreshEstado() {
+            try {
+                const res = await fetch('/admin/videos/estado.json');
+                if (!res.ok) return;
+                const data = await res.json();
+                const q = data.quota || {};
+                const settings = data.settings || {};
+                const state = document.getElementById('botLiveState');
+                const quota = document.getElementById('botLiveQuota');
+                const tick = document.getElementById('botLiveTick');
+                const quotaLabel = document.getElementById('quotaLabel');
+                const quotaBar = document.getElementById('quotaBar');
+                if (state) state.textContent = settings.enabled ? 'ENCENDIDO' : 'APAGADO';
+                if (quota) quota.textContent = (q.used || 0) + ' / ' + (q.quota || 0);
+                if (tick) tick.textContent = settings.lastTickResult || 'todavía no corrió';
+                if (quotaLabel) quotaLabel.textContent = (q.used || 0) + ' / ' + (q.quota || 0);
+                if (quotaBar && q.quota) quotaBar.style.width = Math.min(100, Math.round((q.used / q.quota) * 100)) + '%';
+                const logsBox = document.getElementById('logsBox');
+                if (logsBox && Array.isArray(data.logs)) {
+                    logsBox.innerHTML = data.logs.map((log) => {
+                        const when = log.createdAt ? new Date(log.createdAt).toLocaleString('es-PY') : '';
+                        const name = log.productName ? ' <span class="text-muted">(' + log.productName + ')</span>' : '';
+                        return '<div class="log-line log-' + (log.level || 'info') + '"><strong>' + when + '</strong> · ' +
+                            (log.event || 'log') + ' · ' + (log.message || '') + name + '</div>';
+                    }).join('') || '<div class="text-muted p-4 text-center">Todavía no hay logs.</div>';
+                }
+            } catch (err) {
+                console.warn('estado videos', err);
+            }
+        }
+        setInterval(refreshEstado, 12000);
     });
 </script>
 </body>

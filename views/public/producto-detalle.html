@@ -67,6 +67,26 @@
             .product-title { font-size: 1.8rem; }
             .btn-cart, .btn-whatsapp { font-size: 1.1rem; padding: 14px; }
         }
+
+        .product-swipe { position: relative; max-width: 420px; margin: 0 auto 8px; }
+        .product-swipe-viewport {
+            overflow: hidden; border-radius: 18px; background: #111;
+            aspect-ratio: 9 / 16; max-height: min(78vh, 680px); touch-action: pan-y;
+        }
+        .product-swipe-track { display: flex; height: 100%; transition: transform 0.28s ease; }
+        .product-swipe-slide { min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; }
+        .product-swipe-slide img, .product-swipe-slide video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+        .product-swipe-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 38px; height: 38px; border: none; border-radius: 50%;
+            background: rgba(255,255,255,0.92); color: #222; cursor: pointer; z-index: 2;
+        }
+        .product-swipe-nav.prev { left: 8px; }
+        .product-swipe-nav.next { right: 8px; }
+        .product-swipe-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+        .product-swipe-dot { width: 8px; height: 8px; border: none; border-radius: 50%; background: #d9d9d9; padding: 0; cursor: pointer; }
+        .product-swipe-dot.active { background: var(--primary-color, #ff4757); }
+        .product-swipe-hint { text-align: center; color: #888; font-size: 0.82rem; margin: 8px 0 0; }
     </style>
 </head>
 
@@ -78,33 +98,41 @@
         
         <!-- COLUMNA IZQUIERDA: FOTOS -->
         <section class="product-images-section">
-            <div class="main-image-container">
-                <% if (product.photos && product.photos.length > 0) { %>
-                    <img id="mainProductImage" src="<%= product.photos[0] %>" alt="<%= product.name %>">
-                <% } else { %>
-                    <img id="mainProductImage" src="/img/placeholder.png" alt="Sin foto">
+            <% const productPhotos = product.photos || []; %>
+            <% const shopVideos = (product.videos || []).filter(v => v && v.url).slice(0, 2); %>
+            <% const swipeCount = (productPhotos.length || (shopVideos.length ? 0 : 1)) + shopVideos.length; %>
+            <div class="product-swipe" id="productSwipe">
+                <div class="product-swipe-viewport">
+                    <div class="product-swipe-track" id="productSwipeTrack">
+                        <% if (productPhotos.length) { %>
+                            <% productPhotos.forEach((photo, index) => { %>
+                                <div class="product-swipe-slide" data-kind="photo" data-src="<%= photo %>">
+                                    <img <%= index === 0 ? 'id="mainProductImage"' : '' %> src="<%= photo %>" alt="<%= product.name %>">
+                                </div>
+                            <% }); %>
+                        <% } else if (!shopVideos.length) { %>
+                            <div class="product-swipe-slide" data-kind="photo">
+                                <img id="mainProductImage" src="/img/placeholder.png" alt="Sin foto">
+                            </div>
+                        <% } %>
+                        <% shopVideos.forEach((video) => { %>
+                            <div class="product-swipe-slide is-video" data-kind="video">
+                                <video src="<%= video.url %>" playsinline muted loop preload="metadata" controls></video>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+                <% if (swipeCount > 1) { %>
+                    <button type="button" class="product-swipe-nav prev" data-swipe-dir="-1" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                    <button type="button" class="product-swipe-nav next" data-swipe-dir="1" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                    <div class="product-swipe-dots">
+                        <% for (let i = 0; i < swipeCount; i++) { %>
+                            <button type="button" class="product-swipe-dot <%= i === 0 ? 'active' : '' %>" data-swipe-to="<%= i %>" aria-label="Media <%= i + 1 %>"></button>
+                        <% } %>
+                    </div>
+                    <p class="product-swipe-hint">Deslizá: primero las fotos, después los videos</p>
                 <% } %>
             </div>
-
-            <% if (product.photos && product.photos.length > 1) { %>
-                <div class="thumbnails-container">
-                    <% product.photos.forEach((photo, index) => { %>
-                        <img src="<%= photo.replace('/upload/', '/upload/w_150,h_150,c_fill/') %>" 
-                             class="thumbnail <%= index === 0 ? 'active' : '' %>" 
-                             onclick="changeMainImage(this, '<%= photo %>')" 
-                             alt="Miniatura">
-                    <% }); %>
-                </div>
-            <% } %>
-
-            <% const shopVideos = (product.videos || []).filter(v => v && v.url).slice(0, 2); %>
-            <% if (shopVideos.length) { %>
-                <div class="product-videos">
-                    <% shopVideos.forEach((video) => { %>
-                        <video src="<%= video.url %>" controls playsinline preload="metadata"></video>
-                    <% }); %>
-                </div>
-            <% } %>
         </section>
 
         <!-- COLUMNA DERECHA: INFORMACIÓN Y BOTONES -->
@@ -326,17 +354,99 @@
         const originalCartImageSrc = "<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>";
         const mainProductImageElement = document.getElementById('mainProductImage');
 
-        // 2. Cambiar foto al tocar miniatura
+        function initProductSwipe() {
+            const root = document.getElementById('productSwipe');
+            if (!root) return;
+            const track = document.getElementById('productSwipeTrack');
+            const slides = Array.from(root.querySelectorAll('.product-swipe-slide'));
+            const dots = Array.from(root.querySelectorAll('.product-swipe-dot'));
+            if (!track || !slides.length) return;
+            let index = 0;
+            let startX = 0;
+            let dx = 0;
+            let dragging = false;
+
+            function pauseVideos() {
+                root.querySelectorAll('video').forEach((video) => {
+                    try { video.pause(); } catch (e) {}
+                });
+            }
+
+            function playCurrent() {
+                const slide = slides[index];
+                const video = slide && slide.querySelector('video');
+                if (!video) return;
+                video.muted = true;
+                video.play().catch(() => {});
+            }
+
+            function go(next) {
+                index = Math.max(0, Math.min(slides.length - 1, next));
+                track.style.transform = 'translateX(' + (-index * 100) + '%)';
+                dots.forEach((dot, n) => dot.classList.toggle('active', n === index));
+                pauseVideos();
+                playCurrent();
+            }
+
+            window.productSwipeGo = go;
+            window.productSwipeGoToSrc = function(src) {
+                const i = slides.findIndex((slide) => slide.getAttribute('data-src') === src);
+                if (i >= 0) go(i);
+                else go(0);
+            };
+
+            root.querySelectorAll('[data-swipe-dir]').forEach((btn) => {
+                btn.addEventListener('click', () => go(index + Number(btn.getAttribute('data-swipe-dir'))));
+            });
+            dots.forEach((dot) => {
+                dot.addEventListener('click', () => go(Number(dot.getAttribute('data-swipe-to'))));
+            });
+
+            const viewport = root.querySelector('.product-swipe-viewport');
+            if (viewport) {
+                viewport.addEventListener('pointerdown', (ev) => {
+                    dragging = true;
+                    startX = ev.clientX;
+                    dx = 0;
+                    track.style.transition = 'none';
+                    try { viewport.setPointerCapture(ev.pointerId); } catch (e) {}
+                });
+                viewport.addEventListener('pointermove', (ev) => {
+                    if (!dragging) return;
+                    dx = ev.clientX - startX;
+                    const pct = (dx / viewport.clientWidth) * 100;
+                    track.style.transform = 'translateX(' + ((-index * 100) + pct) + '%)';
+                });
+                function endDrag() {
+                    if (!dragging) return;
+                    dragging = false;
+                    track.style.transition = '';
+                    if (dx < -40) go(index + 1);
+                    else if (dx > 40) go(index - 1);
+                    else go(index);
+                    dx = 0;
+                }
+                viewport.addEventListener('pointerup', endDrag);
+                viewport.addEventListener('pointercancel', endDrag);
+            }
+            go(0);
+        }
+        initProductSwipe();
+
+        // 2. Cambiar foto al tocar miniatura / variante
         function changeMainImage(thumbElement, newSrc) {
-            mainProductImageElement.style.opacity = 0; // Efecto suave
-            setTimeout(() => {
-                mainProductImageElement.src = newSrc;
-                mainProductImageElement.style.opacity = 1;
-            }, 150);
-            
-            // Quitar clase active a todas las miniaturas y ponérsela a la tocada
+            if (mainProductImageElement && newSrc) {
+                mainProductImageElement.style.opacity = 0;
+                setTimeout(() => {
+                    mainProductImageElement.src = newSrc;
+                    mainProductImageElement.style.opacity = 1;
+                }, 150);
+            }
             document.querySelectorAll('.thumbnail').forEach(img => img.classList.remove('active'));
             if(thumbElement) thumbElement.classList.add('active');
+            if (typeof window.productSwipeGoToSrc === 'function' && newSrc) {
+                window.productSwipeGoToSrc(newSrc);
+            }
         }
 
         // 3. Lógica cuando se elige "Efecto Anime", "Efecto B", etc.

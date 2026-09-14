@@ -204,6 +204,80 @@
 .product-videos video {
     width: 100%; border-radius: 14px; max-height: 280px; background: #000;
 }
+
+.product-swipe {
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto 8px;
+}
+.product-swipe-viewport {
+    overflow: hidden;
+    border-radius: 18px;
+    background: #111;
+    aspect-ratio: 9 / 16;
+    max-height: min(78vh, 680px);
+    touch-action: pan-y;
+}
+.product-swipe-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.28s ease;
+    will-change: transform;
+}
+.product-swipe-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+.product-swipe-slide img,
+.product-swipe-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #000;
+}
+.product-swipe-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    color: #222;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    cursor: pointer;
+    z-index: 2;
+}
+.product-swipe-nav.prev { left: 8px; }
+.product-swipe-nav.next { right: 8px; }
+.product-swipe-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+.product-swipe-dot {
+    width: 8px;
+    height: 8px;
+    border: none;
+    border-radius: 50%;
+    background: #d9d9d9;
+    padding: 0;
+    cursor: pointer;
+}
+.product-swipe-dot.active { background: var(--primary-color, #f25aa4); transform: scale(1.2); }
+.product-swipe-hint {
+    text-align: center;
+    color: #888;
+    font-size: 0.82rem;
+    margin: 8px 0 0;
+}
 .loc-permit {
     background: var(--primary-color-light);
     border-radius: 16px; padding: 14px; margin-bottom: 12px;
