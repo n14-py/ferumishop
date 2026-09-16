@@ -38,7 +38,20 @@
 .home-trust-item i { color: var(--primary-color-dark); font-size: 1.4rem; margin-bottom: 0.4rem; }
 .home-trust-item strong { display: block; color: var(--primary-color-dark); }
 
-.checkout-wrap { max-width: 920px; margin: 1.5rem auto 3rem; }
+.checkout-wrap { max-width: 920px; margin: 1.5rem auto 3rem; padding: 0 16px; }
+.checkout-field-hint {
+    margin: -8px 0 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted-color);
+    line-height: 1.4;
+}
+.ship-card-detail {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--text-muted-color);
+}
 .checkout-steps {
     display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;
 }
@@ -75,7 +88,7 @@
     position: relative;
     border: 2px solid var(--border-color);
     border-radius: 16px; padding: 16px; margin-bottom: 12px; cursor: pointer; background: #fff;
-    display: flex; align-items: center; gap: 14px;
+    display: flex; align-items: flex-start; gap: 14px;
 }
 .ship-option input, .ship-card input { position: absolute; opacity: 0; pointer-events: none; }
 .ship-option.selected, .ship-card.selected { border-color: var(--primary-color); background: var(--primary-color-light); }
@@ -133,18 +146,18 @@
 .about-map { border: 0; width: 100%; height: 320px; border-radius: 16px; margin-top: 1rem; }
 .product-meta-box {
     background: var(--primary-color-light); border-radius: 14px; padding: 14px; margin-bottom: 18px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.88rem; line-height: 1.35;
 }
 .home-cta-row {
     display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 2.5rem;
 }
 .home-block { margin-bottom: 3rem; }
 .home-ship-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0 2rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem;
 }
 .home-ship-card {
     background: var(--surface-color); border: 1px solid var(--border-color);
-    border-radius: 18px; padding: 1.3rem; text-align: center; box-shadow: var(--shadow-sm);
+    border-radius: 18px; padding: 1.3rem; text-align: left; box-shadow: var(--shadow-sm);
 }
 .home-ship-card i { font-size: 1.8rem; color: var(--primary-color-dark); margin-bottom: 0.6rem; }
 .home-ship-card h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
@@ -153,6 +166,13 @@
     background: var(--primary-color-light); border-radius: 20px; padding: 1.6rem; text-align: center; margin-bottom: 3rem;
 }
 .home-track-banner h2 { margin-bottom: 0.4rem; }
+.footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 4px;
+}
+.footer-nav a { white-space: nowrap; }
 .section-more { text-align: center; margin-top: 1.4rem; }
 
 .shop-pager {
@@ -296,13 +316,16 @@
 @media (max-width: 700px) {
     .chk-row, .product-meta-box { grid-template-columns: 1fr; }
     .checkout-panel { padding: 1rem; }
+    .checkout-panel h2 { font-size: 1.2rem; }
     .checkout-steps { gap: 6px; }
-    .checkout-step-pill { min-width: 0; padding: 10px 8px; font-size: 0.78rem; }
-    .checkout-wrap { margin: 1rem auto 2rem; }
+    .checkout-step-pill { min-width: 0; flex: 1 1 30%; padding: 10px 6px; font-size: 0.72rem; }
+    .checkout-wrap { margin: 1rem auto 2rem; padding: 0 12px; }
     .chk-input, .chk-select { min-height: 48px; font-size: 16px; }
     .btn-shop { min-height: 52px; font-size: 1.08rem; }
-    .ship-card { min-height: 88px; padding: 14px; }
-    .ship-card-icon { width: 52px; height: 52px; }
+    .ship-card { min-height: 0; padding: 14px; gap: 10px; }
+    .ship-card-icon { width: 44px; height: 44px; font-size: 1.25rem; }
+    .ship-card h4 { font-size: 0.98rem; }
+    .ship-card p, .ship-card-detail { font-size: 0.82rem; }
     .guide-grid, .home-trust, .home-ship-grid { grid-template-columns: 1fr; }
     .home-cta-row a { width: 100%; text-align: center; }
     .section-title { font-size: 1.55rem !important; }

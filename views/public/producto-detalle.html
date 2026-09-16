@@ -106,13 +106,17 @@
         <!-- COLUMNA IZQUIERDA: FOTOS -->
         <section class="product-images-section">
             <% const productPhotos = product.photos || []; %>
+            <% const variantPhotos = (product.hasVariants && product.variants ? product.variants : [])
+                .map((variant) => variant && variant.photoUrl)
+                .filter((url, i, arr) => url && arr.indexOf(url) === i && !productPhotos.includes(url)); %>
+            <% const galleryPhotos = productPhotos.concat(variantPhotos); %>
             <% const shopVideos = (product.videos || []).filter(v => v && v.url).slice(0, 2); %>
-            <% const swipeCount = (productPhotos.length || (shopVideos.length ? 0 : 1)) + shopVideos.length; %>
+            <% const swipeCount = (galleryPhotos.length || (shopVideos.length ? 0 : 1)) + shopVideos.length; %>
             <div class="product-swipe" id="productSwipe">
                 <div class="product-swipe-viewport">
                     <div class="product-swipe-track" id="productSwipeTrack">
-                        <% if (productPhotos.length) { %>
-                            <% productPhotos.forEach((photo, index) => { %>
+                        <% if (galleryPhotos.length) { %>
+                            <% galleryPhotos.forEach((photo, index) => { %>
                                 <div class="product-swipe-slide" data-kind="photo" data-src="<%= photo %>">
                                     <img <%= index === 0 ? 'id="mainProductImage"' : '' %> src="<%= photo %>" alt="<%= product.name %>">
                                 </div>
@@ -149,10 +153,10 @@
             <% if (product.category) { %><div class="card-category" style="margin-bottom:8px;"><%= product.category.name %></div><% } %>
             <div class="product-price"><%= formatPrice(product.price) %></div>
             <div class="product-meta-box">
-                <div><i class="fas fa-motorcycle"></i> Motobolt en Central (despacho 1h)</div>
-                <div><i class="fas fa-truck"></i> Interior: transportadora</div>
-                <div><i class="fas fa-store"></i> Retiro en Ferumishop</div>
-                <div><i class="fas fa-lock"></i> Pago seguro Pagopar</div>
+                <div><i class="fas fa-motorcycle"></i> Moto Bolt Envíos: te contactamos en menos de 1 h</div>
+                <div><i class="fas fa-truck"></i> Interior: TSI, Jaraha o tu preferencia</div>
+                <div><i class="fas fa-store"></i> Retiro en Capiatá, Ruta 1 Ex km 21</div>
+                <div><i class="fas fa-lock"></i> Pago seguro con Pagopar</div>
             </div>
             
             <!-- 1. BLOQUE DE VARIANTES (Primero) -->
@@ -361,6 +365,21 @@
         const originalCartImageSrc = "<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>";
         const mainProductImageElement = document.getElementById('mainProductImage');
 
+        function normalizePhotoSrc(src) {
+            return String(src || '')
+                .split('?')[0]
+                .replace(/\/upload\/((?:[a-z]+_[^/,]+,?)+)\//ig, '/upload/')
+                .replace(/\/+$/, '')
+                .toLowerCase();
+        }
+
+        function photoFileName(src) {
+            const clean = String(src || '').split('?')[0];
+            const name = clean.split('/').pop() || '';
+            try { return decodeURIComponent(name).toLowerCase(); }
+            catch (e) { return name.toLowerCase(); }
+        }
+
         function initProductSwipe() {
             const root = document.getElementById('productSwipe');
             if (!root) return;
@@ -397,9 +416,34 @@
 
             window.productSwipeGo = go;
             window.productSwipeGoToSrc = function(src) {
-                const i = slides.findIndex((slide) => slide.getAttribute('data-src') === src);
-                if (i >= 0) go(i);
-                else go(0);
+                if (!src) { go(0); return; }
+                const wanted = normalizePhotoSrc(src);
+                const wantedName = photoFileName(src);
+                const i = slides.findIndex((slide) => {
+                    const img = slide.querySelector('img');
+                    const candidates = [
+                        slide.getAttribute('data-src'),
+                        img && img.getAttribute('src'),
+                        img && img.src
+                    ];
+                    return candidates.some((c) => c && (
+                        c === src ||
+                        normalizePhotoSrc(c) === wanted ||
+                        (wantedName && photoFileName(c) === wantedName)
+                    ));
+                });
+                if (i >= 0) {
+                    const img = slides[i].querySelector('img');
+                    if (img) img.src = src;
+                    slides[i].setAttribute('data-src', src);
+                    go(i);
+                } else {
+                    const firstPhoto = slides.find((slide) => slide.getAttribute('data-kind') !== 'video');
+                    const img = (firstPhoto && firstPhoto.querySelector('img')) || mainProductImageElement;
+                    if (img) img.src = src;
+                    if (firstPhoto) firstPhoto.setAttribute('data-src', src);
+                    go(firstPhoto ? slides.indexOf(firstPhoto) : 0);
+                }
             };
 
             root.querySelectorAll('[data-swipe-dir]').forEach((btn) => {
@@ -442,18 +486,13 @@
 
         // 2. Cambiar foto al tocar miniatura / variante
         function changeMainImage(thumbElement, newSrc) {
-            if (mainProductImageElement && newSrc) {
-                mainProductImageElement.style.opacity = 0;
-                setTimeout(() => {
-                    mainProductImageElement.src = newSrc;
-                    mainProductImageElement.style.opacity = 1;
-                }, 150);
-            }
-            document.querySelectorAll('.thumbnail').forEach(img => img.classList.remove('active'));
-            if(thumbElement) thumbElement.classList.add('active');
             if (typeof window.productSwipeGoToSrc === 'function' && newSrc) {
                 window.productSwipeGoToSrc(newSrc);
+            } else if (mainProductImageElement && newSrc) {
+                mainProductImageElement.src = newSrc;
             }
+            document.querySelectorAll('.thumbnail').forEach(img => img.classList.remove('active'));
+            if (thumbElement) thumbElement.classList.add('active');
         }
 
         // 3. Lógica cuando se elige "Efecto Anime", "Efecto B", etc.
@@ -548,18 +587,14 @@
         }
 
         // Al cargar la página, si la primera variante tiene foto, mostrarla en los botones también
-        window.onload = () => {
+        function applyInitialVariant() {
             const firstVariantBtn = document.querySelector('.btn-variant.selected');
-            if (firstVariantBtn) {
-                const initialPhoto = firstVariantBtn.getAttribute('data-photo');
-                if (initialPhoto && initialPhoto !== '') {
-                    changeMainImage(null, initialPhoto);
-                    document.querySelectorAll('.btnAddToCart').forEach(btnCart => {
-                        btnCart.setAttribute('data-image', initialPhoto.replace('/upload/', '/upload/w_150,h_150,c_fill/'));
-                    });
-                }
-            }
-        };
+            if (firstVariantBtn) selectVariant(firstVariantBtn);
+        }
+        applyInitialVariant();
+        if (document.readyState !== 'complete') {
+            window.addEventListener('load', applyInitialVariant);
+        }
     </script>
 </body>
 </html>

@@ -22,8 +22,8 @@ const OUT_FILE = path.join(__dirname, 'json_prueba_salida.json');
 
 const siteConfig = {
     whatsappNumber: process.env.WHATSAPP_NUMBER || '595987301591',
-    storeAddress: 'Ferumishop, Asunción - Paraguay',
-    motoboltMaxKm: 40,
+    storeAddress: 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay',
+    motoboltMaxKm: 30,
     instagramUrl: 'https://instagram.com/ferumishop',
     tiktokUrl: 'https://tiktok.com/@ferumishop'
 };

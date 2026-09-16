@@ -27,9 +27,9 @@
             </div>
         <% } else if (order.shippingMethod === 'motobolt') { %>
             <div class="thanks-note">
-                Cuando esté preparado te escribimos para que pidas <strong>Motobolt</strong>.
-                Despacho en 1 hora como máximo.
-                <% if (locals.store) { %><br><a href="<%= store.mapsUrl %>" target="_blank">Ubicación Ferumishop</a><% } %>
+                Pagopar ya confirmó tu pago. Procesamos tu pedido, lo preparamos y te escribimos en menos de 1 hora al WhatsApp que cargaste para coordinar la entrega con <strong>Moto Bolt Envíos</strong>.
+                Atención de 9:00 a 20:00; si el pago entra fuera de ese horario, la coordinación pasa al día siguiente.
+                <% if (locals.store) { %><br><a href="<%= store.mapsUrl %>" target="_blank">Ubicación Ferumishop (Capiatá, Ruta 1 Ex km 21)</a><% } %>
             </div>
         <% } else if (order.shippingMethod === 'retiro') { %>
             <div class="thanks-note">
@@ -38,7 +38,7 @@
             </div>
         <% } else { %>
             <div class="thanks-note">
-                Va por transportadora. Te escribimos para coordinar el envío al interior.
+                Va por encomienda: Transportadora TSI, Transportadora Jaraha o la de tu preferencia. Te escribimos por WhatsApp para coordinar agencia y retiro.
             </div>
         <% } %>
 
