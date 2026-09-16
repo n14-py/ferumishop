@@ -213,11 +213,11 @@ const siteConfigSchema = new mongoose.Schema({
     aboutUsText: { type: String, default: 'Escribe aquí la descripción de "Sobre Nosotros".' },
     logoUrl: { type: String },
     bannerImages: [{ type: String }], // URLs de Cloudinary para el banner principal
-    storeAddress: { type: String, default: 'Ferumishop, Asunción - Paraguay' },
+    storeAddress: { type: String, default: 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' },
     storeLat: { type: Number, default: -25.28646 },
     storeLng: { type: Number, default: -57.647 },
     storeMapsUrl: { type: String, default: 'https://share.google/39F8jWwL96lFY65Th' },
-    motoboltMaxKm: { type: Number, default: 40 },
+    motoboltMaxKm: { type: Number, default: 30 },
     instagramUrl: { type: String, default: 'https://instagram.com/ferumishop' },
     facebookUrl: { type: String, default: '' },
     tiktokUrl: { type: String, default: 'https://tiktok.com/@ferumishop' }
@@ -2125,7 +2125,7 @@ app.post('/admin/configuracion/update', requireAdmin, async (req, res, next) => 
             storeLat: parseFloat(storeLat) || -25.28646,
             storeLng: parseFloat(storeLng) || -57.647,
             storeMapsUrl: purify.sanitize(storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th'),
-            motoboltMaxKm: parseInt(motoboltMaxKm, 10) || 40,
+            motoboltMaxKm: parseInt(motoboltMaxKm, 10) || 30,
             instagramUrl: purify.sanitize(instagramUrl || ''),
             facebookUrl: purify.sanitize(facebookUrl || ''),
             tiktokUrl: purify.sanitize(tiktokUrl || ''),

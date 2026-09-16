@@ -40,6 +40,9 @@ test('checkout view renders', async () => {
     assert.match(html, /Instagram, TikTok o WhatsApp/);
     assert.match(html, /Pagopar/);
     assert.match(html, /Pedir por WhatsApp/);
+    assert.match(html, /scrollCheckoutTop/);
+    assert.match(html, /El teléfono tiene que ser el WhatsApp/);
+    assert.match(html, /Capiatá, Ruta 1 Ex km 21/);
 });
 
 test('product detail shows at most two videos', async () => {
@@ -69,6 +72,32 @@ test('product detail shows at most two videos', async () => {
     assert.match(html, /Deslizá: primero las fotos, después los videos/);
     assert.match(html, /max-width: 100%/);
     assert.equal((html.match(/product-swipe-slide is-video/g) || []).length, 2);
+});
+
+test('product detail shows variant photos in the gallery and switches on select', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/producto-detalle.html'), locals({
+        pageTitle: 'Pinza',
+        product: {
+            _id: '65f000000000000000000002',
+            name: 'Pinza',
+            description: 'Cuatro colores',
+            price: 15000,
+            photos: ['https://img/pinza.jpg'],
+            videos: [],
+            hasVariants: true,
+            variants: [
+                { name: 'Azul', stock: 3, photoUrl: 'https://img/pinza-azul.jpg' },
+                { name: 'Rosa', stock: 2, photoUrl: 'https://img/pinza-rosa.jpg' }
+            ],
+            category: { name: 'Accesorios' }
+        },
+        recommendedProducts: []
+    }));
+    assert.match(html, /data-photo="https:\/\/img\/pinza-azul.jpg"/);
+    assert.match(html, /data-src="https:\/\/img\/pinza-azul.jpg"/);
+    assert.match(html, /data-src="https:\/\/img\/pinza-rosa.jpg"/);
+    assert.match(html, /productSwipeGoToSrc/);
+    assert.match(html, /Moto Bolt Envíos/);
 });
 
 test('tracking view renders', async () => {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar compra - FERUMI</title>
-    <%- include('../partials/seo.html', { pageTitle: 'Finalizar compra', seoDescription: 'Completá tus datos, elegí envío Motobolt, transportadora o retiro en Ferumishop y pagá con Pagopar.' }) %>
+    <%- include('../partials/seo.html', { pageTitle: 'Finalizar compra', seoDescription: 'Completá tus datos, elegí Moto Bolt Envíos, encomienda o retiro en Ferumishop y pagá con Pagopar.' }) %>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <%- include('../partials/header.html') %>
 <main class="container checkout-wrap">
     <h1 style="text-align:center; margin-bottom: 0.4rem;">Tu compra, paso a paso</h1>
-    <p class="checkout-help" style="text-align:center;">Completá tus datos, decinos dónde estás y elegí cómo te llega. Al final pagás con Pagopar o, si retirás, también en efectivo.</p>
+    <p class="checkout-help" style="text-align:center;">Completá tus datos, decinos dónde estás y elegí cómo te llega. Al final pagás con Pagopar — es seguro — o, si retirás, también en efectivo.</p>
 
     <div class="checkout-steps">
         <div class="checkout-step-pill active" data-step-pill="1">1. Datos</div>
@@ -24,7 +24,7 @@
 
     <div class="checkout-panel" id="step1">
         <h2>Tus datos</h2>
-        <p class="checkout-help">Los mismos que pide Pagopar: nombre, cédula, correo y WhatsApp.</p>
+        <p class="checkout-help">Los mismos que pide Pagopar: nombre, cédula, correo y tu WhatsApp. El teléfono tiene que ser el WhatsApp donde te vamos a escribir para coordinar la entrega.</p>
         <div class="chk-row">
             <div>
                 <label class="chk-label">Nombre completo *</label>
@@ -41,8 +41,9 @@
                 <input class="chk-input" id="customerEmail" type="email" autocomplete="email">
             </div>
             <div>
-                <label class="chk-label">Teléfono / WhatsApp *</label>
+                <label class="chk-label">WhatsApp *</label>
                 <input class="chk-input" id="customerPhone" inputmode="tel" placeholder="0981..." autocomplete="tel">
+                <p class="checkout-field-hint">Usá tu número de WhatsApp: Pagopar lo pide y por ahí te contactamos para concretar el envío.</p>
             </div>
         </div>
         <button type="button" class="btn-shop" onclick="goStep(2)">Continuar a ubicación</button>
@@ -51,10 +52,10 @@
 
     <div class="checkout-panel" id="step2" style="display:none;">
         <h2>¿Dónde te queda?</h2>
-        <p class="checkout-help">Primero tu ubicación. Calculamos los km hasta Ferumishop. Todo Central se cubre con Motobolt; el interior va por transportadora.</p>
+        <p class="checkout-help">Primero tu ubicación. Calculamos los km hasta Ferumishop (Capiatá, Ruta 1 Ex km 21). Si estás en Asunción y alrededores, podés elegir Moto Bolt Envíos; el interior va por encomienda.</p>
         <div id="map" style="height: 220px; border-radius: 14px; margin-bottom: 12px;"></div>
         <div class="loc-permit" id="locPermit">
-            <p>Ferumishop pide tu ubicación solo para calcular si te llega Motobolt o encomienda. Tocá Permitir cuando el celular lo pregunte.</p>
+            <p>Ferumishop pide tu ubicación solo para ver si te llega Moto Bolt Envíos (Asunción y alrededores) o si va por encomienda. Tocá Permitir cuando el celular lo pregunte.</p>
             <div class="loc-permit-actions">
                 <button type="button" class="btn-shop" onclick="useMyLocation()"><i class="fas fa-location-arrow"></i> Permitir que Ferumishop vea tu ubicación</button>
                 <button type="button" class="btn-loc-copy" onclick="copyCheckoutLink()">Copiar link para abrir en Safari o Chrome</button>
@@ -64,7 +65,7 @@
         <div class="chk-row">
             <div>
                 <label class="chk-label">Ciudad</label>
-                <input class="chk-input" id="city" placeholder="Asunción, Luque, Encarnación...">
+                <input class="chk-input" id="city" placeholder="Capiatá, Luque, Encarnación...">
             </div>
             <div>
                 <label class="chk-label">Dirección</label>
@@ -90,7 +91,7 @@
                 <span class="ship-card-icon"><i class="fas fa-lock"></i></span>
                 <span class="ship-card-body">
                     <h4>Pagopar</h4>
-                    <p>Tarjetas, Tigo Money, Aqui Pago, bancos.</p>
+                    <p>Pago seguro: tarjetas, Tigo Money, Aquí Pago y bancos. El teléfono que cargaste debe ser tu WhatsApp.</p>
                 </span>
             </div>
             <div class="ship-card" id="payCash" style="display:none;" onclick="selectPay('efectivo_retiro')">
@@ -124,7 +125,7 @@ function money(n) { return new Intl.NumberFormat('es-PY').format(n) + ' Gs.'; }
 function goStep(n) {
     if (n === 2) {
         const ok = ['customerName','customerEmail','customerDocument','customerPhone'].every(id => document.getElementById(id).value.trim());
-        if (!ok) { document.getElementById('err1').textContent = 'Completá los 4 datos. Pagopar los exige.'; return; }
+        if (!ok) { document.getElementById('err1').textContent = 'Completá los 4 datos. Pagopar los exige. El teléfono debe ser tu WhatsApp.'; return; }
         document.getElementById('err1').textContent = '';
         initMap();
         showLocationHints();
@@ -135,6 +136,29 @@ function goStep(n) {
         pill.classList.toggle('active', i===n);
         pill.classList.toggle('done', i<n);
     });
+    scrollCheckoutTop();
+    if (n === 2 && map) {
+        setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 80);
+    }
+}
+
+function scrollCheckoutTop() {
+    const jump = () => {
+        try {
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        } catch (e) {
+            window.scrollTo(0, 0);
+        }
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const wrap = document.querySelector('.checkout-wrap');
+        if (wrap && wrap.scrollIntoView) {
+            wrap.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+    };
+    jump();
+    requestAnimationFrame(jump);
+    setTimeout(jump, 50);
 }
 
 function initMap() {
@@ -248,8 +272,8 @@ async function calcShipping() {
     const box = document.getElementById('distanceBox');
     box.style.display = 'block';
     box.innerHTML = shipping.distanceKm != null
-        ? `<strong>Estás a ${shipping.distanceKm} km</strong> de Ferumishop. ${shipping.central ? 'Zona Motobolt (Central).' : 'Queda lejos: Motobolt no llega, usamos transportadora.'}`
-        : `Sin GPS exacto. Según la ciudad ${shipping.central ? 'podemos ofrecer Motobolt.' : 'probablemente va por transportadora.'}`;
+        ? `<strong>Estás a ${shipping.distanceKm} km</strong> de Ferumishop (Capiatá, Ruta 1 Ex km 21). ${shipping.central ? 'Zona Moto Bolt Envíos: Asunción y alrededores.' : 'Queda lejos para Motobolt: enviamos por encomienda (TSI, Jaraha o la de tu preferencia).'}`
+        : `Sin GPS exacto. Según la ciudad ${shipping.central ? 'podemos ofrecer Moto Bolt Envíos.' : 'probablemente va por encomienda (TSI, Jaraha o la de tu preferencia).'}`;
     renderShips();
     goStep(3);
     renderCartPreview();
@@ -264,6 +288,7 @@ function renderShips() {
             <span class="ship-card-body">
                 <h4>${o.easyTitle || o.label}</h4>
                 <p>${o.easyText || o.eta}</p>
+                ${o.detail ? `<small class="ship-card-detail">${o.detail}</small>` : ''}
             </span>
         </label>`).join('');
     wrap.querySelectorAll('.ship-card').forEach(el => {

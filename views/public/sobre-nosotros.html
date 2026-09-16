@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sobre Nosotros - FERUMI</title>
-    <%- include('../partials/seo.html', { pageTitle: 'Sobre Nosotros', seoDescription: 'Ferumishop: tienda de belleza en Paraguay. Motobolt en Central, transportadora al interior y retiro en local.' }) %>
+    <%- include('../partials/seo.html', { pageTitle: 'Sobre Nosotros', seoDescription: 'Ferumishop en Capiatá, Ruta 1 Ex km 21. Moto Bolt Envíos en Asunción y alrededores, encomienda al interior y retiro en local.' }) %>
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -69,12 +69,12 @@
             <h3 style="font-family: var(--font-family-headings); margin-top: 2.5rem; margin-bottom: 1rem;">¿Cómo llega tu pedido?</h3>
             <ul class="values-list">
                 <li>
-                    <strong>Motobolt (Gran Asunción / Central):</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Calculamos los km hasta Ferumishop. Si estás cerca, te preparamos y te escribimos. Pedís Motobolt, te pasamos la ubicación y en 1 hora como máximo se despacha.</p>
+                    <strong>Moto Bolt Envíos (Asunción y alrededores):</strong>
+                    <p style="margin:0; font-size: 0.95rem;">El local está en Capiatá, Ruta 1 Ex km 21. Cubrimos Asunción y alrededores (hasta 30 km). Pagás con Pagopar — es seguro — y, una vez recibido el pedido, lo procesamos, lo preparamos y te escribimos en menos de 1 hora al WhatsApp que cargaste para coordinar la entrega. Horario de 9:00 a 20:00; fuera de ese horario, pasa al día siguiente. El costo del moto lo abonás al conductor.</p>
                 </li>
                 <li>
-                    <strong>Interior del país:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Si estás lejos, Motobolt no aparece. Coordinamos transportadora hasta tu ciudad.</p>
+                    <strong>Encomienda al interior:</strong>
+                    <p style="margin:0; font-size: 0.95rem;">Si estás más lejos, enviamos con Transportadora TSI, Transportadora Jaraha o la de tu preferencia. Después del pago te contactamos para confirmar agencia y datos de retiro.</p>
                 </li>
                 <li>
                     <strong>Retiro en Ferumishop:</strong>
@@ -111,9 +111,9 @@
             </p>
             <div style="margin-top:2rem;">
                 <h3 style="text-align:center;">Visitanos</h3>
-                <p style="text-align:center;"><%= siteConfig.storeAddress || 'Ferumishop, Asunción' %></p>
+                <p style="text-align:center;"><%= siteConfig.storeAddress || 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' %></p>
                 <iframe class="about-map" loading="lazy"
-                    src="https://www.google.com/maps?q=<%= encodeURIComponent(siteConfig.storeAddress || 'Ferumishop Asuncion Paraguay') %>&output=embed"></iframe>
+                    src="https://www.google.com/maps?q=<%= encodeURIComponent(siteConfig.storeAddress || 'Ferumishop Capiatá Ruta 1 Ex km 21 Paraguay') %>&output=embed"></iframe>
                 <p style="text-align:center;margin-top:12px;">
                     <a class="btn btn-primary" href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Google Maps</a>
                     <a class="btn btn-secondary" href="/tracking">Tracking de pedidos</a>

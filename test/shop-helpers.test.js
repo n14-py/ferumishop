@@ -26,10 +26,38 @@ test('interior city does not get Motobolt', () => {
 test('central city offers Motobolt', () => {
     const info = shop.shippingOptions({
         lat: -25.286, lng: -57.64, city: 'Asunción',
-        siteConfig: { storeLat: -25.28646, storeLng: -57.647, motoboltMaxKm: 40 }
+        siteConfig: { storeLat: -25.28646, storeLng: -57.647, motoboltMaxKm: 30 }
     });
     assert.equal(info.central, true);
     assert.ok(info.options.some((o) => o.id === 'motobolt'));
+});
+
+test('default Motobolt range is 30 km and remaps the old 40 km default', () => {
+    const withDefault = shop.storeFromConfig({});
+    assert.equal(withDefault.motoboltMaxKm, 30);
+    assert.match(withDefault.address, /Capiatá/);
+    const remapped = shop.storeFromConfig({ motoboltMaxKm: 40 });
+    assert.equal(remapped.motoboltMaxKm, 30);
+    const custom = shop.storeFromConfig({ motoboltMaxKm: 25 });
+    assert.equal(custom.motoboltMaxKm, 25);
+});
+
+test('Motobolt and encomienda copy explain contact in under 1 hour and TSI/Jaraha', () => {
+    const info = shop.shippingOptions({
+        lat: -25.286, lng: -57.64, city: 'Asunción',
+        siteConfig: { storeLat: -25.28646, storeLng: -57.647 }
+    });
+    const moto = info.options.find((o) => o.id === 'motobolt');
+    assert.equal(moto.easyTitle, 'Moto Bolt Envíos');
+    assert.match(moto.easyText, /WhatsApp/i);
+    assert.match(moto.detail, /Capiatá/);
+    assert.match(moto.detail, /9:00/);
+    assert.match(moto.detail, /20:00/);
+    assert.doesNotMatch(moto.easyTitle, /Moto a tu casa/);
+    const enc = info.options.find((o) => o.id === 'transportadora');
+    assert.match(enc.easyTitle, /Encomienda/i);
+    assert.match(enc.easyText, /TSI/);
+    assert.match(enc.easyText, /Jaraha/);
 });
 
 test('efectivo only makes sense with retiro (enforced in route, shipping still lists retiro)', () => {

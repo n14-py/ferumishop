@@ -254,7 +254,7 @@ test('prompt talks about overlay, no map, 85s and ferumishopvideos', () => {
     assert.match(prompt, /Motobolt/);
     assert.match(prompt, /Paraguay/);
     assert.match(prompt, /Capiatá/);
-    assert.match(prompt, /Ruta 1 km 21/);
+    assert.match(prompt, /Ruta 1 Ex km 21/);
     assert.match(prompt, /0987 301 591/);
     assert.match(prompt, /texto_pantalla/);
     assert.match(prompt, /"type": "video"/);

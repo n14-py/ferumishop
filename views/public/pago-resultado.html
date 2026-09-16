@@ -20,11 +20,11 @@
                     <p>Estado: <strong><%= orderView.tracking.title %></strong></p>
                     <p><%= orderView.tracking.detail %></p>
                     <% if (orderView.shippingMethod === 'motobolt' && locals.store) { %>
-                        <div class="thanks-note">Cuando esté preparado te escribimos para que pidas Motobolt. Despacho en 1 hora. <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps</a>.</div>
+                        <div class="thanks-note">Pagopar ya confirmó tu pago. Procesamos tu pedido, lo preparamos y te escribimos en menos de 1 hora al WhatsApp que cargaste para coordinar la entrega con Moto Bolt Envíos. De 9:00 a 20:00; fuera de horario, al día siguiente. <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps (Capiatá)</a>.</div>
                     <% } else if (orderView.shippingMethod === 'retiro' && locals.store) { %>
                         <div class="thanks-note">Retiro en Ferumishop. Te avisamos cuando esté listo. <a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar</a></div>
                     <% } else { %>
-                        <div class="thanks-note">Coordinamos la transportadora al interior. Te escribimos por WhatsApp.</div>
+                        <div class="thanks-note">Va por encomienda con Transportadora TSI, Transportadora Jaraha o la de tu preferencia. Te escribimos por WhatsApp para coordinar agencia y retiro.</div>
                     <% } %>
                     <p style="font-size:0.9rem; color:#888;">Número para buscar tu pedido: <strong><%= orderView.ticketCode %></strong></p>
                 <% } %>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FERUMI - Maquillaje, Uñas y Accesorios</title>
-    <%- include('../partials/seo.html', { pageTitle: 'Inicio', seoDescription: 'FERUMI Shop Paraguay: maquillaje, uñas y accesorios. Pagá con Pagopar, envío Motobolt en Central o retiro en Ferumishop.' }) %>
+    <%- include('../partials/seo.html', { pageTitle: 'Inicio', seoDescription: 'FERUMI Shop Paraguay: maquillaje, uñas y accesorios. Pagá con Pagopar, Moto Bolt Envíos en Asunción y alrededores o retiro en Ferumishop, Capiatá.' }) %>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -97,21 +97,21 @@
             <div class="guide-card">
                 <div class="guide-num">2</div>
                 <h3>Decinos dónde estás</h3>
-                <p>Usá tu ubicación. Si estás cerca, va Motobolt. Si estás lejos, encomienda.</p>
+                <p>Usá tu ubicación. Si estás en Asunción y alrededores, va Moto Bolt Envíos. Si estás lejos, encomienda.</p>
             </div>
             <div class="guide-card">
                 <div class="guide-num">3</div>
                 <h3>Pagá o retirás</h3>
-                <p>Pagopar (tarjetas, Tigo, bocas). Efectivo solo si retirás en el local.</p>
+                <p>Pagopar es seguro (tarjetas, Tigo, bocas). El número que pongas debe ser tu WhatsApp. Efectivo solo si retirás en el local.</p>
             </div>
             <div class="guide-card">
                 <div class="guide-num">4</div>
                 <h3>Seguí tu pedido</h3>
-                <p>Pagado → preparando → moto / encomienda / retiro → entregado.</p>
+                <p>Pagado → preparamos → te escribimos (Moto Bolt / encomienda / retiro) → entregado.</p>
             </div>
         </div>
         <div class="home-trust">
-            <div class="home-trust-item"><i class="fas fa-motorcycle"></i><strong>Motobolt 1 hora</strong>Despacho en Central</div>
+            <div class="home-trust-item"><i class="fas fa-motorcycle"></i><strong>Moto Bolt Envíos</strong>Te contactamos en menos de 1 hora</div>
             <div class="home-trust-item"><i class="fas fa-store"></i><strong>Ferumishop</strong>Retiro en el local</div>
             <div class="home-trust-item"><i class="fas fa-lock"></i><strong>Pagopar</strong>Pago seguro Paraguay</div>
             <div class="home-trust-item"><i class="fas fa-map-marker-alt"></i><strong>Ubicación</strong><a href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Ver en Maps</a></div>
@@ -165,18 +165,18 @@
         <div class="home-ship-grid">
             <div class="home-ship-card">
                 <i class="fas fa-motorcycle"></i>
-                <h3>Moto a tu casa</h3>
-                <p>En Gran Asunción / Central. Vos pedís Motobolt. Despacho en 1 hora.</p>
+                <h3>Moto Bolt Envíos</h3>
+                <p>Asunción y alrededores (hasta 30 km). Pagás con Pagopar — es seguro — y en menos de 1 hora preparamos tu pedido y te escribimos al WhatsApp para coordinar la entrega. De 9 a 20 h; fuera de horario, al día siguiente.</p>
             </div>
             <div class="home-ship-card">
                 <i class="fas fa-truck"></i>
-                <h3>Encomienda</h3>
-                <p>Si estás lejos, va por transportadora al interior. Coordinamos juntos.</p>
+                <h3>Encomienda por transportadora</h3>
+                <p>Al interior enviamos con Transportadora TSI, Transportadora Jaraha o la de tu preferencia. Después del pago te contactamos para confirmar agencia y retiro.</p>
             </div>
             <div class="home-ship-card">
                 <i class="fas fa-store"></i>
                 <h3>Paso a buscar</h3>
-                <p>Retiro en Ferumishop. Acá sí podés pagar en efectivo.</p>
+                <p>Retiro en Ferumishop, Capiatá, Ruta 1 Ex km 21. Acá sí podés pagar en efectivo.</p>
             </div>
         </div>
     </section>
@@ -200,7 +200,14 @@
   "url": "https://www.ferumi.shop/",
   "image": "https://www.ferumi.shop/ferumi.logo.png",
   "telephone": "+<%= siteConfig.whatsappNumber %>",
-  "address": { "@type": "PostalAddress", "addressLocality": "Asunción", "addressCountry": "PY" },
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Ruta 1 Ex km 21",
+    "addressLocality": "Capiatá",
+    "addressRegion": "Central",
+    "addressCountry": "PY"
+  },
+  "areaServed": ["Asunción", "Gran Asunción", "Central"],
   "sameAs": ["https://instagram.com/ferumishop", "https://tiktok.com/@ferumishop"]
 }
 </script>
