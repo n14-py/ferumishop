@@ -119,6 +119,21 @@ test('webhook verify token and signature', () => {
     assert.equal(wa.verifySignature(body, 'sha256=deadbeef').ok, false);
 });
 
+test('webhook summary separates customer messages from status receipts', () => {
+    const statusOnly = {
+        entry: [{ changes: [{ field: 'messages', value: { statuses: [{ status: 'delivered', recipient_id: '595981000000' }] } }] }]
+    };
+    assert.equal(wa.extractMessages(statusOnly).length, 0);
+    assert.match(wa.summarizeWebhook(statusOnly), /status=delivered/);
+    assert.match(wa.summarizeWebhook({}), /sin entry/);
+});
+
+test('graph errors explain an expired token and the dev allow-list', () => {
+    assert.match(wa.explainGraphError({ code: 190, message: 'Error validating access token' }), /permanente/i);
+    assert.match(wa.explainGraphError({ code: 131030, message: 'Recipient phone number not in allowed list' }), /desarrollo/i);
+    assert.match(wa.explainGraphError({ code: 100, message: 'Unsupported post request. Object does not exist' }), /Phone number ID/i);
+});
+
 test('text chunks stay under WhatsApp limit', () => {
     const parts = wa.chunkText('a'.repeat(5000), 3900);
     assert.ok(parts.length >= 2);

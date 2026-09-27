@@ -417,8 +417,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({
     verify: (req, _res, buf) => {
-        if (req.originalUrl && req.originalUrl.split('?')[0] === '/api/whatsapp/webhook') {
-            req.rawBody = buf;
+        const pathOnly = String(req.originalUrl || req.url || '').split('?')[0];
+        if (pathOnly === '/api/whatsapp/webhook' || pathOnly.endsWith('/api/whatsapp/webhook')) {
+            req.rawBody = Buffer.from(buf);
         }
     }
 }));
@@ -2904,11 +2905,13 @@ app.use((err, req, res, next) => {
 // Iniciar el servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor FERUMI corriendo en ${process.env.BASE_URL}`);
-    const waCfg = require('./lib/whatsapp').config();
+    const waLib = require('./lib/whatsapp');
+    const waCfg = waLib.config();
     const diCfg = require('./lib/deepinfra').config();
     console.log(waCfg.ok
         ? '✅ Agente WhatsApp listo (webhook /api/whatsapp/webhook)'
         : 'ℹ️ Agente WhatsApp en espera: faltan WHATSAPP_TOKEN y WHATSAPP_PHONE_NUMBER_ID');
+    waLib.logAccountStatus().catch((err) => console.error('[whatsapp] diagnóstico', err.message));
     console.log(diCfg.ok
         ? `✅ DeepInfra listo (${diCfg.model})`
         : 'ℹ️ DeepInfra en espera: falta DEEPINFRA_API_KEY');
