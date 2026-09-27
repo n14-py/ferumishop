@@ -128,6 +128,12 @@ test('webhook summary separates customer messages from status receipts', () => {
     assert.match(wa.summarizeWebhook({}), /sin entry/);
 });
 
+test('ACTIVE without a display number is the WhatsApp business account', () => {
+    assert.equal(wa.accountKind({ id: '2317168128820020', status: 'ACTIVE' }), 'waba');
+    assert.equal(wa.accountKind({ id: '1', display_phone_number: '+595 987 301591', status: 'CONNECTED' }), 'phone');
+    assert.equal(wa.accountKind({ id: '1', display_phone_number: '+595 987 301591', status: 'PENDING' }), 'phone');
+});
+
 test('graph errors explain an expired token and the dev allow-list', () => {
     assert.match(wa.explainGraphError({ code: 190, message: 'Error validating access token' }), /permanente/i);
     assert.match(wa.explainGraphError({ code: 131030, message: 'Recipient phone number not in allowed list' }), /desarrollo/i);
