@@ -75,7 +75,12 @@
 
             <div class="separador"></div>
 
-            <p><span class="negrita">Cliente:</span> <%= pedido.cliente %></p>
+            <p><span class="negrita">Cliente:</span> <%= pedido.cliente || '—' %></p>
+            <p><span class="negrita">Teléfono:</span> <%= pedido.phone || '—' %></p>
+            <p><span class="negrita">Ciudad:</span> <%= pedido.city || '—' %></p>
+            <% if (pedido.reference) { %>
+            <p><span class="negrita">Referencia:</span> <%= pedido.reference %></p>
+            <% } %>
             <% if (pedido.shippingLabel) { %>
             <p><span class="negrita">Envío:</span> <%= pedido.shippingLabel %></p>
             <% } %>

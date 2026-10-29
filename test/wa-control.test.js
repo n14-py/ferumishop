@@ -26,6 +26,7 @@ const { alreadyClaimsReceipt } = require('../lib/wa-control/flow');
 const { parseCoord } = require('../lib/whatsapp');
 const { planTurn } = require('../lib/wa-control/flow');
 const { speakTurn } = require('../lib/wa-control/speak');
+const { createGather, mergeIncoming } = require('../lib/wa-control/gather');
 const { customerSafeText } = require('../lib/wa-control/text');
 const { controlModels } = require('../lib/wa-control/models');
 const pagopar = require('../lib/pagopar');
@@ -459,6 +460,7 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     const shown = planTurn({
         text: 'tienen pinzas',
         stage: 'browsing',
+        customer: { name: 'Ana' },
         products: [{ _id: 'p1', name: 'Pinzas para cejas', price: 15000 }]
     });
     assert.match(shown.replies[0], /Pinzas para cejas/);
@@ -466,13 +468,15 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     const shipping = planTurn({
         text: 'solo eso',
         stage: 'browsing',
+        customer: { name: 'Ana' },
         cart: [{ name: 'Pinzas para cejas', price: 15000, quantity: 1 }],
         departureTime: '18:00'
     });
     assert.equal(shipping.stage, 'shipping');
     assert.match(shipping.replies[0], /18:00/);
-    assert.match(shipping.replies[0], /Motobolt/);
-    assert.match(shipping.replies[0], /Transportadora/);
+    assert.match(shipping.replies[0], /Delivery propio[\s\S]*\n\nMotobolt/);
+    assert.match(shipping.replies[0], /Motobolt[\s\S]*\n\nTransportadora/);
+    assert.match(shipping.replies[0], /ubicación/);
     const pay = planTurn({
         text: 'delivery propio',
         stage: 'shipping',
@@ -484,8 +488,20 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     });
     assert.equal(pay.stage, 'payment');
     assert.match(pay.replies.join('\n'), /20\.000/);
-    assert.match(pay.replies.join('\n'), /ferumi\.ueno/);
+    assert.match(pay.replies.join('\n'), /Transferencia/);
     assert.match(pay.replies.join('\n'), /PagoPar/);
+    assert.doesNotMatch(pay.replies.join('\n'), /ferumi\.ueno/);
+    const alias = planTurn({
+        text: 'por transferencia',
+        stage: 'payment',
+        customer: { name: 'Ana' },
+        place,
+        transfer: { alias: 'ferumi.ueno', bank: 'Ueno', holderName: 'Ferumi' },
+        totalLabel: '35.000 Gs.'
+    });
+    assert.equal(alias.stage, 'receipt');
+    assert.match(alias.replies.join('\n'), /ferumi\.ueno/);
+    assert.match(alias.replies.join('\n'), /35\.000/);
     const cash = planTurn({ text: 'puedo pagar en efectivo?', stage: 'payment', place, departureTime: '18:00' });
     assert.match(cash.replies[0], /día siguiente/);
     const interior = planTurn({
@@ -538,6 +554,23 @@ test('the purchase is spoken, the greeting asks the name, and a question is answ
     assert.equal(hi.askName, true);
     assert.equal(hi.showProduct, undefined);
     assert.match(hi.replies[0], /nombre/i);
+    const held = planTurn({
+        text: 'tienen pinzas',
+        stage: 'browsing',
+        customer: {},
+        products: [{ _id: 'p1', name: 'Pinzas para cejas', price: 15000 }]
+    });
+    assert.equal(held.showProduct, undefined);
+    assert.equal(held.holdQuestion, 'tienen pinzas');
+    const resume = planTurn({
+        text: 'Ana Gomez',
+        stage: 'browsing',
+        awaitingName: true,
+        pendingQuestion: 'tienen pinzas',
+        customer: {}
+    });
+    assert.equal(resume.customer.name, 'Ana Gomez');
+    assert.equal(resume.resume, 'tienen pinzas');
     const named = planTurn({ text: 'Ana Gomez', stage: 'browsing', awaitingName: true, customer: {} });
     assert.equal(named.customer.name, 'Ana Gomez');
     assert.equal(named.clearNameAsk, true);
@@ -570,6 +603,37 @@ test('the purchase is spoken, the greeting asks the name, and a question is answ
     assert.equal(leaked.spoken, false);
     assert.match(leaked.text, /20\.000/);
     assert.doesNotMatch(leaked.text, /-25\.3397/);
+});
+
+test('messages in the same ten seconds stay together, including a receipt and a location', () => {
+    const timers = [];
+    const gather = createGather({
+        delayMs: 10000,
+        schedule(fn, ms) {
+            timers.push({ fn, ms });
+            return timers.length;
+        },
+        clear() {}
+    });
+    let batch = null;
+    gather.push('595981', { wamid: 'a', text: '[foto]', imageId: 'img-1', type: 'image' }, (items) => {
+        batch = items;
+    });
+    gather.push('595981', {
+        wamid: 'b',
+        text: 'Te mandé la ubicación.',
+        location: { lat: -25.3, lng: -57.5 },
+        type: 'location'
+    }, () => {});
+    assert.equal(timers.length, 1);
+    assert.equal(timers[0].ms, 10000);
+    assert.equal(batch, null);
+    timers[0].fn();
+    const merged = mergeIncoming(batch);
+    assert.equal(merged.imageId, 'img-1');
+    assert.equal(merged.location.lat, -25.3);
+    assert.deepEqual(merged.wamids, ['a', 'b']);
+    assert.equal(merged.type, 'mixed');
 });
 
 test('the customer pin is stored exactly and a receipt photo is not another alias', () => {

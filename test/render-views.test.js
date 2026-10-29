@@ -153,6 +153,8 @@ test('printed thermal ticket has dual-use pedido QR', async () => {
             orderNumber: 'FER-TEST',
             ticketCode: 'FM-ABC',
             shippingLabel: 'Motobolt',
+            phone: '0981123456',
+            city: 'San Lorenzo',
             qrPayload: 'https://www.ferumi.shop/pedido/FM-ABC',
             qrHint: 'Preparar / Motobolt'
         }
@@ -161,6 +163,9 @@ test('printed thermal ticket has dual-use pedido QR', async () => {
     assert.match(html, /FM-ABC/);
     assert.match(html, /\/pedido\/FM-ABC/);
     assert.match(html, /Preparar \/ Motobolt/);
+    assert.match(html, /0981123456/);
+    assert.match(html, /San Lorenzo/);
+    assert.match(html, /Ana/);
 });
 
 test('delivery detail shows client WhatsApp and map', async () => {
@@ -178,13 +183,17 @@ test('delivery detail shows client WhatsApp and map', async () => {
             lng: -57.64,
             address: 'Centro, Asunción',
             orderNumber: 'FER-1',
-            housePhotoUrl: ''
+            housePhotoUrl: '',
+            city: 'San Lorenzo',
+            paymentNote: 'Ya está pagado. No cobrar. Total 25.000 Gs.'
         }
     }));
     assert.match(html, /Ana/);
     assert.match(html, /0981123456/);
     assert.match(html, /Escribir al WhatsApp/);
     assert.match(html, /Abrir en Google Maps/);
+    assert.match(html, /San Lorenzo/);
+    assert.match(html, /No cobrar/);
 });
 
 test('despacho admin view renders', async () => {

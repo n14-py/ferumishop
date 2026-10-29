@@ -16,7 +16,9 @@ En Tarifas, un lugar como «Capiatá ruta 2» con un precio aplica a todo destin
 
 Una pregunta como «¿el delivery propio sale a las 6?» se responde con el horario de las 18:00. No dispara una búsqueda de productos ni manda fotos. La ubicación se guarda en la conversación y al cliente solo se le dice el costo del envío que ya eligió, o si está en zona o va por transportadora.
 
-Los pasos siguen en el mismo orden: saludo y nombre si quiere pedir, el producto, el envío, el pago y recién ahí los datos. Esos pasos no se pegan como formulario. El modelo los dice en un mensaje, contestando la consulta. Si la IA no responde, queda el texto del paso para no perder el dato (precio, alias o enlace).
+Los pasos siguen en el mismo orden: saludo y nombre, la consulta y el producto, el envío en tres bloques (delivery propio a las 18:00, Motobolt y transportadora), el pago y recién ahí los datos. El alias y el total se pasan cuando elige transferencia. PagoPar pide solo nombre, cédula, correo y teléfono. La foto del comprobante se transcribe y, si parece una transferencia, queda parcial hasta que una persona la apruebe.
+
+Si en unos segundos llegan juntos el comprobante y la ubicación, se leen los dos antes de contestar. La espera es de 10 segundos (`WA_REPLY_DELAY_MS`). El ticket térmico imprime nombre, teléfono y ciudad. El QR del ticket, en el admin, marca preparado; si lo abre otra persona, ve la ubicación, el WhatsApp y si hay que cobrar.
 
 El botón Confirmar de Comprobantes manda la acción en un campo oculto. Al confirmar, el comprobante queda confirmado, el cliente recibe el aviso y la conversación recuerda que el pago ya está confirmado. La foto se transcribe completa y de ese texto salen emisor, destinatario, monto y banco.
 

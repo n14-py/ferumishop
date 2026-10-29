@@ -2745,7 +2745,10 @@ app.get('/pedido/:id', async (req, res, next) => {
                         lng,
                         fecha: transaccion.date,
                         address: '',
-                        housePhotoUrl: ''
+                        housePhotoUrl: '',
+                        city: '',
+                        paymentNote: 'Ya está pagado. No cobrar.',
+                        paid: true
                     }
                 });
             }
