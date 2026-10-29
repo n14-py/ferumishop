@@ -16,6 +16,8 @@ En Tarifas, un lugar como «Capiatá ruta 2» con un precio aplica a todo destin
 
 Una pregunta como «¿el delivery propio sale a las 6?» se responde con el horario de las 18:00. No dispara una búsqueda de productos ni manda fotos. La ubicación se guarda en la conversación y al cliente solo se le dice el costo del envío que ya eligió, o si está en zona o va por transportadora.
 
+Los pasos siguen en el mismo orden: saludo y nombre si quiere pedir, el producto, el envío, el pago y recién ahí los datos. Esos pasos no se pegan como formulario. El modelo los dice en un mensaje, contestando la consulta. Si la IA no responde, queda el texto del paso para no perder el dato (precio, alias o enlace).
+
 El botón Confirmar de Comprobantes manda la acción en un campo oculto. Al confirmar, el comprobante queda confirmado, el cliente recibe el aviso y la conversación recuerda que el pago ya está confirmado. La foto se transcribe completa y de ese texto salen emisor, destinatario, monto y banco.
 
 PagoPar no tiene monto mínimo. El enlace incluye QR, tarjeta de crédito y débito. Si el envío tiene precio, ese importe entra en el total que se manda a PagoPar.
