@@ -15,6 +15,7 @@ const NAV = [
     ['clientes', 'Clientes', 'fa-user'],
     ['pedidos', 'Pedidos', 'fa-receipt'],
     ['pagos', 'Pagos', 'fa-money-check'],
+    ['comprobantes', 'Comprobantes', 'fa-receipt'],
     ['catalogo', 'Catálogo IA', 'fa-box'],
     ['delivery', 'Delivery', 'fa-motorcycle'],
     ['mapa', 'Mapa', 'fa-map-location-dot'],
@@ -67,6 +68,13 @@ async function loadSection(section, query) {
         const list = await service.listOrders(query);
         const detail = query.id ? await service.getOrder(query.id) : null;
         return { ...list, detail, financial: FINANCIAL, logistics: LOGISTICS };
+    }
+    if (section === 'comprobantes') {
+        const { trashStillVisible } = require('../lib/wa-control/receipt-read');
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const pending = await models.WaReceipt.find({ status: { $in: ['en_verificacion', 'diferencia', 'parcial'] } }).sort({ createdAt: -1 }).limit(40).lean();
+        const trash = await models.WaReceipt.find({ status: 'rechazado', rejectedAt: { $gte: since } }).sort({ rejectedAt: -1 }).limit(40).lean();
+        return { pending, trash: trash.filter((item) => trashStillVisible(item.rejectedAt)), papelera: query.papelera === '1' };
     }
     if (section === 'pagos') {
         const receipts = await models.WaReceipt.find({}).sort({ createdAt: -1 }).limit(80).lean();
@@ -208,13 +216,9 @@ module.exports = function registerWaAdmin(app, deps) {
 
     app.post('/admin/whatsapp/pagos/:id', requirePermission('wa.payments.approve'), async (req, res, next) => {
         try {
-            if (req.body.action === 'confirm' && req.body.confirm !== 'CONFIRMAR') {
-                req.session.error = 'Para confirmar el pago escribí CONFIRMAR.';
-                return back(res, 'pagos');
-            }
             const result = await service.reviewReceipt(req.params.id, req.body.action, req.user, req.body);
-            req.session[result.ok ? 'success' : 'error'] = result.ok ? 'Comprobante actualizado.' : result.message;
-            return back(res, 'pagos');
+            req.session[result.ok ? 'success' : 'error'] = result.ok ? 'Listo.' : result.message;
+            return back(res, req.body.volver || 'comprobantes');
         } catch (err) { return next(err); }
     });
 

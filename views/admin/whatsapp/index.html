@@ -227,6 +227,38 @@
                         <% } %>
                     <% } %>
 
+                    <% if (section === 'comprobantes') { %>
+                        <div class="d-flex gap-2 mb-3">
+                            <a class="btn <%= data.papelera ? 'btn-outline-dark' : 'btn-dark' %>" href="/admin/whatsapp/comprobantes">Para confirmar</a>
+                            <a class="btn <%= data.papelera ? 'btn-dark' : 'btn-outline-dark' %>" href="/admin/whatsapp/comprobantes?papelera=1">Papelera 30 días</a>
+                        </div>
+                        <% const rows = data.papelera ? (data.trash || []) : (data.pending || []); %>
+                        <% if (!rows.length) { %><div class="wa-card text-muted"><%= data.papelera ? 'No hay rechazados de los últimos 30 días.' : 'No hay comprobantes esperando.' %></div><% } %>
+                        <% rows.forEach((receipt) => { const photo = receipt.mediaUrl || receipt.imageData; %>
+                            <article class="wa-card mb-3">
+                                <% if (photo) { %><img src="<%= photo %>" alt="Comprobante" style="width:100%; max-height:420px; object-fit:contain; border-radius:12px; background:#111;">
+                                <% } else { %><p class="text-muted">No se pudo guardar la imagen. El aviso igual quedó registrado.</p><% } %>
+                                <p class="mt-3 mb-1"><strong>De:</strong> <%= receipt.senderName || '—' %></p>
+                                <p class="mb-1"><strong>Para:</strong> <%= receipt.recipientName || '—' %></p>
+                                <p class="mb-1"><strong>Banco:</strong> <%= receipt.bankName || '—' %></p>
+                                <p class="mb-1"><strong>Monto:</strong> <%= receipt.extractedAmount || receipt.declaredAmount || '—' %></p>
+                                <p class="mb-3 text-muted">WhatsApp <%= receipt.waId || '—' %></p>
+                                <% if (!data.papelera) { %>
+                                <form method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>" class="d-flex gap-2">
+                                    <input type="hidden" name="volver" value="comprobantes">
+                                    <button class="wa-btn" name="action" value="confirm" type="submit">Confirmar</button>
+                                    <button class="wa-btn secondary" name="action" value="reject" type="submit">Rechazar</button>
+                                </form>
+                                <% } else { %>
+                                <form method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>">
+                                    <input type="hidden" name="volver" value="comprobantes?papelera=1">
+                                    <button class="wa-btn" name="action" value="restore" type="submit">Volver a verificar</button>
+                                </form>
+                                <% } %>
+                            </article>
+                        <% }) %>
+                    <% } %>
+
                     <% if (section === 'pagos') { const transfer = data.transfer || {}; %>
                         <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/transferencia">
                             <h3 class="h5">Datos de transferencia</h3>
