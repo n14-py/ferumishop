@@ -2,6 +2,7 @@
 
 const wa = require('../lib/whatsapp');
 const agent = require('../lib/wa-agent');
+const { createGather, mergeIncoming } = require('../lib/wa-control/gather');
 const slug = require('../lib/wa-slug');
 const pagopar = require('../lib/pagopar');
 const shop = require('../lib/orders');
@@ -116,6 +117,63 @@ function previewIncoming(text) {
 }
 
 module.exports = function registerWhatsApp(app, deps) {
+    const configuredDelay = Number(process.env.WA_REPLY_DELAY_MS);
+    const gather = createGather({
+        delayMs: Number.isFinite(configuredDelay) && configuredDelay >= 0 ? configuredDelay : 10000
+    });
+
+    async function settleBurst(items) {
+        const merged = mergeIncoming(items);
+        const phoneNumberId = merged.phoneNumberId || wa.config().phoneNumberId;
+        const models = require('../lib/wa-control/models').controlModels();
+        await wa.enqueue(merged.from, async () => {
+            try {
+                const handled = await agent.handleIncoming(merged, deps);
+                const claimedIds = merged.claimedIds || [];
+                if (handled.duplicate) {
+                    console.log('[whatsapp] Mensaje repetido de', merged.from, '— no vuelvo a responder.');
+                    if (claimedIds.length) await models.WaInbound.updateMany({ _id: { $in: claimedIds } }, { $set: { status: 'processed', finishedAt: new Date() } });
+                    return;
+                }
+                const { customerSafeText } = require('../lib/wa-control/text');
+                const outgoing = (handled.outgoing || []).map((reply) => {
+                    if (!reply || typeof reply !== 'object') return reply;
+                    const next = { ...reply };
+                    if (next.text) next.text = customerSafeText(next.text);
+                    if (next.caption) next.caption = customerSafeText(next.caption);
+                    return next;
+                });
+                if (!outgoing.length) {
+                    if (claimedIds.length) await models.WaInbound.updateMany({ _id: { $in: claimedIds } }, { $set: { status: 'processed', finishedAt: new Date() } });
+                    return;
+                }
+                console.log(`[whatsapp] Respondiendo a ${merged.from} (${outgoing.length} mensaje(s))`);
+                const result = await wa.sendReplies(merged.from, outgoing, phoneNumberId);
+                if (handled.sendPaymentLink && handled.paymentIntentKey && result.sent > 0) {
+                    await require('../lib/wa-control/checkout').markPaymentLinkSent(handled.paymentIntentKey);
+                }
+                if (claimedIds.length) {
+                    await models.WaInbound.updateMany({ _id: { $in: claimedIds } }, { $set: { status: result.failed ? 'error' : 'processed', finishedAt: new Date() } });
+                }
+                console.log(`[whatsapp] Fin de envío a ${merged.from}: enviados=${result?.sent || 0} fallidos=${result?.failed || 0}`);
+            } catch (err) {
+                console.error('[whatsapp] NO pude responder a', merged.from, wa.explainGraphError(err));
+                const claimedIds = merged.claimedIds || [];
+                if (claimedIds.length) {
+                    await models.WaInbound.updateMany({ _id: { $in: claimedIds } }, { $set: { status: 'error', error: String(err.message || '').slice(0, 240), finishedAt: new Date() } }).catch(() => {});
+                }
+                const fallbackKey = `error:${merged.wamid || merged.from}`;
+                try {
+                    await models.WaOutbound.create({ key: fallbackKey, waId: merged.from, purpose: 'error', status: 'sending' });
+                    await wa.sendText(merged.from, 'Se me complicó un segundo. Escribime de nuevo y lo retomo.', phoneNumberId);
+                    await models.WaOutbound.updateOne({ key: fallbackKey }, { $set: { status: 'sent', sentAt: new Date() } });
+                } catch (e) {
+                    if (e && e.code !== 11000) console.error('[whatsapp] El aviso de error tampoco salió:', wa.explainGraphError(e));
+                }
+            }
+        });
+    }
+
     app.get('/api/whatsapp/webhook', (req, res) => {
         const result = wa.challengeResponse(req.query);
         if (result.ok) {
@@ -129,7 +187,7 @@ module.exports = function registerWhatsApp(app, deps) {
         return res.status(403).send('Verify token inválido');
     });
 
-    app.post('/api/whatsapp/webhook', (req, res) => {
+    app.post('/api/whatsapp/webhook', async (req, res) => {
         res.status(200).json({ ok: true });
         try {
             const signature = req.get('X-Hub-Signature-256') || req.get('x-hub-signature-256');
@@ -194,68 +252,28 @@ module.exports = function registerWhatsApp(app, deps) {
                     );
                 }
                 const phoneNumberId = incoming.phoneNumberId || cfg.phoneNumberId;
-                wa.enqueue(incoming.from, async () => {
-                    const models = require('../lib/wa-control/models').controlModels();
-                    let claimed = null;
-                    try {
-                        if (incoming.wamid) {
-                            claimed = await models.WaInbound.create({
-                                wamid: incoming.wamid,
-                                waId: incoming.from,
-                                status: 'processing',
-                                type: incoming.type || '',
-                                preview: String(incoming.text || '').slice(0, 80)
-                            });
-                        }
-                    } catch (err) {
-                        if (err && err.code === 11000) {
-                            console.log('[whatsapp] Mensaje repetido de', incoming.from, '— no vuelvo a responder.');
-                            return;
-                        }
-                        console.error('[whatsapp] No pude registrar la deduplicación:', err.message);
-                    }
-                    try {
-                        await wa.markReadTyping(incoming.wamid, phoneNumberId);
-                        const handled = await agent.handleIncoming(incoming, deps);
-                        if (handled.duplicate) {
-                            console.log('[whatsapp] Mensaje repetido de', incoming.from, '— no vuelvo a responder.');
-                            return;
-                        }
-                        const { customerSafeText } = require('../lib/wa-control/text');
-                        const outgoing = (handled.outgoing || []).map((reply) => {
-                            if (!reply || typeof reply !== 'object') return reply;
-                            const next = { ...reply };
-                            if (next.text) next.text = customerSafeText(next.text);
-                            if (next.caption) next.caption = customerSafeText(next.caption);
-                            return next;
+                let claimedId = '';
+                try {
+                    if (incoming.wamid) {
+                        const claimed = await models.WaInbound.create({
+                            wamid: incoming.wamid,
+                            waId: incoming.from,
+                            status: 'processing',
+                            type: incoming.type || '',
+                            preview: String(incoming.text || '').slice(0, 80)
                         });
-                        if (!outgoing.length) {
-                            if (claimed) await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: 'processed', finishedAt: new Date() } });
-                            return;
-                        }
-                        console.log(`[whatsapp] Respondiendo a ${incoming.from} (${outgoing.length} mensaje(s))`);
-                        const result = await wa.sendReplies(incoming.from, outgoing, phoneNumberId);
-                        if (handled.sendPaymentLink && handled.paymentIntentKey && result.sent > 0) {
-                            await require('../lib/wa-control/checkout').markPaymentLinkSent(handled.paymentIntentKey);
-                        }
-                        if (claimed) {
-                            await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: result.failed ? 'error' : 'processed', finishedAt: new Date() } });
-                        }
-                        console.log(`[whatsapp] Fin de envío a ${incoming.from}: enviados=${result?.sent || 0} fallidos=${result?.failed || 0}`);
-                    } catch (err) {
-                        console.error('[whatsapp] NO pude responder a', incoming.from, wa.explainGraphError(err));
-                        if (claimed) {
-                            await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: 'error', error: String(err.message || '').slice(0, 240), finishedAt: new Date() } }).catch(() => {});
-                        }
-                        const fallbackKey = `error:${incoming.wamid || incoming.from}`;
-                        try {
-                            await models.WaOutbound.create({ key: fallbackKey, waId: incoming.from, purpose: 'error', status: 'sending' });
-                            await wa.sendText(incoming.from, 'Se me complicó un segundo. Escribime de nuevo y lo retomo.', phoneNumberId);
-                            await models.WaOutbound.updateOne({ key: fallbackKey }, { $set: { status: 'sent', sentAt: new Date() } });
-                        } catch (e) {
-                            if (e && e.code !== 11000) console.error('[whatsapp] El aviso de error tampoco salió:', wa.explainGraphError(e));
-                        }
+                        claimedId = String(claimed._id);
                     }
+                } catch (err) {
+                    if (err && err.code === 11000) {
+                        console.log('[whatsapp] Mensaje repetido de', incoming.from, '— no vuelvo a responder.');
+                        continue;
+                    }
+                    console.error('[whatsapp] No pude registrar la deduplicación:', err.message);
+                }
+                wa.markReadTyping(incoming.wamid, phoneNumberId).catch(() => {});
+                gather.push(incoming.from, { ...incoming, claimedId, phoneNumberId }, (batch) => {
+                    settleBurst(batch).catch((err) => console.error('[whatsapp] tanda', err.message));
                 });
             }
         } catch (err) {

@@ -75,10 +75,22 @@
                     <div class="info-value"><%= pedido.telefonoOriginal || 'No especificado' %></div>
                 </div>
 
+                <% if (pedido.city) { %>
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-city text-primary"></i> Ciudad</div>
+                    <div class="info-value"><%= pedido.city %></div>
+                </div>
+                <% } %>
                 <% if (pedido.address) { %>
                 <div class="info-group">
                     <div class="info-label"><i class="fas fa-home text-primary"></i> Dirección</div>
                     <div class="info-value"><%= pedido.address %></div>
+                </div>
+                <% } %>
+                <% if (pedido.paymentNote) { %>
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-money-bill text-success"></i> Pago</div>
+                    <div class="info-value"><%= pedido.paymentNote %></div>
                 </div>
                 <% } %>
                 

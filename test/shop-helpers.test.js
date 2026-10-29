@@ -90,11 +90,32 @@ test('thermal ticket QR is dual-use pedido URL', () => {
         createdAt: new Date(),
         ticketCode: 'FM-ABC',
         orderNumber: 'FER-1',
-        shippingMethod: 'motobolt'
+        shippingMethod: 'motobolt',
+        shippingCity: 'San Lorenzo',
+        shippingReference: 'casa azul'
     });
     assert.match(pedido.qrPayload, /\/pedido\/FM-ABC/);
     assert.match(pedido.qrHint, /Motobolt/i);
     assert.equal(pedido.shippingLabel, 'Motobolt');
+    assert.equal(pedido.phone, '0981');
+    assert.equal(pedido.city, 'San Lorenzo');
+    assert.equal(pedido.cliente, 'Ana');
+    const paid = shop.paymentNote({ paymentStatus: 'pagado', totalAmount: 25000 });
+    assert.match(paid, /Ya está pagado/);
+    assert.match(paid, /No cobrar/);
+    const transfer = shop.paymentNote({ paymentStatus: 'pendiente', paymentMethod: 'transferencia', totalAmount: 25000 });
+    assert.match(transfer, /cobrar/i);
+    const view = shop.deliveryPedidoFromWebOrder({
+        _id: '65f000000000000000000001',
+        customerName: 'Ana',
+        customerPhone: '0981',
+        totalAmount: 25000,
+        paymentStatus: 'pagado',
+        shippingCity: 'San Lorenzo',
+        items: []
+    });
+    assert.match(view.paymentNote, /No cobrar/);
+    assert.equal(view.city, 'San Lorenzo');
 });
 
 test('scan extracts ticket from URL or FERUMI code', () => {
