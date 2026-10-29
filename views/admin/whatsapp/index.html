@@ -95,6 +95,7 @@
                     <% } %>
 
                     <% if (section === 'conversaciones' || section === 'atencion') { %>
+                        <% if (section === 'atencion') { %><div class="wa-card mb-3"><h3 class="h5 mb-1">Chats para una persona</h3><p class="text-muted mb-0">Cuando alguien pide hablar con una persona, el chat aparece acá y la IA deja de responder.</p></div><% } %>
                         <form class="wa-card wa-form mb-3" method="get" action="/admin/whatsapp/<%= section %>">
                             <input name="q" placeholder="Nombre, teléfono o pedido" value="<%= query.q || '' %>">
                             <select name="status">
@@ -104,13 +105,13 @@
                             <button type="submit">Buscar</button>
                         </form>
                         <div class="wa-card mb-3">
-                            <% if (!(data.items || []).length) { %><p class="text-muted mb-0">No hay conversaciones con ese filtro.</p><% } %>
+                            <% if (!(data.items || []).length) { %><p class="text-muted mb-0"><%= section === 'atencion' ? 'Nadie está esperando una persona en este momento.' : 'No hay conversaciones con ese filtro.' %></p><% } %>
                             <table class="wa-table">
                                 <thead><tr><th>Cliente</th><th>Estado</th><th>Pedido</th></tr></thead>
                                 <tbody>
                                 <% (data.items || []).forEach((item) => { %>
                                     <tr>
-                                        <td><a href="/admin/whatsapp/conversaciones?id=<%= item._id %>"><%= item.profileName || item.customer?.name || item.waId %></a><br><small><%= item.waId %></small></td>
+                                        <td><a href="/admin/whatsapp/<%= section %>?id=<%= item._id %>"><%= item.profileName || item.customer?.name || item.waId %></a><br><small><%= item.waId %></small></td>
                                         <td><span class="wa-pill"><%= labels[item.attentionStatus] || item.attentionStatus || 'IA activa' %></span></td>
                                         <td><%= item.lastOrderNumber || '—' %></td>
                                     </tr>
@@ -226,13 +227,24 @@
                         <% } %>
                     <% } %>
 
-                    <% if (section === 'pagos') { %>
+                    <% if (section === 'pagos') { const transfer = data.transfer || {}; %>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/transferencia">
+                            <h3 class="h5">Datos de transferencia</h3>
+                            <p class="text-muted">La IA envía estos datos cuando el cliente quiere transferir. El comprobante aparece más abajo.</p>
+                            <input name="bank" placeholder="Banco, por ejemplo Ueno" value="<%= transfer.bank || '' %>">
+                            <input name="alias" placeholder="Alias" value="<%= transfer.alias || '' %>">
+                            <input name="holderName" placeholder="Nombre de la cuenta" value="<%= transfer.holderName || '' %>">
+                            <textarea name="note" placeholder="Nota opcional"><%= transfer.note || '' %></textarea>
+                            <% if (perms['wa.payments.approve']) { %><button type="submit">Guardar transferencia</button><% } %>
+                        </form>
                         <div class="wa-card mb-3">
-                            <h3 class="h5">Comprobantes</h3>
+                            <h3 class="h5">Comprobantes recibidos</h3>
+                            <p class="text-muted">PagoPar es QR, crédito y débito. Una foto de transferencia no confirma el pago sola.</p>
                             <% if (!(data.receipts || []).length) { %><p class="text-muted">No hay comprobantes cargados.</p><% } %>
                             <% (data.receipts || []).forEach((receipt) => { %>
                                 <div class="border-bottom py-2">
-                                    <strong><%= receipt.status %></strong> · pedido <%= receipt.orderId || 'sin asociar' %> · declarado <%= receipt.declaredAmount || '—' %> · esperado <%= receipt.expectedAmount || '—' %>
+                                    <strong><%= receipt.status %></strong> · <%= receipt.waId || '' %> · pedido <%= receipt.orderId || 'sin asociar' %> · declarado <%= receipt.declaredAmount || '—' %> · esperado <%= receipt.expectedAmount || '—' %>
+                                    <% if (receipt.mediaUrl) { %><div><a href="<%= receipt.mediaUrl %>" target="_blank" rel="noopener">Ver comprobante</a></div><% } %>
                                     <% if (perms['wa.payments.approve']) { %>
                                     <form class="wa-form mt-2" method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>">
                                         <select name="action">
@@ -338,7 +350,8 @@
                         </form>
                         <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/tarifas">
                             <h3 class="h5">Nueva tarifa</h3>
-                            <input name="name" placeholder="Nombre" required>
+                            <p class="text-muted">Si cargás «Capiatá ruta 2» y un precio, todo lo que diga Capiatá ruta 2 usa ese precio. Un lugar más largo gana sobre el general.</p>
+                            <input name="name" placeholder="Lugar, por ejemplo Capiatá ruta 2" required>
                             <select name="method" required><option value="delivery_propio">Delivery propio</option><option value="motobolt">MotoBolt</option><option value="transportadora">Transportadora</option><option value="retiro">Retiro</option></select>
                             <input name="city" placeholder="Ciudad">
                             <input name="zone" placeholder="Zona">

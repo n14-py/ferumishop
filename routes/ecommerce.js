@@ -321,8 +321,8 @@ module.exports = function registerEcommerce(app, deps) {
             }
 
             const totalAmount = Math.max(0, subtotal - discountAmount);
-            if (totalAmount < 1000 && paymentMethod === 'pagopar') {
-                return res.status(400).json({ success: false, message: 'El total es demasiado bajo para Pagopar.' });
+            if (totalAmount <= 0 && paymentMethod === 'pagopar') {
+                return res.status(400).json({ success: false, message: 'El total del pedido no es válido.' });
             }
 
             const order = new WebOrder({

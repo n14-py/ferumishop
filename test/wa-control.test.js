@@ -18,6 +18,10 @@ const {
 const { collapseOutgoing, createMemoryOutbound, claimOutbound } = require('../lib/wa-control/outbound');
 const { validateInboundImage, matchCatalogByDescription, visionStatus } = require('../lib/wa-control/vision');
 const { simulateTurn, SCENARIOS } = require('../lib/wa-control/simulator');
+const { rankCatalog, catalogReply, replyDeniesCatalog } = require('../lib/wa-control/catalog');
+const { transferMessage } = require('../lib/wa-control/transfer');
+const pagopar = require('../lib/pagopar');
+const agent = require('../lib/wa-agent');
 const { summarizeOperations } = require('../lib/wa-control/dashboard');
 const { competeForLastUnit } = require('../lib/orders');
 const wa = require('../lib/whatsapp');
@@ -365,4 +369,52 @@ test('whatsapp admin sections render inside the existing shell', async () => {
     });
     assert.match(detail, /Hola ñandú/);
     assert.match(detail, /Pausar IA/);
+});
+
+test('pinzas matches pinza products and a denial is replaced', () => {
+    const found = rankCatalog([
+        { name: 'Pinzas para cejas', description: 'acero', price: 15000, stock: 4 },
+        { name: 'Labial', description: 'rojo', price: 25000, stock: 2 }
+    ], 'tienen pinzas?');
+    assert.equal(found[0].name, 'Pinzas para cejas');
+    assert.equal(replyDeniesCatalog('No tenemos pinzas'), true);
+    assert.match(catalogReply(found), /Pinzas para cejas/);
+});
+
+test('Capiatá ruta 2 uses that price and a general Capiatá does not override it', () => {
+    const rates = [
+        { id: 'general', method: 'delivery_propio', name: 'Capiatá', city: 'Capiatá', basePrice: 15000, priority: 1, active: true },
+        { id: 'ruta', method: 'delivery_propio', name: 'Capiatá ruta 2', city: 'Capiatá ruta 2', basePrice: 20000, priority: 1, active: true }
+    ];
+    const specific = quoteShipping(rates, { method: 'delivery_propio', city: 'Capiatá', address: 'ruta 2 km 25' });
+    assert.equal(specific.amount, 20000);
+    assert.equal(specific.ruleId, 'ruta');
+    const general = quoteShipping(rates, { method: 'delivery_propio', city: 'Capiatá', address: 'centro' });
+    assert.equal(general.amount, 15000);
+});
+
+test('PagoPar has no 5000 minimum and shipping is included in the charge', () => {
+    const order = agent.canCreateOrder({
+        cart: [{ name: 'Pinza', price: 5000, quantity: 1 }],
+        customer: { name: 'Ana', document: '123', email: 'a@b.c', phone: '0981' },
+        shipping: { method: 'retiro', address: 'Local' }
+    });
+    assert.equal(order.ok, true);
+    assert.equal(order.total, 5000);
+    const aligned = pagopar.alignCompraItems([
+        { precio_total: 5000, public_key: 'pub', url_imagen: 'https://ferumi.shop/ferumi.logo.png' }
+    ], 7000);
+    assert.equal(aligned.reduce((sum, item) => sum + item.precio_total, 0), 7000);
+    assert.equal(aligned[1].nombre, 'Envio');
+});
+
+test('transfer message uses the configured alias and human words are recognized', () => {
+    const message = transferMessage({ alias: 'ferumi.ueno', bank: 'Ueno', holderName: 'Ferumi Shop' }, { total: '5.000 Gs.' });
+    assert.match(message.text, /ferumi\.ueno/);
+    assert.match(message.text, /Ueno/);
+    assert.match(message.text, /Ferumi Shop/);
+    assert.match(message.text, /comprobante/);
+    assert.equal(transferMessage({}).ok, false);
+    assert.equal(wantsHuman('humano'), true);
+    assert.equal(wantsHuman('quiero hablar con alguien del local'), true);
 });
