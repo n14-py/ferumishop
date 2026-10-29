@@ -301,6 +301,53 @@
                         <% }) %>
                     <% } %>
 
+                    <% if (section === 'mapa') { const store = data.store || {}; %>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/mapa">
+                            <h3 class="h5">Local de Ferumi Shop</h3>
+                            <p class="text-muted">Esta coordenada es el origen. La de cada cliente se guarda exacta para el ticket y el mapa.</p>
+                            <input id="storeLat" name="storeLat" value="<%= store.lat %>" required>
+                            <input id="storeLng" name="storeLng" value="<%= store.lng %>" required>
+                            <% if (perms['wa.delivery']) { %><button type="submit">Guardar local</button><% } %>
+                        </form>
+                        <div id="ferumi-map" class="wa-card mb-3" style="height:360px;"></div>
+                        <form class="wa-card wa-form mb-3" method="get" action="/admin/whatsapp/mapa">
+                            <h3 class="h6">Probar una coordenada</h3>
+                            <input name="lat" placeholder="Latitud" value="<%= query.lat || '' %>">
+                            <input name="lng" placeholder="Longitud" value="<%= query.lng || '' %>">
+                            <input name="address" placeholder="Texto, por ejemplo San Lorenzo" value="<%= query.address || '' %>">
+                            <button type="submit">Calcular</button>
+                            <% if (data.sample) { %>
+                                <p class="mt-2 mb-1">Ciudad: <strong><%= data.sample.city || 'interior' %></strong> · Distancia: <%= data.sample.distanceKm %> km</p>
+                                <p class="mb-1">Coordenada: <%= data.sample.label %></p>
+                                <% if (data.sample.routeUrl) { %><a href="<%= data.sample.routeUrl %>" target="_blank" rel="noopener">Abrir recorrido en Google Maps</a><% } %>
+                            <% } %>
+                        </form>
+                        <div class="wa-card">
+                            <h3 class="h6">Ubicaciones guardadas en pedidos</h3>
+                            <% if (!(data.orders || []).length) { %><p class="text-muted mb-0">Todavía no hay pedidos con coordenadas.</p><% } %>
+                            <% (data.orders || []).forEach((order) => { %>
+                                <div>
+                                    <%= order.orderNumber %> · <%= order.shippingCity || 'sin ciudad' %> ·
+                                    <%= order.shippingCoords && order.shippingCoords.lat %>, <%= order.shippingCoords && order.shippingCoords.lng %>
+                                </div>
+                            <% }) %>
+                        </div>
+                        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+                        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                        <script>
+                            const lat = Number(document.getElementById('storeLat').value);
+                            const lng = Number(document.getElementById('storeLng').value);
+                            const map = L.map('ferumi-map').setView([lat, lng], 12);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+                            const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                            marker.on('dragend', () => {
+                                const point = marker.getLatLng();
+                                document.getElementById('storeLat').value = point.lat.toFixed(7);
+                                document.getElementById('storeLng').value = point.lng.toFixed(7);
+                            });
+                        </script>
+                    <% } %>
+
                     <% if (section === 'delivery') { const settings = data.settings || {}; %>
                         <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/delivery">
                             <h3 class="h5">Salida habitual</h3>

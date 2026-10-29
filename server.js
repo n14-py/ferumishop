@@ -315,7 +315,7 @@ const webOrderSchema = new mongoose.Schema({
     pagoparFormaPago: { type: String, default: '' },
     pagoparLastConsulta: { type: mongoose.Schema.Types.Mixed },
     status: { type: String, enum: ['pendiente', 'pagado', 'cancelado'], default: 'pendiente' },
-    paymentMethod: { type: String, enum: ['pagopar', 'efectivo_retiro', 'transferencia', 'mixto'], default: 'pagopar' },
+    paymentMethod: { type: String, enum: ['pagopar', 'efectivo_retiro', 'efectivo', 'transferencia', 'mixto'], default: 'pagopar' },
     paymentStatus: { type: String, enum: ['pendiente', 'pagado', 'cancelado', 'reembolsado'], default: 'pendiente' },
     shippingMethod: { type: String, enum: ['motobolt', 'transportadora', 'retiro', 'delivery_propio'], default: 'retiro' },
     shippingAddress: { type: String, default: '' },

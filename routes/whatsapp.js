@@ -221,7 +221,14 @@ module.exports = function registerWhatsApp(app, deps) {
                             console.log('[whatsapp] Mensaje repetido de', incoming.from, '— no vuelvo a responder.');
                             return;
                         }
-                        const outgoing = handled.outgoing || [];
+                        const { customerSafeText } = require('../lib/wa-control/text');
+                        const outgoing = (handled.outgoing || []).map((reply) => {
+                            if (!reply || typeof reply !== 'object') return reply;
+                            const next = { ...reply };
+                            if (next.text) next.text = customerSafeText(next.text);
+                            if (next.caption) next.caption = customerSafeText(next.caption);
+                            return next;
+                        });
                         if (!outgoing.length) {
                             if (claimed) await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: 'processed', finishedAt: new Date() } });
                             return;

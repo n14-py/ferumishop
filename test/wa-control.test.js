@@ -20,6 +20,10 @@ const { validateInboundImage, matchCatalogByDescription, visionStatus } = requir
 const { simulateTurn, SCENARIOS } = require('../lib/wa-control/simulator');
 const { rankCatalog, catalogReply, replyDeniesCatalog } = require('../lib/wa-control/catalog');
 const { transferMessage } = require('../lib/wa-control/transfer');
+const { describePoint } = require('../lib/wa-control/geo');
+const { planTurn } = require('../lib/wa-control/flow');
+const { customerSafeText } = require('../lib/wa-control/text');
+const { controlModels } = require('../lib/wa-control/models');
 const pagopar = require('../lib/pagopar');
 const agent = require('../lib/wa-agent');
 const { summarizeOperations } = require('../lib/wa-control/dashboard');
@@ -417,4 +421,55 @@ test('transfer message uses the configured alias and human words are recognized'
     assert.equal(transferMessage({}).ok, false);
     assert.equal(wantsHuman('humano'), true);
     assert.equal(wantsHuman('quiero hablar con alguien del local'), true);
+});
+
+test('a San Lorenzo pin keeps exact coordinates and the city price step comes before payment data', () => {
+    const place = describePoint({
+        lat: -25.3397,
+        lng: -57.5076,
+        store: { lat: -25.28646, lng: -57.647 }
+    });
+    assert.equal(place.city, 'San Lorenzo');
+    assert.equal(place.inZone, true);
+    assert.match(place.label, /^-25\.3397/);
+    const shown = planTurn({
+        text: 'tienen pinzas',
+        stage: 'browsing',
+        products: [{ _id: 'p1', name: 'Pinzas para cejas', price: 15000 }]
+    });
+    assert.match(shown.replies[0], /Pinzas para cejas/);
+    assert.equal(shown.stage, 'browsing');
+    const shipping = planTurn({
+        text: 'solo eso',
+        stage: 'browsing',
+        cart: [{ name: 'Pinzas para cejas', price: 15000, quantity: 1 }],
+        departureTime: '18:00'
+    });
+    assert.equal(shipping.stage, 'shipping');
+    assert.match(shipping.replies[0], /18:00/);
+    assert.match(shipping.replies[0], /Motobolt/);
+    assert.match(shipping.replies[0], /Transportadora/);
+    const pay = planTurn({
+        text: 'delivery propio',
+        stage: 'shipping',
+        cart: [{ name: 'Pinzas' }],
+        place,
+        quote: { ok: true, amount: 20000 },
+        transfer: { alias: 'ferumi.ueno', bank: 'Ueno', holderName: 'Ferumi' },
+        departureTime: '18:00'
+    });
+    assert.equal(pay.stage, 'payment');
+    assert.match(pay.replies.join('\n'), /20\.000/);
+    assert.match(pay.replies.join('\n'), /ferumi\.ueno/);
+    assert.match(pay.replies.join('\n'), /PagoPar/);
+    const cash = planTurn({ text: 'puedo pagar en efectivo?', stage: 'payment', place, departureTime: '18:00' });
+    assert.match(cash.replies[0], /día siguiente/);
+    const interior = planTurn({
+        text: 'efectivo',
+        stage: 'payment',
+        place: { ...place, inZone: false, interior: true, city: '' }
+    });
+    assert.match(interior.replies[0], /interior/);
+    assert.equal(customerSafeText('PagoPar rechazó la transacción'), 'Seguimos desde acá. Decime si seguís con el producto, el envío o el pago.');
+    assert.ok(controlModels().WaSettings.schema.path('transfer.alias'));
 });

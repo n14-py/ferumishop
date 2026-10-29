@@ -17,6 +17,7 @@ const NAV = [
     ['pagos', 'Pagos', 'fa-money-check'],
     ['catalogo', 'Catálogo IA', 'fa-box'],
     ['delivery', 'Delivery', 'fa-motorcycle'],
+    ['mapa', 'Mapa', 'fa-map-location-dot'],
     ['tarifas', 'Tarifas', 'fa-map'],
     ['transportadoras', 'Transportadoras', 'fa-truck'],
     ['ia', 'Configuración IA', 'fa-robot'],
@@ -78,6 +79,20 @@ async function loadSection(section, query) {
         const filter = q ? { name: q } : {};
         const products = await mongoose.model('Product').find(filter).select('name price stock aiVisible aiNotes aiUsage isForSale').sort({ name: 1 }).limit(80).lean();
         return { products };
+    }
+    if (section === 'mapa') {
+        const geo = require('../lib/wa-control/geo');
+        const shop = require('../lib/orders');
+        const site = await mongoose.model('SiteConfig').findOne({ configKey: 'main_config' }).lean();
+        const store = shop.storeFromConfig(site || {});
+        const orders = await mongoose.model('WebOrder').find({
+            'shippingCoords.lat': { $exists: true },
+            deletedAt: { $exists: false }
+        }).sort({ createdAt: -1 }).limit(15).select('orderNumber customerName shippingCity shippingCoords shippingDistanceKm').lean();
+        const sample = query.lat && query.lng
+            ? geo.describePoint({ lat: query.lat, lng: query.lng, address: query.address || '', store })
+            : null;
+        return { store, orders, sample };
     }
     if (section === 'delivery') {
         const settings = await models.WaSettings.findOne({ key: 'main' }).lean();
@@ -217,7 +232,10 @@ module.exports = function registerWaAdmin(app, deps) {
                     updatedBy: req.user.username || req.user.email
                 }
             }, { upsert: true });
-            req.session.success = 'Datos de transferencia guardados. La IA va a usar exactamente esos datos.';
+            const alias = String(req.body.alias || '').trim();
+            req.session.success = alias
+                ? `Transferencia guardada. Alias: ${alias}.`
+                : 'Guardé el banco y el nombre, pero el alias está vacío.';
             return back(res, 'pagos');
         } catch (err) { return next(err); }
     });
@@ -254,6 +272,24 @@ module.exports = function registerWaAdmin(app, deps) {
             });
             req.session.success = 'Visibilidad del producto actualizada.';
             return back(res, 'catalogo');
+        } catch (err) { return next(err); }
+    });
+
+    app.post('/admin/whatsapp/mapa', requirePermission('wa.delivery'), async (req, res, next) => {
+        try {
+            const lat = Number(req.body.storeLat);
+            const lng = Number(req.body.storeLng);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                req.session.error = 'La coordenada del local no es válida.';
+                return back(res, 'mapa');
+            }
+            await mongoose.model('SiteConfig').updateOne(
+                { configKey: 'main_config' },
+                { $set: { storeLat: lat, storeLng: lng } },
+                { upsert: true }
+            );
+            req.session.success = `Local guardado en ${lat}, ${lng}.`;
+            return back(res, 'mapa');
         } catch (err) { return next(err); }
     });
 
