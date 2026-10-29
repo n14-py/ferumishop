@@ -21,7 +21,7 @@ const { simulateTurn, SCENARIOS } = require('../lib/wa-control/simulator');
 const { rankCatalog, catalogReply, replyDeniesCatalog } = require('../lib/wa-control/catalog');
 const { transferMessage } = require('../lib/wa-control/transfer');
 const { describePoint } = require('../lib/wa-control/geo');
-const { parseTransferText, trashStillVisible } = require('../lib/wa-control/receipt-read');
+const { parseTransferText, trashStillVisible, interpretReceiptVision } = require('../lib/wa-control/receipt-read');
 const { alreadyClaimsReceipt } = require('../lib/wa-control/flow');
 const { parseCoord } = require('../lib/whatsapp');
 const { planTurn } = require('../lib/wa-control/flow');
@@ -376,6 +376,26 @@ test('whatsapp admin sections render inside the existing shell', async () => {
     });
     assert.match(detail, /Hola ñandú/);
     assert.match(detail, /Pausar IA/);
+    const comprobantes = await ejs.renderFile(view, {
+        ...locals,
+        section: 'comprobantes',
+        data: {
+            papelera: false,
+            pending: [{
+                _id: 'r1',
+                waId: '595981000000',
+                senderName: 'Ana',
+                recipientName: 'Ferumi',
+                bankName: 'Ueno',
+                extractedAmount: 25000,
+                rawText: 'Banco Ueno Para Ferumi De Ana Gs. 25000'
+            }],
+            trash: []
+        }
+    });
+    assert.match(comprobantes, /name="action" value="confirm"/);
+    assert.match(comprobantes, /Banco Ueno Para Ferumi/);
+    assert.doesNotMatch(comprobantes, /name="action" value="confirm" type="submit"/);
 });
 
 test('pinzas matches pinza products and a denial is replaced', () => {
@@ -475,6 +495,41 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     assert.match(interior.replies[0], /interior/);
     assert.equal(customerSafeText('PagoPar rechazó la transacción'), 'Seguimos desde acá. Decime si seguís con el producto, el envío o el pago.');
     assert.ok(controlModels().WaSettings.schema.path('transfer.alias'));
+    const question = planTurn({
+        text: 'Delivery propio sale a las 6?',
+        stage: 'shipping',
+        cart: [{ name: 'Pinzas para cejas' }],
+        products: [{ _id: 'p1', name: 'Pinzas para cejas', price: 15000 }],
+        place,
+        quote: { ok: true, amount: 20000 },
+        chosenMethod: 'delivery_propio',
+        departureTime: '18:00'
+    });
+    assert.equal(question.showProduct, undefined);
+    assert.equal(question.handled, true);
+    assert.match(question.replies[0], /18:00/);
+    assert.match(question.replies[0], /20\.000/);
+    assert.doesNotMatch(question.replies.join('\n'), /Pinzas/);
+    const complaint = planTurn({
+        text: 'no te pedí nada',
+        stage: 'browsing',
+        products: [{ _id: 'p1', name: 'Pinzas para cejas', price: 15000 }]
+    });
+    assert.equal(complaint.showProduct, undefined);
+    assert.equal(complaint.handled, true);
+    assert.doesNotMatch(complaint.replies.join('\n'), /Pinzas/);
+    const located = planTurn({
+        text: '',
+        hasLocation: true,
+        stage: 'shipping',
+        chosenMethod: 'delivery_propio',
+        place,
+        quote: { ok: true, amount: 20000 },
+        departureTime: '18:00'
+    });
+    assert.match(located.replies[0], /20\.000/);
+    assert.equal(located.stage, 'payment');
+    assert.doesNotMatch(located.replies.join('\n'), /maps\.google|google\.com\/maps|-25\.3397|km de/);
 });
 
 test('the customer pin is stored exactly and a receipt photo is not another alias', () => {
@@ -496,4 +551,19 @@ test('the customer pin is stored exactly and a receipt photo is not another alia
     const now = new Date('2026-10-29T12:00:00Z');
     assert.equal(trashStillVisible(new Date('2026-10-20T12:00:00Z'), now), true);
     assert.equal(trashStillVisible(new Date('2026-09-01T12:00:00Z'), now), false);
+    const read = interpretReceiptVision(`Banco Ueno
+Para Ferumi Shop
+De Ana Gomez
+Gs. 25.000
+JSON: {"es_transferencia":true,"monto":25,"banco":"","destinatario":"","emisor":""}`);
+    assert.match(read.rawText, /Ferumi Shop/);
+    assert.match(read.rawText, /Ana Gomez/);
+    assert.equal(read.parsed.amount, 25000);
+    assert.match(read.parsed.bank, /Ueno/i);
+    assert.match(read.parsed.recipientName, /Ferumi/);
+    assert.match(read.parsed.senderName, /Ana/);
+    const kept = guardCustomerReply('Tu pago ya está confirmado', { paymentConfirmed: true });
+    assert.match(kept, /ya está confirmado/i);
+    const corrected = guardCustomerReply('Todavía no está confirmado el pago', { paymentConfirmed: true });
+    assert.match(corrected, /ya está confirmada/i);
 });

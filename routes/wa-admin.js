@@ -215,11 +215,22 @@ module.exports = function registerWaAdmin(app, deps) {
     });
 
     app.post('/admin/whatsapp/pagos/:id', requirePermission('wa.payments.approve'), async (req, res, next) => {
+        const volver = String(req.body.volver || 'comprobantes');
         try {
-            const result = await service.reviewReceipt(req.params.id, req.body.action, req.user, req.body);
-            req.session[result.ok ? 'success' : 'error'] = result.ok ? 'Listo.' : result.message;
-            return back(res, req.body.volver || 'comprobantes');
-        } catch (err) { return next(err); }
+            const action = String(req.body.action || '').trim();
+            if (!action) {
+                req.session.error = 'No llegó la acción. Tocá Confirmar otra vez.';
+                return back(res, volver);
+            }
+            const result = await service.reviewReceipt(req.params.id, action, req.user, req.body);
+            if (result.ok) req.session.success = result.message || 'Listo.';
+            else req.session.error = result.message;
+            return back(res, volver);
+        } catch (err) {
+            console.error('[whatsapp] confirmar comprobante', err);
+            req.session.error = `No se pudo confirmar: ${String(err.message || 'error').slice(0, 180)}`;
+            return back(res, volver);
+        }
     });
 
     app.post('/admin/whatsapp/transferencia', requirePermission('wa.payments.approve'), async (req, res, next) => {
