@@ -50,7 +50,10 @@ async function loadSection(section, query) {
     const models = controlModels();
     if (section === 'dashboard') return service.dashboardData(query);
     if (section === 'conversaciones' || section === 'atencion') {
-        const list = await service.listConversations(query);
+        const list = await service.listConversations({
+            ...query,
+            status: query.status || (section === 'atencion' ? 'humanos' : '')
+        });
         const detail = query.id ? await service.getConversation(query.id) : null;
         const admins = await mongoose.model('AdminUser').find().select('username email role').lean();
         return { ...list, detail, labels: ATTENTION_LABELS, admins };
@@ -67,7 +70,8 @@ async function loadSection(section, query) {
     if (section === 'pagos') {
         const receipts = await models.WaReceipt.find({}).sort({ createdAt: -1 }).limit(80).lean();
         const intents = await models.WaPaymentIntent.find({}).sort({ updatedAt: -1 }).limit(40).lean();
-        return { receipts, intents };
+        const settings = await models.WaSettings.findOne({ key: 'main' }).lean();
+        return { receipts, intents, transfer: settings?.transfer || {} };
     }
     if (section === 'catalogo') {
         const q = query.q ? new RegExp(String(query.q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
@@ -195,6 +199,25 @@ module.exports = function registerWaAdmin(app, deps) {
             }
             const result = await service.reviewReceipt(req.params.id, req.body.action, req.user, req.body);
             req.session[result.ok ? 'success' : 'error'] = result.ok ? 'Comprobante actualizado.' : result.message;
+            return back(res, 'pagos');
+        } catch (err) { return next(err); }
+    });
+
+    app.post('/admin/whatsapp/transferencia', requirePermission('wa.payments.approve'), async (req, res, next) => {
+        try {
+            await controlModels().WaSettings.updateOne({ key: 'main' }, {
+                $set: {
+                    transfer: {
+                        alias: String(req.body.alias || '').trim(),
+                        bank: String(req.body.bank || '').trim(),
+                        holderName: String(req.body.holderName || '').trim(),
+                        note: String(req.body.note || '').trim()
+                    },
+                    updatedAt: new Date(),
+                    updatedBy: req.user.username || req.user.email
+                }
+            }, { upsert: true });
+            req.session.success = 'Datos de transferencia guardados. La IA va a usar exactamente esos datos.';
             return back(res, 'pagos');
         } catch (err) { return next(err); }
     });

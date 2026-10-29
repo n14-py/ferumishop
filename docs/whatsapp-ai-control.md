@@ -8,6 +8,14 @@ Los enlaces de PagoPar se repetían porque cada confirmación creaba un pedido n
 
 Ahora cada operación de pago tiene una clave estable. Si PagoPar no confirma el resultado, la operación queda incierta y no se llama de nuevo. Un mensaje de WhatsApp con el mismo `wamid` se registra una sola vez.
 
+## Transferencia y envío
+
+En WhatsApp AI → Pagos se cargan banco, alias y nombre. La IA envía exactamente esos datos y el comprobante queda en ese mismo apartado, sin marcar el pago como confirmado.
+
+En Tarifas, un lugar como «Capiatá ruta 2» con un precio aplica a todo destino que contenga esa frase. Si también existe «Capiatá», gana la frase más específica.
+
+PagoPar no tiene monto mínimo. El enlace incluye QR, tarjeta de crédito y débito. Si el envío tiene precio, ese importe entra en el total que se manda a PagoPar.
+
 ## Variables nuevas
 
 No hace falta ninguna variable para el funcionamiento actual. Opcionales:
