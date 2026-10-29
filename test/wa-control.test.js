@@ -25,6 +25,7 @@ const { parseTransferText, trashStillVisible, interpretReceiptVision } = require
 const { alreadyClaimsReceipt } = require('../lib/wa-control/flow');
 const { parseCoord } = require('../lib/whatsapp');
 const { planTurn } = require('../lib/wa-control/flow');
+const { speakTurn } = require('../lib/wa-control/speak');
 const { customerSafeText } = require('../lib/wa-control/text');
 const { controlModels } = require('../lib/wa-control/models');
 const pagopar = require('../lib/pagopar');
@@ -530,6 +531,45 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     assert.match(located.replies[0], /20\.000/);
     assert.equal(located.stage, 'payment');
     assert.doesNotMatch(located.replies.join('\n'), /maps\.google|google\.com\/maps|-25\.3397|km de/);
+});
+
+test('the purchase is spoken, the greeting asks the name, and a question is answered in prose', async () => {
+    const hi = planTurn({ text: 'hola', stage: 'browsing', customer: {} });
+    assert.equal(hi.askName, true);
+    assert.equal(hi.showProduct, undefined);
+    assert.match(hi.replies[0], /nombre/i);
+    const named = planTurn({ text: 'Ana Gomez', stage: 'browsing', awaitingName: true, customer: {} });
+    assert.equal(named.customer.name, 'Ana Gomez');
+    assert.equal(named.clearNameAsk, true);
+    const facts = 'Sí. El delivery propio sale todos los días a las 18:00 (6:00 pm). A San Lorenzo son 20.000 Gs.';
+    const spoken = await speakTurn({
+        text: 'Delivery propio sale a las 6?',
+        facts,
+        customerName: 'Ana',
+        chat: async () => 'Sale todos los días a las 6 de la tarde. El delivery propio a San Lorenzo te queda en 20.000 Gs.'
+    });
+    assert.equal(spoken.spoken, true);
+    assert.match(spoken.text, /6 de la tarde/);
+    assert.doesNotMatch(spoken.text, /Te muestro/);
+    let tries = 0;
+    const retried = await speakTurn({
+        text: 'Delivery propio sale a las 6?',
+        facts,
+        chat: async () => {
+            tries += 1;
+            return tries === 1 ? 'Sale a la tarde.' : 'El delivery propio a San Lorenzo sale a la tarde y son 20.000 Gs.';
+        }
+    });
+    assert.equal(retried.spoken, true);
+    assert.match(retried.text, /20\.000/);
+    const leaked = await speakTurn({
+        text: 'te mando la ubicación',
+        facts: 'Delivery propio a San Lorenzo: 20.000 Gs.',
+        chat: async () => 'Tu pin es -25.3397000, a 8 km, y el delivery propio sale 20.000 Gs.'
+    });
+    assert.equal(leaked.spoken, false);
+    assert.match(leaked.text, /20\.000/);
+    assert.doesNotMatch(leaked.text, /-25\.3397/);
 });
 
 test('the customer pin is stored exactly and a receipt photo is not another alias', () => {
