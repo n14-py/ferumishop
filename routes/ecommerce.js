@@ -29,6 +29,7 @@ async function applyPaidOrder(deps, order, pagoInfo) {
     if (paid && order.paymentStatus !== 'pagado') {
         order.paymentStatus = 'pagado';
         order.status = 'pagado';
+        order.financialStatus = 'confirmado';
         order.paidAt = new Date();
         shop.appendEvent(order, shop.FULFILLMENT.PAGADO);
         shop.appendEvent(order, shop.FULFILLMENT.PREPARANDO, 'Pago confirmado. El equipo ya está preparando tu pedido.');
@@ -251,6 +252,13 @@ module.exports = function registerEcommerce(app, deps) {
                             trackingUrl: `/tracking?q=${encodeURIComponent(existing.ticketCode)}`
                         });
                     }
+                    if (existing.pagoparAttemptStatus === 'uncertain' && existing.paymentStatus !== 'pagado') {
+                        return res.status(409).json({
+                            success: false,
+                            uncertain: true,
+                            message: 'El intento anterior con PagoPar quedó sin confirmación. No genero otro pedido ni otro enlace.'
+                        });
+                    }
                     if (existing.paymentMethod === 'efectivo_retiro' && existing.status !== 'cancelado') {
                         return res.json({
                             success: true,
@@ -360,21 +368,40 @@ module.exports = function registerEcommerce(app, deps) {
                 });
             }
 
-            const { result } = await pagopar.iniciarTransaccion({
-                orderId: String(order._id),
-                montoTotal: totalAmount,
-                customer: {
-                    name: customerName,
-                    email: customerEmail,
-                    document: customerDocument,
-                    phone: customerPhone,
-                    address,
-                    reference,
-                    coords: (lat != null && lng != null) ? `${lat},${lng}` : ''
-                },
-                items: normalizedItems,
-                descripcion: `FERUMI ${order.orderNumber}`
-            });
+            let result;
+            try {
+                order.pagoparAttemptStatus = 'calling';
+                order.pagoparAttemptAt = new Date();
+                await order.save();
+                const started = await pagopar.iniciarTransaccion({
+                    orderId: String(order._id),
+                    montoTotal: totalAmount,
+                    customer: {
+                        name: customerName,
+                        email: customerEmail,
+                        document: customerDocument,
+                        phone: customerPhone,
+                        address,
+                        reference,
+                        coords: (lat != null && lng != null) ? `${lat},${lng}` : ''
+                    },
+                    items: normalizedItems,
+                    descripcion: `FERUMI ${order.orderNumber}`
+                });
+                result = started.result;
+            } catch (err) {
+                if (err.uncertain || err.name === 'TimeoutError' || err.name === 'AbortError') {
+                    order.pagoparAttemptStatus = 'uncertain';
+                    order.pagoparAttemptError = String(err.message || 'sin confirmación').slice(0, 240);
+                    await order.save();
+                    return res.status(409).json({
+                        success: false,
+                        uncertain: true,
+                        message: 'PagoPar no confirmó si creó el cobro. No generé otro enlace.'
+                    });
+                }
+                throw err;
+            }
 
             if (result.respuesta === true && result.resultado?.[0]?.data) {
                 order.pagoparHash = result.resultado[0].data;

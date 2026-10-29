@@ -68,37 +68,45 @@ async function goPay(req, res, next, deps) {
             return res.redirect(302, slug.publicTrackingUrl(order.ticketCode));
         }
         if (!order.pagoparHash) {
-            const { result } = await pagopar.iniciarTransaccion({
-                orderId: String(order._id),
-                montoTotal: order.totalAmount,
-                customer: {
-                    name: order.customerName,
-                    email: order.customerEmail,
-                    document: order.customerDocument,
-                    phone: order.customerPhone,
-                    address: order.shippingAddress || '',
-                    reference: order.shippingReference || '',
-                    coords: order.shippingCoords?.lat != null
-                        ? `${order.shippingCoords.lat},${order.shippingCoords.lng}`
-                        : ''
-                },
-                items: order.items,
-                descripcion: `FERUMI WA ${order.orderNumber}`
-            });
-            if (result.respuesta === true && result.resultado?.[0]?.data) {
-                order.pagoparHash = result.resultado[0].data;
-                await order.save();
-            } else {
-                return res.status(400).render('public/error', {
-                    pageTitle: 'Pago',
-                    message: 'Pagopar no pudo iniciar el pago. Escribinos por WhatsApp 💖'
-                });
+            const ensured = await require('../lib/wa-control/checkout').ensurePagoparHash(order);
+            if (ensured.ok && (ensured.hash || order.pagoparHash)) {
+                return res.redirect(302, pagopar.checkoutUrl(ensured.hash || order.pagoparHash));
             }
+            return res.status(ensured.uncertain ? 409 : 400).render('public/error', {
+                pageTitle: 'Pago',
+                message: ensured.message || 'Pagopar no pudo iniciar el pago. Escribinos por WhatsApp.'
+            });
         }
         return res.redirect(302, pagopar.checkoutUrl(order.pagoparHash));
     } catch (err) {
         next(err);
     }
+}
+
+async function noteBusinessEcho(echo, models, mongoose) {
+    if (!echo || !echo.to) return;
+    if (echo.wamid) {
+        const own = await models.WaOutbound.findOne({ providerId: echo.wamid }).lean();
+        if (own) return;
+    }
+    const WaConversation = mongoose.models.WaConversation;
+    if (!WaConversation) return;
+    const conv = await WaConversation.findOne({ waId: echo.to });
+    if (!conv) return;
+    const recentOwn = (conv.history || []).slice(-6).some((item) => item.role === 'assistant' && echo.text && item.content === echo.text);
+    if (recentOwn) return;
+    conv.aiPaused = true;
+    conv.attentionStatus = 'human_active';
+    conv.pausedReason = 'mensaje_desde_el_celular';
+    conv.updatedAt = new Date();
+    await conv.save();
+    await models.WaAudit.create({
+        action: 'intervencion_celular',
+        actor: 'whatsapp_celular',
+        waId: echo.to,
+        operationId: echo.wamid || '',
+        result: 'IA pausada porque llegó un eco no enviado por el servidor'
+    });
 }
 
 function previewIncoming(text) {
@@ -139,13 +147,31 @@ module.exports = function registerWhatsApp(app, deps) {
             }
 
             const messages = wa.extractMessages(req.body || {});
+            const echoes = wa.extractEchoes(req.body || {});
+            const statuses = wa.extractStatuses(req.body || {});
             console.log(sig.skipped
                 ? '[whatsapp] POST llegó. Firma no verificada (falta WHATSAPP_APP_SECRET).'
                 : '[whatsapp] POST llegó. Firma OK.');
             if (!messages.length) {
                 console.log('[whatsapp] No es un mensaje de clienta:', wa.summarizeWebhook(req.body));
-                return;
             }
+            const mongoose = require('mongoose');
+            const models = require('../lib/wa-control/models').controlModels();
+            for (const status of statuses) {
+                if (status.status !== 'failed') continue;
+                models.WaAudit.create({
+                    action: 'mensaje_fallido',
+                    status: 'error',
+                    actor: 'whatsapp',
+                    waId: status.recipient || '',
+                    operationId: status.wamid || '',
+                    error: (status.errors || []).join('; ').slice(0, 300)
+                }).catch(() => {});
+            }
+            for (const echo of echoes) {
+                noteBusinessEcho(echo, models, mongoose).catch((err) => console.error('[whatsapp] echo', err.message));
+            }
+            if (!messages.length) return;
 
             const cfg = wa.config();
             for (const incoming of messages) {
@@ -169,26 +195,58 @@ module.exports = function registerWhatsApp(app, deps) {
                 }
                 const phoneNumberId = incoming.phoneNumberId || cfg.phoneNumberId;
                 wa.enqueue(incoming.from, async () => {
+                    const models = require('../lib/wa-control/models').controlModels();
+                    let claimed = null;
                     try {
-                        await wa.markReadTyping(incoming.wamid, phoneNumberId);
-                        const { outgoing, duplicate } = await agent.handleIncoming(incoming, deps);
-                        if (duplicate) {
+                        if (incoming.wamid) {
+                            claimed = await models.WaInbound.create({
+                                wamid: incoming.wamid,
+                                waId: incoming.from,
+                                status: 'processing',
+                                type: incoming.type || '',
+                                preview: String(incoming.text || '').slice(0, 80)
+                            });
+                        }
+                    } catch (err) {
+                        if (err && err.code === 11000) {
                             console.log('[whatsapp] Mensaje repetido de', incoming.from, '— no vuelvo a responder.');
                             return;
                         }
-                        if (!outgoing?.length) {
-                            console.warn('[whatsapp] Llegó el mensaje de', incoming.from, 'pero el agente no armó respuesta.');
+                        console.error('[whatsapp] No pude registrar la deduplicación:', err.message);
+                    }
+                    try {
+                        await wa.markReadTyping(incoming.wamid, phoneNumberId);
+                        const handled = await agent.handleIncoming(incoming, deps);
+                        if (handled.duplicate) {
+                            console.log('[whatsapp] Mensaje repetido de', incoming.from, '— no vuelvo a responder.');
+                            return;
+                        }
+                        const outgoing = handled.outgoing || [];
+                        if (!outgoing.length) {
+                            if (claimed) await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: 'processed', finishedAt: new Date() } });
                             return;
                         }
                         console.log(`[whatsapp] Respondiendo a ${incoming.from} (${outgoing.length} mensaje(s))`);
                         const result = await wa.sendReplies(incoming.from, outgoing, phoneNumberId);
+                        if (handled.sendPaymentLink && handled.paymentIntentKey && result.sent > 0) {
+                            await require('../lib/wa-control/checkout').markPaymentLinkSent(handled.paymentIntentKey);
+                        }
+                        if (claimed) {
+                            await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: result.failed ? 'error' : 'processed', finishedAt: new Date() } });
+                        }
                         console.log(`[whatsapp] Fin de envío a ${incoming.from}: enviados=${result?.sent || 0} fallidos=${result?.failed || 0}`);
                     } catch (err) {
                         console.error('[whatsapp] NO pude responder a', incoming.from, wa.explainGraphError(err));
+                        if (claimed) {
+                            await models.WaInbound.updateOne({ _id: claimed._id }, { $set: { status: 'error', error: String(err.message || '').slice(0, 240), finishedAt: new Date() } }).catch(() => {});
+                        }
+                        const fallbackKey = `error:${incoming.wamid || incoming.from}`;
                         try {
-                            await wa.sendText(incoming.from, 'Ay linda, se me trabó un segundo 💖 Escribime de nuevo que ya te atiendo.', phoneNumberId);
+                            await models.WaOutbound.create({ key: fallbackKey, waId: incoming.from, purpose: 'error', status: 'sending' });
+                            await wa.sendText(incoming.from, 'Se me complicó un segundo. Escribime de nuevo y lo retomo.', phoneNumberId);
+                            await models.WaOutbound.updateOne({ key: fallbackKey }, { $set: { status: 'sent', sentAt: new Date() } });
                         } catch (e) {
-                            console.error('[whatsapp] El aviso de error tampoco salió:', wa.explainGraphError(e));
+                            if (e && e.code !== 11000) console.error('[whatsapp] El aviso de error tampoco salió:', wa.explainGraphError(e));
                         }
                     }
                 });

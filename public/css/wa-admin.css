@@ -1,0 +1,27 @@
+.wa-shell { display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
+.wa-nav { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+.wa-nav a { text-decoration: none; color: #333; border-radius: 12px; padding: 8px 10px; font-weight: 650; display: flex; gap: 8px; align-items: center; }
+.wa-nav a.active, .wa-nav a:hover { background: #fff; color: var(--admin-primary-dark); }
+.wa-card { background: #fff; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,.05); padding: 16px; }
+.wa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.wa-stat { background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.04); }
+.wa-stat b { display: block; font-size: 1.35rem; }
+.wa-stat span { color: #777; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+.wa-table { width: 100%; border-collapse: collapse; }
+.wa-table th, .wa-table td { padding: 8px 6px; border-bottom: 1px solid #f0e6ee; vertical-align: top; font-size: .92rem; }
+.wa-pill { border-radius: 999px; padding: 3px 8px; background: #fff0f6; color: #dd518f; font-weight: 700; font-size: .75rem; }
+.wa-alert { border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; background: #fff7e8; }
+.wa-alert.danger { background: #ffe8ea; }
+.wa-chat { max-height: 420px; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+.wa-bubble { border-radius: 14px; padding: 8px 10px; max-width: 90%; }
+.wa-bubble.user { background: #f4f4f4; align-self: flex-start; }
+.wa-bubble.assistant { background: #ffe4f1; align-self: flex-end; }
+.wa-form input, .wa-form select, .wa-form textarea { width: 100%; border: 1px solid #ecdce6; border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
+.wa-form button, .wa-btn { border: 0; border-radius: 12px; background: var(--admin-primary-dark); color: white; font-weight: 700; padding: 8px 12px; }
+.wa-btn.secondary { background: #333; }
+.wa-btn:disabled { opacity: .6; }
+@media (max-width: 800px) {
+    .wa-shell { grid-template-columns: 1fr; }
+    .wa-nav { flex-direction: row; overflow: auto; position: static; max-height: none; }
+    .wa-nav a { white-space: nowrap; }
+}
