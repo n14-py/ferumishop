@@ -15,8 +15,6 @@
                 return;
             }
             form.dataset.submitted = '1';
-            const button = form.querySelector('button[type="submit"]');
-            if (button) button.disabled = true;
         });
     });
 }());

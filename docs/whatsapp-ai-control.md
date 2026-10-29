@@ -14,6 +14,10 @@ En WhatsApp AI → Pagos se cargan banco, alias y nombre. La IA envía exactamen
 
 En Tarifas, un lugar como «Capiatá ruta 2» con un precio aplica a todo destino que contenga esa frase. Si también existe «Capiatá», gana la frase más específica.
 
+Una pregunta como «¿el delivery propio sale a las 6?» se responde con el horario de las 18:00. No dispara una búsqueda de productos ni manda fotos. La ubicación se guarda en la conversación y al cliente solo se le dice el costo del envío que ya eligió, o si está en zona o va por transportadora.
+
+El botón Confirmar de Comprobantes manda la acción en un campo oculto. Al confirmar, el comprobante queda confirmado, el cliente recibe el aviso y la conversación recuerda que el pago ya está confirmado. La foto se transcribe completa y de ese texto salen emisor, destinatario, monto y banco.
+
 PagoPar no tiene monto mínimo. El enlace incluye QR, tarjeta de crédito y débito. Si el envío tiene precio, ese importe entra en el total que se manda a PagoPar.
 
 ## Variables nuevas

@@ -242,17 +242,26 @@
                                 <p class="mb-1"><strong>Para:</strong> <%= receipt.recipientName || '—' %></p>
                                 <p class="mb-1"><strong>Banco:</strong> <%= receipt.bankName || '—' %></p>
                                 <p class="mb-1"><strong>Monto:</strong> <%= receipt.extractedAmount || receipt.declaredAmount || '—' %></p>
+                                <% if (receipt.rawText) { %><pre class="small mt-2 mb-3" style="white-space:pre-wrap;"><%= receipt.rawText %></pre><% } %>
                                 <p class="mb-3 text-muted">WhatsApp <%= receipt.waId || '—' %></p>
                                 <% if (!data.papelera) { %>
-                                <form method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>" class="d-flex gap-2">
-                                    <input type="hidden" name="volver" value="comprobantes">
-                                    <button class="wa-btn" name="action" value="confirm" type="submit">Confirmar</button>
-                                    <button class="wa-btn secondary" name="action" value="reject" type="submit">Rechazar</button>
-                                </form>
+                                <div class="d-flex gap-2">
+                                    <form method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>">
+                                        <input type="hidden" name="volver" value="comprobantes">
+                                        <input type="hidden" name="action" value="confirm">
+                                        <button class="wa-btn" type="submit">Confirmar</button>
+                                    </form>
+                                    <form method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>">
+                                        <input type="hidden" name="volver" value="comprobantes">
+                                        <input type="hidden" name="action" value="reject">
+                                        <button class="wa-btn secondary" type="submit">Rechazar</button>
+                                    </form>
+                                </div>
                                 <% } else { %>
                                 <form method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>">
                                     <input type="hidden" name="volver" value="comprobantes?papelera=1">
-                                    <button class="wa-btn" name="action" value="restore" type="submit">Volver a verificar</button>
+                                    <input type="hidden" name="action" value="restore">
+                                    <button class="wa-btn" type="submit">Volver a verificar</button>
                                 </form>
                                 <% } %>
                             </article>
