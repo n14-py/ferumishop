@@ -21,6 +21,9 @@ const { simulateTurn, SCENARIOS } = require('../lib/wa-control/simulator');
 const { rankCatalog, catalogReply, replyDeniesCatalog } = require('../lib/wa-control/catalog');
 const { transferMessage } = require('../lib/wa-control/transfer');
 const { describePoint } = require('../lib/wa-control/geo');
+const { parseTransferText, trashStillVisible } = require('../lib/wa-control/receipt-read');
+const { alreadyClaimsReceipt } = require('../lib/wa-control/flow');
+const { parseCoord } = require('../lib/whatsapp');
 const { planTurn } = require('../lib/wa-control/flow');
 const { customerSafeText } = require('../lib/wa-control/text');
 const { controlModels } = require('../lib/wa-control/models');
@@ -472,4 +475,25 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     assert.match(interior.replies[0], /interior/);
     assert.equal(customerSafeText('PagoPar rechazó la transacción'), 'Seguimos desde acá. Decime si seguís con el producto, el envío o el pago.');
     assert.ok(controlModels().WaSettings.schema.path('transfer.alias'));
+});
+
+test('the customer pin is stored exactly and a receipt photo is not another alias', () => {
+    const place = describePoint({
+        lat: -25.3012345,
+        lng: -57.6012345,
+        store: { lat: -25.28646, lng: -57.647 }
+    });
+    assert.equal(place.lat, -25.3012345);
+    assert.equal(place.lng, -57.6012345);
+    assert.match(place.pinUrl, /q=-25\.3012345,-57\.6012345/);
+    assert.equal(parseCoord('-25,3012345'), -25.3012345);
+    assert.equal(alreadyClaimsReceipt('ya te mandé el comprobante'), true);
+    const parsed = parseTransferText('Banco Ueno. Ordenante: Ana Gomez. Destinatario: Ferumi Shop. Monto Gs. 25000');
+    assert.equal(parsed.amount, 25000);
+    assert.match(parsed.bank, /Ueno/i);
+    assert.match(parsed.recipientName, /Ferumi/);
+    assert.match(parsed.senderName, /Ana/);
+    const now = new Date('2026-10-29T12:00:00Z');
+    assert.equal(trashStillVisible(new Date('2026-10-20T12:00:00Z'), now), true);
+    assert.equal(trashStillVisible(new Date('2026-09-01T12:00:00Z'), now), false);
 });
