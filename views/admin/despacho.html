@@ -103,7 +103,7 @@
                 const statusLabel = statusMap[order.fulfillmentStatus] || order.fulfillmentStatus;
                 const needsPrepare = ['pagado','preparando','pendiente_pago'].includes(order.fulfillmentStatus);
                 const needsDeliver = ['preparado','esperando_motobolt','enviando','esperando_retiro'].includes(order.fulfillmentStatus);
-                const shipMap = { motobolt: 'Moto (Motobolt)', transportadora: 'Encomienda', retiro: 'Retiro en local' };
+                const shipMap = { motobolt: 'Moto (Motobolt)', transportadora: 'Encomienda', retiro: 'Retiro en local', delivery_propio: 'Delivery propio' };
             %>
             <div class="card order-card">
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -116,7 +116,7 @@
                 <div class="order-meta mt-2">
                     <strong><%= order.customerName %></strong><br>
                     <%= order.customerPhone %> · CI <%= order.customerDocument %><br>
-                    Pago: <strong><%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : 'Pagopar' %></strong>
+                    Pago: <strong><%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : (order.paymentMethod === 'transferencia' ? 'Transferencia' : 'Pagopar') %></strong>
                     (<%= order.paymentStatus || order.status %>)<br>
                     <% if (order.source === 'whatsapp' && order.checkoutSlug) { %>Canal: WhatsApp · /<%= order.checkoutSlug %><br><% } %>
                     Envío: <strong><%= shipMap[order.shippingMethod] || order.shippingMethod || '—' %></strong>

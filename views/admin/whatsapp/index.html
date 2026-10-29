@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp AI - FERUMI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/wa-admin.css">
+</head>
+<body>
+<div class="admin-wrapper">
+    <%- include('../partials/sidebar.html') %>
+    <div class="main-content-wrapper">
+        <header class="admin-header bg-white px-3 py-3 sticky-top d-md-none">
+            <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
+            <h1 class="header-title">WhatsApp AI</h1>
+            <div style="width:24px;"></div>
+        </header>
+        <main class="main-content p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="fw-bold mb-0">WhatsApp AI</h2>
+                    <p class="text-muted mb-0">Centro de control dentro del administrador de Ferumi.</p>
+                </div>
+                <span class="wa-pill"><%= admin.role %></span>
+            </div>
+            <% if (success) { %><div class="alert alert-success rounded-4"><%= success %></div><% } %>
+            <% if (error) { %><div class="alert alert-danger rounded-4"><%= error %></div><% } %>
+            <% if (section === 'denegado') { %>
+                <div class="wa-card">No tenés permiso para esta operación.</div>
+            <% } else { %>
+            <div class="wa-shell">
+                <nav class="wa-nav" aria-label="Secciones de WhatsApp">
+                    <% nav.forEach((item) => { %>
+                        <a class="<%= section === item[0] ? 'active' : '' %>" href="/admin/whatsapp/<%= item[0] %>"><i class="fa-solid <%= item[2] %>"></i> <%= item[1] %></a>
+                    <% }) %>
+                </nav>
+                <section>
+                    <% if (section === 'dashboard') { const s = data.summary || {}; %>
+                        <form class="wa-card wa-form mb-3" method="get">
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3"><label>Desde<input type="date" name="from" value="<%= query.from || '' %>"></label></div>
+                                <div class="col-6 col-md-3"><label>Hasta<input type="date" name="to" value="<%= query.to || '' %>"></label></div>
+                                <div class="col-6 col-md-3"><label>Pago<select name="paymentMethod"><option value="">Todos</option><option value="pagopar">PagoPar</option><option value="transferencia">Transferencia</option><option value="efectivo_retiro">Efectivo</option></select></label></div>
+                                <div class="col-6 col-md-3"><label>Entrega<select name="shippingMethod"><option value="">Todas</option><option value="motobolt">MotoBolt</option><option value="delivery_propio">Delivery propio</option><option value="transportadora">Transportadora</option><option value="retiro">Retiro</option></select></label></div>
+                            </div>
+                            <button type="submit">Filtrar</button>
+                        </form>
+                        <div class="wa-grid mb-3">
+                            <% const cards = [
+                                ['Conversaciones nuevas', s.conversationsNew],
+                                ['Activas', s.conversationsActive],
+                                ['Esperan persona', s.waitingHuman],
+                                ['Pedidos del rango', s.ordersToday],
+                                ['Pendientes de pago', s.pendingPayment],
+                                ['Transferencias a verificar', s.transfersToVerify],
+                                ['Pagados', s.paid],
+                                ['En preparación', s.preparing],
+                                ['Listos', s.ready],
+                                ['En próxima salida', s.inNextDeparture],
+                                ['Despachados', s.dispatched],
+                                ['Entregados', s.delivered],
+                                ['Retrasados', s.delayed],
+                                ['Cancelados', s.cancelled],
+                                ['Enlaces generados', s.paymentLinks],
+                                ['Errores de mensaje', s.messageErrors]
+                            ]; %>
+                            <% cards.forEach((card) => { %>
+                                <div class="wa-stat"><b><%= card[1] == null ? '—' : card[1] %></b><span><%= card[0] %></span></div>
+                            <% }) %>
+                        </div>
+                        <div class="wa-card mb-3">
+                            <h3 class="h5">Dinero</h3>
+                            <p class="mb-1">Pedidos registrados: <strong><%= Number(s.registeredSales || 0).toLocaleString('es-PY') %> Gs.</strong></p>
+                            <p class="mb-1">Cobros confirmados: <strong><%= Number(s.collectedSales || 0).toLocaleString('es-PY') %> Gs.</strong></p>
+                            <p class="mb-1">Pendiente de cobro: <strong><%= Number(s.pendingCollection || 0).toLocaleString('es-PY') %> Gs.</strong></p>
+                            <% (s.notes || []).forEach((note) => { %><p class="text-muted small mb-0"><%= note %></p><% }) %>
+                        </div>
+                        <div class="wa-card mb-3">
+                            <h3 class="h5">Entregas del rango</h3>
+                            <% const methods = s.deliveryMethods || {}; %>
+                            <% if (!Object.keys(methods).length) { %><p class="text-muted mb-0">Sin pedidos en el filtro.</p><% } %>
+                            <% Object.keys(methods).forEach((key) => { %><span class="wa-pill me-1"><%= key %>: <%= methods[key] %></span><% }) %>
+                        </div>
+                        <div class="wa-card">
+                            <h3 class="h5">Alertas</h3>
+                            <% if (!(s.alerts || []).length) { %><p class="text-muted mb-0">No hay alertas con los datos actuales.</p><% } %>
+                            <% (s.alerts || []).forEach((alert) => { %><div class="wa-alert <%= alert.level === 'danger' ? 'danger' : '' %>"><%= alert.text %></div><% }) %>
+                            <h3 class="h6 mt-3">Stock bajo o agotado</h3>
+                            <% if (!(s.lowStock || []).length) { %><p class="text-muted mb-0">No hay productos en ese umbral.</p><% } %>
+                            <% (s.lowStock || []).forEach((item) => { %><div><%= item.name %> · <%= item.stock %></div><% }) %>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'conversaciones' || section === 'atencion') { %>
+                        <form class="wa-card wa-form mb-3" method="get" action="/admin/whatsapp/<%= section %>">
+                            <input name="q" placeholder="Nombre, teléfono o pedido" value="<%= query.q || '' %>">
+                            <select name="status">
+                                <option value="">Todos los estados</option>
+                                <% Object.keys(labels).forEach((key) => { %><option value="<%= key %>" <%= query.status === key ? 'selected' : '' %>><%= labels[key] %></option><% }) %>
+                            </select>
+                            <button type="submit">Buscar</button>
+                        </form>
+                        <div class="wa-card mb-3">
+                            <% if (!(data.items || []).length) { %><p class="text-muted mb-0">No hay conversaciones con ese filtro.</p><% } %>
+                            <table class="wa-table">
+                                <thead><tr><th>Cliente</th><th>Estado</th><th>Pedido</th></tr></thead>
+                                <tbody>
+                                <% (data.items || []).forEach((item) => { %>
+                                    <tr>
+                                        <td><a href="/admin/whatsapp/conversaciones?id=<%= item._id %>"><%= item.profileName || item.customer?.name || item.waId %></a><br><small><%= item.waId %></small></td>
+                                        <td><span class="wa-pill"><%= labels[item.attentionStatus] || item.attentionStatus || 'IA activa' %></span></td>
+                                        <td><%= item.lastOrderNumber || '—' %></td>
+                                    </tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% if (data.detail) { const conv = data.detail.conv; %>
+                            <div class="wa-card mb-3">
+                                <h3 class="h5"><%= conv.profileName || conv.waId %></h3>
+                                <p>Estado: <strong><%= labels[conv.attentionStatus] || conv.attentionStatus %></strong><% if (conv.aiPaused) { %> · IA pausada<% } %></p>
+                                <div class="wa-chat mb-3">
+                                    <% (conv.history || []).forEach((msg) => { %>
+                                        <div class="wa-bubble <%= msg.role %>"><%= msg.content %></div>
+                                    <% }) %>
+                                </div>
+                                <% if (perms['wa.reply']) { %>
+                                <form class="wa-form" method="post" action="/admin/whatsapp/conversaciones/<%= conv._id %>/mensaje">
+                                    <textarea name="text" required placeholder="Mensaje al cliente"></textarea>
+                                    <button type="submit">Enviar y pausar IA</button>
+                                </form>
+                                <% } %>
+                                <% if (perms['wa.handoff']) { %>
+                                <form class="wa-form mt-2" method="post" action="/admin/whatsapp/conversaciones/<%= conv._id %>/estado">
+                                    <select name="action">
+                                        <option value="pause">Pausar IA</option>
+                                        <option value="resume">Reactivar IA</option>
+                                        <option value="takeover">Tomar control</option>
+                                        <option value="release">Finalizar atención humana</option>
+                                        <option value="resolve">Marcar resuelta</option>
+                                    </select>
+                                    <select name="ownerId">
+                                        <option value="">Sin transferir</option>
+                                        <% (data.admins || []).forEach((adminUser) => { %><option value="<%= adminUser._id %>"><%= adminUser.username || adminUser.email %></option><% }) %>
+                                    </select>
+                                    <button type="submit">Guardar atención</button>
+                                </form>
+                                <% } %>
+                                <form class="wa-form mt-2" method="post" action="/admin/whatsapp/conversaciones/<%= conv._id %>/nota">
+                                    <textarea name="text" required placeholder="Nota interna. No se envía."></textarea>
+                                    <button class="wa-btn secondary" type="submit">Guardar nota</button>
+                                </form>
+                                <h3 class="h6 mt-3">Notas internas</h3>
+                                <% (conv.internalNotes || []).forEach((note) => { %><p><%= note.text %> <small>— <%= note.author %></small></p><% }) %>
+                                <h3 class="h6">Pedidos vinculados</h3>
+                                <% (data.detail.orders || []).forEach((order) => { %><div><a href="/admin/whatsapp/pedidos?id=<%= order._id %>"><%= order.orderNumber %></a> · <%= order.paymentStatus %> · <%= order.totalAmount %> Gs.</div><% }) %>
+                            </div>
+                        <% } %>
+                    <% } %>
+
+                    <% if (section === 'clientes') { %>
+                        <div class="wa-card">
+                            <% if (!(data.items || []).length) { %><p class="text-muted mb-0">Todavía no hay clientes de WhatsApp.</p><% } %>
+                            <table class="wa-table">
+                                <thead><tr><th>WhatsApp</th><th>Nombre</th><th>Ciudad</th><th>Último pedido</th></tr></thead>
+                                <tbody>
+                                <% (data.items || []).forEach((item) => { %>
+                                    <tr>
+                                        <td><a href="/admin/whatsapp/conversaciones?id=<%= item._id %>"><%= item.waId %></a></td>
+                                        <td><%= item.customer?.name || item.profileName || '—' %></td>
+                                        <td><%= item.shipping?.city || '—' %></td>
+                                        <td><%= item.lastOrderNumber || '—' %></td>
+                                    </tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                            <p class="small text-muted mt-2 mb-0">Los clientes se identifican por el número de WhatsApp. No se unen por nombre parecido.</p>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'pedidos') { %>
+                        <form class="wa-form wa-card mb-3" method="get">
+                            <input name="q" value="<%= query.q || '' %>" placeholder="Número, cliente o teléfono">
+                            <button type="submit">Buscar</button>
+                        </form>
+                        <div class="wa-card mb-3">
+                            <table class="wa-table">
+                                <thead><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th>Entrega</th></tr></thead>
+                                <tbody>
+                                <% (data.items || []).forEach((order) => { %>
+                                    <tr>
+                                        <td><a href="/admin/whatsapp/pedidos?id=<%= order._id %>"><%= order.orderNumber %></a></td>
+                                        <td><%= order.customerName %></td>
+                                        <td><%= Number(order.totalAmount || 0).toLocaleString('es-PY') %></td>
+                                        <td><%= order.financialStatus || order.paymentStatus %></td>
+                                        <td><%= order.shippingMethod %></td>
+                                    </tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% if (data.detail) { const order = data.detail.order; %>
+                            <div class="wa-card">
+                                <h3 class="h5"><%= order.orderNumber %></h3>
+                                <p><%= order.customerName %> · <%= order.customerPhone %></p>
+                                <p>Comercial: <%= order.commercialStatus || '—' %> · Financiero: <%= order.financialStatus || order.paymentStatus %> · Logístico: <%= order.logisticsStatus || order.fulfillmentStatus %></p>
+                                <p>Subtotal <%= order.subtotal %> · Envío <%= order.shippingCost %> · Total <%= order.totalAmount %> · Cobrado <%= order.amountPaid || 0 %></p>
+                                <% (order.items || []).forEach((item) => { %><div>• <%= item.quantity %> × <%= item.name %> · <%= item.price %></div><% }) %>
+                                <% if (perms['wa.orders.write']) { %>
+                                <form class="wa-form mt-3" method="post" action="/admin/whatsapp/pedidos/<%= order._id %>">
+                                    <label>Estado logístico<select name="logisticsStatus"><option value="">Sin cambio</option><% data.logistics.forEach((item) => { %><option value="<%= item %>"><%= item %></option><% }) %></select></label>
+                                    <input name="shippingCity" placeholder="Ciudad" value="<%= order.shippingCity || '' %>">
+                                    <input name="shippingAddress" placeholder="Dirección" value="<%= order.shippingAddress || '' %>">
+                                    <select name="shippingMethod"><option value="">Sin cambio</option><option value="motobolt">MotoBolt</option><option value="delivery_propio">Delivery propio</option><option value="transportadora">Transportadora</option><option value="retiro">Retiro</option></select>
+                                    <textarea name="note" placeholder="Nota interna"></textarea>
+                                    <input name="reason" required placeholder="Motivo del cambio">
+                                    <button type="submit">Guardar cambio</button>
+                                </form>
+                                <% } %>
+                                <h3 class="h6 mt-3">Historial</h3>
+                                <% (order.statusLog || []).forEach((row) => { %><div><%= row.reason %> · <%= row.by %></div><% }) %>
+                            </div>
+                        <% } %>
+                    <% } %>
+
+                    <% if (section === 'pagos') { %>
+                        <div class="wa-card mb-3">
+                            <h3 class="h5">Comprobantes</h3>
+                            <% if (!(data.receipts || []).length) { %><p class="text-muted">No hay comprobantes cargados.</p><% } %>
+                            <% (data.receipts || []).forEach((receipt) => { %>
+                                <div class="border-bottom py-2">
+                                    <strong><%= receipt.status %></strong> · pedido <%= receipt.orderId || 'sin asociar' %> · declarado <%= receipt.declaredAmount || '—' %> · esperado <%= receipt.expectedAmount || '—' %>
+                                    <% if (perms['wa.payments.approve']) { %>
+                                    <form class="wa-form mt-2" method="post" action="/admin/whatsapp/pagos/<%= receipt._id %>">
+                                        <select name="action">
+                                            <option value="pending">Dejar en revisión</option>
+                                            <option value="confirm">Confirmar pago</option>
+                                            <option value="reject">Rechazar</option>
+                                            <option value="duplicate">Marcar duplicado</option>
+                                            <option value="difference">Registrar diferencia</option>
+                                        </select>
+                                        <input name="confirmedAmount" placeholder="Importe confirmado">
+                                        <input name="note" placeholder="Nota">
+                                        <input name="confirm" placeholder="Escribí CONFIRMAR para acreditar">
+                                        <button type="submit">Aplicar</button>
+                                    </form>
+                                    <% } %>
+                                </div>
+                            <% }) %>
+                        </div>
+                        <div class="wa-card">
+                            <h3 class="h5">Intenciones de PagoPar</h3>
+                            <table class="wa-table">
+                                <thead><tr><th>Estado</th><th>Pedido</th><th>Error</th><th></th></tr></thead>
+                                <tbody>
+                                <% (data.intents || []).forEach((intent) => { %>
+                                    <tr>
+                                        <td><%= intent.status %></td>
+                                        <td><%= intent.orderId || '—' %></td>
+                                        <td><%= intent.error || '' %></td>
+                                        <td>
+                                            <% if (intent.status === 'uncertain' && perms['wa.payments.approve']) { %>
+                                            <form method="post" action="/admin/whatsapp/pagos/<%= intent._id %>/reintentar">
+                                                <input name="confirm" placeholder="REINTENTAR" required>
+                                                <button type="submit">Autorizar reintento</button>
+                                            </form>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'catalogo') { %>
+                        <form class="wa-form wa-card mb-3" method="get"><input name="q" value="<%= query.q || '' %>" placeholder="Buscar producto"><button type="submit">Buscar</button></form>
+                        <% (data.products || []).forEach((product) => { %>
+                            <form class="wa-card wa-form mb-2" method="post" action="/admin/whatsapp/catalogo/<%= product._id %>">
+                                <strong><%= product.name %></strong> · <%= product.price %> Gs. · stock <%= product.stock %>
+                                <select name="aiVisible"><option value="true" <%= product.aiVisible !== false ? 'selected' : '' %>>Visible para la IA</option><option value="false" <%= product.aiVisible === false ? 'selected' : '' %>>Oculto</option></select>
+                                <textarea name="aiNotes" placeholder="Información autorizada"><%= product.aiNotes || '' %></textarea>
+                                <textarea name="aiUsage" placeholder="Uso del producto"><%= product.aiUsage || '' %></textarea>
+                                <% if (perms['wa.catalog']) { %><button type="submit">Guardar</button><% } %>
+                            </form>
+                        <% }) %>
+                    <% } %>
+
+                    <% if (section === 'delivery') { const settings = data.settings || {}; %>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/delivery">
+                            <h3 class="h5">Salida habitual</h3>
+                            <label>Hora de salida<input name="departureTime" value="<%= settings.departureTime || '18:00' %>"></label>
+                            <label>Hora límite<input name="cutoffTime" value="<%= settings.cutoffTime || '17:30' %>"></label>
+                            <input name="serviceDays" value="<%= (settings.serviceDays || []).join(',') %>" placeholder="Días 0-6 separados por coma">
+                            <select name="requirePaidBeforeDispatch"><option value="true">Exigir pago confirmado</option><option value="false">No exigir</option></select>
+                            <p class="small text-muted">Zona horaria fija del negocio: America/Asuncion. La hora no se copia en otros módulos.</p>
+                            <% if (perms['wa.delivery']) { %><button type="submit">Guardar horario</button><% } %>
+                        </form>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/salidas">
+                            <h3 class="h5">Nueva salida</h3>
+                            <input name="businessDate" placeholder="2026-10-28" required>
+                            <input name="zones" placeholder="Ciudades o zonas, separadas por coma">
+                            <input name="orderIds" placeholder="IDs de pedidos, separados por coma">
+                            <textarea name="notes" placeholder="Notas operativas"></textarea>
+                            <% if (perms['wa.delivery']) { %><button type="submit">Planificar</button><% } %>
+                        </form>
+                        <% (data.departures || []).forEach((departure) => { %>
+                            <div class="wa-card mb-2">
+                                <strong><%= departure.businessDate || 'Sin fecha' %></strong> · <%= departure.status %>
+                                <form method="post" action="/admin/whatsapp/salidas/<%= departure._id %>/despachar" class="wa-form mt-2">
+                                    <input name="confirm" placeholder="Escribí SALIO para avisar" required>
+                                    <% if (perms['wa.notify.bulk']) { %><button type="submit">El delivery ya salió</button><% } %>
+                                </form>
+                            </div>
+                        <% }) %>
+                        <div class="wa-card">
+                            <h3 class="h6">Pedidos de delivery propio</h3>
+                            <% if (!(data.orders || []).length) { %><p class="text-muted mb-0">No hay pedidos con esta modalidad.</p><% } %>
+                            <% (data.orders || []).forEach((order) => { %><div><%= order.orderNumber %> · <%= order.shippingCity || 'sin ciudad' %> · <%= order.fulfillmentStatus %></div><% }) %>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'tarifas') { %>
+                        <form class="wa-card wa-form mb-3" method="get">
+                            <h3 class="h5">Probar tarifa</h3>
+                            <input type="hidden" name="probar" value="1">
+                            <input name="city" placeholder="Ciudad" value="<%= query.city || '' %>">
+                            <input name="zone" placeholder="Zona" value="<%= query.zone || '' %>">
+                            <select name="method"><option value="delivery_propio">Delivery propio</option><option value="motobolt">MotoBolt</option><option value="transportadora">Transportadora</option><option value="retiro">Retiro</option></select>
+                            <input name="subtotal" placeholder="Subtotal" value="<%= query.subtotal || '' %>">
+                            <button type="submit">Calcular</button>
+                            <% if (data.quote) { %>
+                                <pre class="mt-2 mb-0"><%= JSON.stringify(data.quote, null, 2) %></pre>
+                            <% } %>
+                        </form>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/tarifas">
+                            <h3 class="h5">Nueva tarifa</h3>
+                            <input name="name" placeholder="Nombre" required>
+                            <select name="method" required><option value="delivery_propio">Delivery propio</option><option value="motobolt">MotoBolt</option><option value="transportadora">Transportadora</option><option value="retiro">Retiro</option></select>
+                            <input name="city" placeholder="Ciudad">
+                            <input name="zone" placeholder="Zona">
+                            <input name="neighborhood" placeholder="Barrio">
+                            <input name="basePrice" placeholder="Precio base" required>
+                            <input name="priority" placeholder="Prioridad" value="0">
+                            <input name="eta" placeholder="Tiempo estimado">
+                            <textarea name="notes" placeholder="Notas internas"></textarea>
+                            <% if (perms['wa.prices']) { %><button type="submit">Guardar tarifa</button><% } else { %><p>No tenés permiso para cambiar precios.</p><% } %>
+                        </form>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/lugares">
+                            <h3 class="h5">Lugar</h3>
+                            <select name="kind"><option value="department">Departamento</option><option value="city">Ciudad</option><option value="neighborhood">Barrio</option><option value="zone">Zona</option></select>
+                            <input name="name" required placeholder="Nombre">
+                            <input name="aliases" placeholder="Alias separados por coma">
+                            <% if (perms['wa.delivery']) { %><button type="submit">Guardar lugar</button><% } %>
+                        </form>
+                        <div class="wa-card">
+                            <table class="wa-table">
+                                <thead><tr><th>Tarifa</th><th>Modalidad</th><th>Destino</th><th>Precio</th><th>Prioridad</th></tr></thead>
+                                <tbody>
+                                <% (data.rates || []).forEach((rate) => { %>
+                                    <tr><td><%= rate.name || '—' %></td><td><%= rate.method %></td><td><%= rate.neighborhood || rate.zone || rate.city || 'general' %></td><td><%= rate.basePrice %></td><td><%= rate.priority || 0 %></td></tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                            <% if (!(data.rates || []).length) { %><p class="text-muted mb-0">No hay tarifas cargadas. El sistema no inventa precios.</p><% } %>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'transportadoras') { %>
+                        <% (data.carriers || []).forEach((carrier) => { %>
+                            <form class="wa-card wa-form mb-2" method="post" action="/admin/whatsapp/transportadoras">
+                                <input type="hidden" name="id" value="<%= carrier._id %>">
+                                <input name="name" value="<%= carrier.name %>">
+                                <select name="active"><option value="true" <%= carrier.active ? 'selected' : '' %>>Activa</option><option value="false">Inactiva</option></select>
+                                <input name="coverage" value="<%= carrier.coverage || '' %>" placeholder="Cobertura">
+                                <input name="tariffMode" value="<%= carrier.tariffMode || 'unknown' %>">
+                                <textarea name="ratesNote"><%= carrier.ratesNote || carrier.notes || '' %></textarea>
+                                <textarea name="paymentTerms"><%= carrier.paymentTerms || '' %></textarea>
+                                <% if (perms['wa.delivery']) { %><button type="submit">Guardar</button><% } %>
+                            </form>
+                        <% }) %>
+                        <p class="small text-muted">MotoBolt exige pago confirmado antes del despacho. El reparto propio usa las tarifas y las salidas. El retiro usa la dirección de la tienda.</p>
+                    <% } %>
+
+                    <% if (section === 'ia') { const ai = data.published || {}; %>
+                        <form class="wa-card wa-form" method="post" action="/admin/whatsapp/ia">
+                            <% ['identity','personality','formality','tone','responseLength','emojiUse','greeting','presentation','farewell','afterHours','handoff','recommendationStyle','closingStyle','followupRules','objectionRules','authorizedInfo','faq','policies','restrictions','extraInstructions'].forEach((field) => { %>
+                                <label><%= field %><textarea name="<%= field %>"><%= ai[field] || '' %></textarea></label>
+                            <% }) %>
+                            <label>Permitir trato afectuoso<select name="allowAffectionate"><option value="false" <%= ai.allowAffectionate ? '' : 'selected' %>>No</option><option value="true" <%= ai.allowAffectionate ? 'selected' : '' %>>Sí</option></select></label>
+                            <% if (perms['wa.ai.edit']) { %>
+                                <button name="action" value="borrador" type="submit">Guardar borrador</button>
+                                <button name="action" value="publicar" type="submit">Publicar</button>
+                            <% } %>
+                        </form>
+                        <div class="wa-card mt-3">
+                            <h3 class="h6">Versiones</h3>
+                            <% (data.revisions || []).forEach((revision) => { %>
+                                <form method="post" action="/admin/whatsapp/ia/restaurar" class="d-flex gap-2 align-items-center mb-2">
+                                    <span>v<%= revision.version %> · <%= revision.status %> · <%= revision.author %></span>
+                                    <input type="hidden" name="version" value="<%= revision.version %>">
+                                    <% if (perms['wa.ai.edit']) { %><button type="submit">Publicar esta versión</button><% } %>
+                                </form>
+                            <% }) %>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'reglas') { %>
+                        <% (data.rules || []).forEach((rule) => { %>
+                            <form class="wa-card wa-form mb-2" method="post" action="/admin/whatsapp/reglas">
+                                <input type="hidden" name="id" value="<%= rule._id %>">
+                                <strong><%= rule.name %></strong>
+                                <p class="mb-1"><%= rule.description %></p>
+                                <input name="priority" value="<%= rule.priority || 0 %>">
+                                <select name="active"><option value="true" <%= rule.active ? 'selected' : '' %>>Activa</option><option value="false" <%= rule.active ? '' : 'selected' %>>Inactiva</option></select>
+                                <% if (perms['wa.ai.edit']) { %><button type="submit">Guardar</button><% } %>
+                            </form>
+                        <% }) %>
+                    <% } %>
+
+                    <% if (section === 'plantillas') { %>
+                        <% (data.templates || []).forEach((tpl) => { %>
+                            <form class="wa-card wa-form mb-2" method="post" action="/admin/whatsapp/plantillas">
+                                <input type="hidden" name="key" value="<%= tpl.key %>">
+                                <input name="name" value="<%= tpl.name %>">
+                                <textarea name="body" required><%= tpl.body %></textarea>
+                                <p class="small text-muted">Canal: <%= tpl.channel %>. Las variables se validan antes de guardar.</p>
+                                <% if (perms['wa.ai.edit']) { %><button type="submit">Guardar</button><% } %>
+                            </form>
+                        <% }) %>
+                    <% } %>
+
+                    <% if (section === 'automatizaciones') { %>
+                        <% (data.jobs || []).forEach((job) => { %>
+                            <form class="wa-card wa-form mb-2" method="post" action="/admin/whatsapp/automatizaciones/<%= job.key %>">
+                                <strong><%= job.name %></strong>
+                                <p class="small mb-1">Última: <%= job.lastRunAt ? new Date(job.lastRunAt).toISOString() : 'todavía no' %> · <%= job.lastResult || '' %> <%= job.lastError || '' %></p>
+                                <select name="enabled"><option value="false" <%= job.enabled ? '' : 'selected' %>>Apagada</option><option value="true" <%= job.enabled ? 'selected' : '' %>>Encendida</option></select>
+                                <input name="intervalMinutes" value="<%= job.intervalMinutes || 15 %>">
+                                <% if (job.external) { %><p class="small text-muted">Tiene efecto externo. Por defecto queda apagada.</p><% } %>
+                                <% if (perms['wa.ai.edit']) { %><button type="submit">Guardar</button><% } %>
+                            </form>
+                        <% }) %>
+                    <% } %>
+
+                    <% if (section === 'situaciones') { %>
+                        <% if ((data.conflicts || []).length) { %><div class="wa-alert danger">Hay situaciones en conflicto. Resolvé la prioridad antes de aplicarlas juntas.</div><% } %>
+                        <% if (data.bulk) { %>
+                            <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/situaciones/aviso/avisar">
+                                <h3 class="h5">Confirmar aviso</h3>
+                                <p>Destinatarios: <%= data.bulk.preview.recipients %></p>
+                                <pre><%= data.bulk.preview.text %></pre>
+                                <input type="hidden" name="token" value="<%= data.bulk.token %>">
+                                <button type="submit">Enviar ahora</button>
+                            </form>
+                        <% } %>
+                        <form class="wa-card wa-form mb-3" method="post" action="/admin/whatsapp/situaciones">
+                            <input name="title" required placeholder="Título">
+                            <textarea name="description" placeholder="Descripción"></textarea>
+                            <select name="category"><% (data.categories || []).forEach((item) => { %><option value="<%= item %>"><%= item %></option><% }) %></select>
+                            <select name="scope"><% (data.scopes || []).forEach((item) => { %><option value="<%= item %>"><%= item %></option><% }) %></select>
+                            <input name="methods" placeholder="delivery_propio,motobolt">
+                            <input name="cities" placeholder="Ciudades">
+                            <input name="priority" value="10">
+                            <input name="actions" placeholder="reschedule_next_day">
+                            <textarea name="responseInstructions" placeholder="Qué debe decir la IA"></textarea>
+                            <% if (perms['wa.delivery']) { %><button type="submit">Guardar situación</button><% } %>
+                        </form>
+                        <% (data.situations || []).forEach((item) => { %>
+                            <div class="wa-card mb-2">
+                                <strong><%= item.title %></strong> · <%= item.status %> · <%= item.scope %>
+                                <p class="mb-1"><%= item.responseInstructions || item.description %></p>
+                                <% if (perms['wa.notify.bulk']) { %>
+                                <form method="post" action="/admin/whatsapp/situaciones/<%= item._id %>/avisar" class="wa-form">
+                                    <textarea name="text" required placeholder="Texto exacto del aviso"></textarea>
+                                    <button type="submit">Preparar aviso a afectados</button>
+                                </form>
+                                <% } %>
+                            </div>
+                        <% }) %>
+                    <% } %>
+
+                    <% if (section === 'simulador') { %>
+                        <form class="wa-card wa-form" method="post" action="/admin/whatsapp/simulador">
+                            <textarea name="text" required placeholder="Mensaje del cliente"><%= query.text || '' %></textarea>
+                            <label><input type="checkbox" name="image" value="true"> Simular foto</label>
+                            <label><input type="checkbox" name="afterCutoff" value="true"> Después del horario límite</label>
+                            <label><input type="checkbox" name="hasLink" value="true"> Ya existe un enlace</label>
+                            <button type="submit">Simular</button>
+                            <p class="small text-muted">No envía WhatsApp, no cobra y no modifica pedidos.</p>
+                        </form>
+                        <% if (data.result) { %>
+                            <div class="wa-card mt-3">
+                                <p>Intención: <strong><%= data.result.intent %></strong></p>
+                                <p>Herramientas: <%= (data.result.tools || []).join(', ') || 'ninguna' %></p>
+                                <p>Reglas: <%= (data.result.rules || []).join(', ') || 'ninguna' %></p>
+                                <p>Faltantes: <%= (data.result.missing || []).join(', ') || 'nada' %></p>
+                                <p>Derivar: <%= data.result.handoff ? 'sí' : 'no' %></p>
+                                <p>Efecto: <%= data.result.orderEffect %></p>
+                                <pre><%= data.result.reply %></pre>
+                            </div>
+                        <% } %>
+                        <div class="wa-card mt-3">
+                            <h3 class="h6">Escenarios</h3>
+                            <% (data.scenarios || []).forEach((scenario) => { %><div><%= scenario.label %>: <%= scenario.text %></div><% }) %>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'actividad' || section === 'errores') { %>
+                        <div class="wa-card">
+                            <% if (!(data.events || []).length) { %><p class="text-muted mb-0">No hay eventos en este filtro.</p><% } %>
+                            <table class="wa-table">
+                                <thead><tr><th>Cuándo</th><th>Acción</th><th>Actor</th><th>Resultado</th></tr></thead>
+                                <tbody>
+                                <% (data.events || []).forEach((event) => { %>
+                                    <tr>
+                                        <td><%= event.at ? new Date(event.at).toISOString() : '' %></td>
+                                        <td><%= event.action %></td>
+                                        <td><%= event.actor %></td>
+                                        <td><%= event.error || event.result || event.status %></td>
+                                    </tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'integraciones') { const status = data.status || {}; %>
+                        <div class="wa-card">
+                            <p>WhatsApp configurado: <strong><%= status.whatsapp?.configured ? 'sí' : 'no' %></strong></p>
+                            <p>Token de verificación presente: <strong><%= status.whatsapp?.verifyToken ? 'sí' : 'no' %></strong></p>
+                            <p>IA configurada: <strong><%= status.deepinfra?.configured ? 'sí' : 'no' %></strong> · modelo <%= status.deepinfra?.model || '—' %></p>
+                            <p>PagoPar configurado: <strong><%= status.pagopar?.configured ? 'sí' : 'no' %></strong></p>
+                            <p>Base de datos: <strong><%= status.mongo?.connected ? 'conectada' : 'sin conexión' %></strong></p>
+                            <p>Imágenes: <strong><%= status.cloudinary?.configured ? 'Cloudinary presente' : 'Cloudinary no configurado' %></strong></p>
+                            <p>Visión: <%= status.vision?.available ? 'disponible' : (status.vision?.reason || 'no disponible') %></p>
+                            <p>Último mensaje recibido: <%= status.lastInboundAt || 'sin dato' %></p>
+                            <p>Último envío correcto: <%= status.lastOutboundAt || 'sin dato' %></p>
+                            <p>Último error de pago: <%= status.lastPaymentError || 'ninguno' %></p>
+                            <p class="mb-0"><%= status.phoneEcho %></p>
+                        </div>
+                    <% } %>
+
+                    <% if (section === 'permisos') { %>
+                        <div class="wa-card">
+                            <% (data.users || []).forEach((user) => { %>
+                                <form class="wa-form mb-2" method="post" action="/admin/whatsapp/permisos/<%= user._id %>">
+                                    <strong><%= user.username || user.email %></strong>
+                                    <select name="role">
+                                        <% data.roles.forEach((role) => { %><option value="<%= role %>" <%= (user.role || 'owner') === role ? 'selected' : '' %>><%= role %></option><% }) %>
+                                    </select>
+                                    <% if (perms['wa.users']) { %><button type="submit">Guardar rol</button><% } %>
+                                </form>
+                            <% }) %>
+                            <p class="small text-muted mb-0">Quien no tiene rol cargado se trata como propietario para no bloquear el acceso actual.</p>
+                        </div>
+                    <% } %>
+                </section>
+            </div>
+            <% } %>
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/wa-admin.js"></script>
+</body>
+</html>

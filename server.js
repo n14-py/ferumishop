@@ -107,7 +107,9 @@ const getPublicId = (url) => {
 const adminUserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    username: { type: String, required: true, default: 'Admin' }
+    username: { type: String, required: true, default: 'Admin' },
+    role: { type: String, enum: ['owner', 'manager', 'operator', 'viewer'], default: 'owner' },
+    waPermissions: { type: [String], default: undefined }
 });
 
 // Encriptar contraseña antes de guardar
@@ -200,6 +202,9 @@ const productSchema = new mongoose.Schema({
     isFeatured: { type: Boolean, default: false }, 
     isForRent: { type: Boolean, default: false }, 
     isForSale: { type: Boolean, default: true },
+    aiVisible: { type: Boolean, default: true },
+    aiNotes: { type: String, default: '' },
+    aiUsage: { type: String, default: '' },
     views: { type: Number, default: 0 } 
 }, { timestamps: true });
 
@@ -310,9 +315,9 @@ const webOrderSchema = new mongoose.Schema({
     pagoparFormaPago: { type: String, default: '' },
     pagoparLastConsulta: { type: mongoose.Schema.Types.Mixed },
     status: { type: String, enum: ['pendiente', 'pagado', 'cancelado'], default: 'pendiente' },
-    paymentMethod: { type: String, enum: ['pagopar', 'efectivo_retiro'], default: 'pagopar' },
+    paymentMethod: { type: String, enum: ['pagopar', 'efectivo_retiro', 'transferencia', 'mixto'], default: 'pagopar' },
     paymentStatus: { type: String, enum: ['pendiente', 'pagado', 'cancelado', 'reembolsado'], default: 'pendiente' },
-    shippingMethod: { type: String, enum: ['motobolt', 'transportadora', 'retiro'], default: 'retiro' },
+    shippingMethod: { type: String, enum: ['motobolt', 'transportadora', 'retiro', 'delivery_propio'], default: 'retiro' },
     shippingAddress: { type: String, default: '' },
     shippingCity: { type: String, default: '' },
     shippingReference: { type: String, default: '' },
@@ -339,6 +344,36 @@ const webOrderSchema = new mongoose.Schema({
     deliveredAt: Date,
     isPrinted: { type: Boolean, default: false },
     source: { type: String, default: 'web' },
+    commercialStatus: { type: String, default: '' },
+    financialStatus: { type: String, default: '' },
+    logisticsStatus: { type: String, default: '' },
+    shippingZone: { type: String, default: '' },
+    shippingQuote: { type: mongoose.Schema.Types.Mixed },
+    paymentIntentKey: { type: String, default: '' },
+    pagoparAttemptStatus: { type: String, default: '' },
+    pagoparAttemptAt: Date,
+    pagoparAttemptError: { type: String, default: '' },
+    amountPaid: { type: Number, default: 0 },
+    payments: [{
+        amount: Number,
+        method: String,
+        status: String,
+        receiptId: String,
+        at: Date,
+        by: String,
+        note: String
+    }],
+    statusLog: [{
+        domain: String,
+        from: String,
+        to: String,
+        by: String,
+        reason: String,
+        at: { type: Date, default: Date.now }
+    }],
+    internalNotes: [{ text: String, by: String, at: { type: Date, default: Date.now } }],
+    scheduledFor: Date,
+    departureId: { type: String, default: '' },
     checkoutSlug: { type: String, unique: true, sparse: true },
     waFrom: { type: String, default: '', index: true },
     waPaidNotifiedAt: Date,
@@ -2867,6 +2902,14 @@ app.get('/sitemap.xml', async (req, res, next) => {
 // MANEJADORES DE ERROR Y ARRANQUE
 // =============================================
 
+require('./routes/wa-admin')(app, {
+    AdminUser,
+    Product,
+    WebOrder,
+    SiteConfig,
+    requireAdmin
+});
+
 require('./routes/whatsapp')(app, {
     WebOrder,
     Product,
@@ -2924,6 +2967,7 @@ app.listen(PORT, () => {
         ? `✅ VPS ferumishopvideos: ${videoCfg.urls.join(', ')}`
         : 'ℹ️ VPS ferumishopvideos en espera: falta VIDEO_BOT_URL');
     require('./lib/video-bot').startScheduler({ Product, SiteConfig });
+    require('./lib/wa-control/scheduler').start().catch((err) => console.error('[wa-control] scheduler', err.message));
     
     // --- Script para crear el admin por primera vez ---
     const createAdmin = async () => {
