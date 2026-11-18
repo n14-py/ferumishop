@@ -60,6 +60,11 @@ mongoose.connect(process.env.MONGODB_URI)
       } catch (err) {
           console.error('No se pudo actualizar pedidos históricos:', err.message);
       }
+      try {
+          await SiteConfig.updateMany({ aboutUsText: { $regex: brandLib.LEGACY_ABOUT_SOURCE, $options: 'i' } }, { $set: { aboutUsText: '' } });
+      } catch (err) {
+          console.error('No se pudo limpiar el texto de la marca:', err.message);
+      }
   })
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
@@ -270,13 +275,14 @@ const Promotion = mongoose.model('Promotion', promotionSchema);
 const promotionsLib = require('./lib/promotions');
 const productFormLib = require('./lib/product-form');
 const brandLib = require('./lib/brand');
+const mediaLib = require('./lib/media');
 
 // --- Modelo de Configuración del Sitio ---
 const siteConfigSchema = new mongoose.Schema({
     configKey: { type: String, default: 'main_config', unique: true },
     whatsappNumber: { type: String, default: '595987301591' },
     whatsappMessage: { type: String, default: 'Hola, vi este producto en la web y quisiera más información: ' },
-    aboutUsText: { type: String, default: 'Escribe aquí la descripción de "Sobre Nosotros".' },
+    aboutUsText: { type: String, default: '' },
     logoUrl: { type: String },
     bannerImages: [{ type: String }], // URLs de Cloudinary para el banner principal
     storeAddress: { type: String, default: 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' },
@@ -703,13 +709,21 @@ app.get('/', async (req, res, next) => {
             .limit(8)
             .sort({ createdAt: -1 });
 
-        const categories = await Category.find().limit(12);
+        const categoryDocs = await Category.find().limit(12).lean();
+        const categories = await Promise.all(categoryDocs.map(async (cat) => {
+            const sample = await Product.findOne({ ...visible, category: cat._id, 'photos.0': { $exists: true } })
+                .sort({ isFeatured: -1, displayOrder: 1, createdAt: -1 })
+                .select('photos')
+                .lean();
+            return { ...cat, cover: sample && sample.photos ? mediaLib.cdn(sample.photos[0], 'w_640,h_800,c_fill,g_auto,q_auto,f_auto') : '' };
+        }));
         
         res.render('public/index', {
             pageTitle: 'Inicio',
             featuredProducts,
             latestProducts,
             categories,
+            heroShots: mediaLib.heroShots([...featuredProducts, ...latestProducts]),
             seoDescription: (res.locals.siteConfig && res.locals.siteConfig.homeSeoDescription) || 'FERUMI, marca paraguaya de pestañas, belleza y cosméticos. Fundación 11 de enero de 2026. Nueva etapa en diciembre de 2026.'
         });
     } catch (err) {
@@ -1026,9 +1040,9 @@ app.get('/categoria/:name', async (req, res, next) => {
             return res.status(404).render('public/error', { message: 'Categoría no encontrada.' });
         }
 
-        const products = await Product.find({ category: category._id })
+        const products = await Product.find({ ...productFormLib.publicFilter(), category: category._id })
             .populate('category')
-            .sort({ createdAt: -1 });
+            .sort({ displayOrder: 1, createdAt: -1 });
 
         res.render('public/tienda', { // Reutilizamos la vista de la tienda
             pageTitle: `Categoría: ${category.name}`,
@@ -1036,7 +1050,7 @@ app.get('/categoria/:name', async (req, res, next) => {
             categories: await Category.find(),
             currentPage: 1,
             totalPages: 1,
-            query: req.query
+            query: { ...req.query, categoria: category.name }
         });
     } catch (err) {
         next(err);
@@ -2281,7 +2295,7 @@ app.post('/admin/configuracion/update', requireAdmin, async (req, res, next) => 
             instagramUrl: purify.sanitize(instagramUrl || ''),
             facebookUrl: purify.sanitize(facebookUrl || ''),
             tiktokUrl: purify.sanitize(tiktokUrl || ''),
-            aboutUsText: purify.sanitize(aboutUsText || '', { USE_PROFILES: { html: true } })
+            aboutUsText: brandLib.cleanAbout(purify.sanitize(aboutUsText || '', { USE_PROFILES: { html: true } }))
         },
             { upsert: true, new: true } // Crea la config si no existe
         );

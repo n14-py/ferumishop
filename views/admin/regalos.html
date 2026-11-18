@@ -59,7 +59,7 @@
                     <div class="card app-card p-4 h-100 border-start border-4 border-info">
                         <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-search text-info me-2"></i> Buscar Envío</h6>
                         <p class="text-muted small mb-3">Busca por nombre del destinatario, remitente o ID.</p>
-                        <input type="text" id="searchInput" class="form-control search-input" placeholder="Ej: María, regalo-00a1...">
+                        <input type="text" id="searchInput" class="form-control search-input" placeholder="Nombre o código">
                     </div>
                 </div>
 
@@ -68,7 +68,7 @@
                         <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-cash-register text-warning me-2"></i> Validar Gift Card</h6>
                         <p class="text-muted small mb-3">Ingresa el código si el cliente pagó presencialmente.</p>
                         <form action="/admin/regalos/verify" method="POST" class="d-flex gap-2">
-                            <input type="text" id="code" name="code" class="form-control search-input flex-grow-1" placeholder="Ej: FERUMI-A1B2" required>
+                            <input type="text" id="code" name="code" class="form-control search-input flex-grow-1" placeholder="Código" required>
                             <button type="submit" class="btn fw-bold px-4 rounded-4" style="background: var(--admin-primary); color: white;">
                                 <i class="fas fa-check"></i>
                             </button>

@@ -12,82 +12,90 @@
 <link rel="apple-touch-icon" href="/favicon.png">
 </head>
 
-<body>
-
+<body class="fm-contact-page">
 <%- include('../partials/header.html') %>
+<%
+    const story = (typeof brand !== 'undefined' && brand) ? brand : null;
+    const waNumber = siteConfig.whatsappNumber || '595987301591';
+    const mapsUrl = siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th';
+    const address = siteConfig.storeAddress || 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay';
+%>
+<main class="fm-page">
+    <header class="fm-page-hero">
+        <p class="fm-kicker">Contacto</p>
+        <h1>Hablemos <em>por donde prefieras</em></h1>
+        <p class="fm-lead">Consultas de productos, tonos y pedidos.</p>
+    </header>
 
-<main class="container">
-    
-    <div class="static-page-container">
-        <h1>Contáctanos</h1>
-        <p style="text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
-            ¿Tienes dudas sobre algún tono o producto? ¿Buscas algo específico?
-            ¡Haz click en cualquiera de los iconos de abajo para hablar con nosotras!
-        </p>
+    <section class="fm-contact-grid">
+        <a class="fm-contact-card is-primary" href="https://wa.me/<%= waNumber %>" target="_blank" rel="noopener">
+            <i class="fab fa-whatsapp"></i>
+            <strong>WhatsApp</strong>
+            <span>Escribinos y te respondemos</span>
+        </a>
+        <a class="fm-contact-card" href="<%= siteConfig.instagramUrl || 'https://instagram.com/ferumishop' %>" target="_blank" rel="noopener">
+            <i class="fab fa-instagram"></i>
+            <strong>Instagram</strong>
+            <span>Novedades y lanzamientos</span>
+        </a>
+        <a class="fm-contact-card" href="<%= siteConfig.tiktokUrl || 'https://tiktok.com/@ferumishop' %>" target="_blank" rel="noopener">
+            <i class="fab fa-tiktok"></i>
+            <strong>TikTok</strong>
+            <span>Videos de la marca</span>
+        </a>
+        <% if (siteConfig.facebookUrl) { %>
+        <a class="fm-contact-card" href="<%= siteConfig.facebookUrl %>" target="_blank" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+            <strong>Facebook</strong>
+            <span>Seguinos en Facebook</span>
+        </a>
+        <% } %>
+        <a class="fm-contact-card" href="/tracking">
+            <i class="fas fa-box"></i>
+            <strong>Mis pedidos</strong>
+            <span>Seguí tu compra</span>
+        </a>
+    </section>
 
-        <div class="contact-info" style="max-width: 600px; margin: 2.5rem auto 0 auto;">
-            
-            <h3 style="text-align: center;">Nuestros Canales</h3>
-            <p style="text-align: center;">Estamos disponibles en:</p>
-            
-            <ul class="contact-icon-list">
-                <li>
-                    <a href="https://wa.me/<%= siteConfig.whatsappNumber %>" target="_blank" title="WhatsApp">
-                        <i class="fab fa-whatsapp"></i>
-                        <span>WhatsApp</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank" title="Ubicación Ferumishop">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Ubicación</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<%= siteConfig.facebookUrl || '#' %>" target="_blank" title="Facebook" class="<%= siteConfig.facebookUrl ? '' : 'shop-hide' %>">
-                        <i class="fab fa-facebook-f"></i>
-                        <span>Facebook</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<%= siteConfig.instagramUrl || 'https://instagram.com/ferumishop' %>" target="_blank" title="Instagram">
-                        <i class="fab fa-instagram"></i>
-                        <span>Instagram</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<%= siteConfig.tiktokUrl || 'https://tiktok.com/@ferumishop' %>" target="_blank" title="TikTok">
-                        <i class="fab fa-tiktok"></i>
-                        <span>TikTok</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/tracking" title="Tracking">
-                        <i class="fas fa-truck"></i>
-                        <span>Tracking</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="mailto:contacto@ferumi.com" title="Email">
-                        <i class="fas fa-envelope"></i>
-                        <span>Email</span>
-                    </a>
-                </li>
-            </ul>
-            <div style="margin-top: 2rem;">
-                <h3 style="text-align:center;">Ferumishop en el mapa</h3>
-                <p style="text-align:center;" class="text-muted"><%= siteConfig.storeAddress || 'Capiatá, Ruta 1 Ex km 21 - Paraguay' %></p>
-                <iframe class="about-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-                    src="https://www.google.com/maps?q=<%= encodeURIComponent(siteConfig.storeAddress || 'Ferumishop Capiatá Ruta 1 Ex km 21') %>&output=embed"></iframe>
-                <p style="text-align:center; margin-top: 10px;"><a class="btn btn-primary" href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Abrir en Google Maps</a></p>
+    <section class="fm-block fm-block-flush">
+        <div class="fm-section-head">
+            <div>
+                <p class="fm-kicker">Entrega</p>
+                <h2>Cómo te llega <em>tu pedido</em></h2>
             </div>
         </div>
+        <div class="fm-ship-grid">
+            <article>
+                <i class="fas fa-motorcycle"></i>
+                <h3>Moto Bolt Envíos</h3>
+                <p>Asunción y alrededores, hasta 30 km. Coordinamos la entrega por WhatsApp, de 9:00 a 20:00.</p>
+            </article>
+            <article>
+                <i class="fas fa-truck"></i>
+                <h3>Interior del país</h3>
+                <p>Enviamos con Transportadora TSI, Transportadora Jaraha o la que prefieras. Te escribimos para confirmar agencia y retiro.</p>
+            </article>
+            <article>
+                <i class="fas fa-store"></i>
+                <h3>Retiro en el local</h3>
+                <p>Pasás a buscar tu pedido. Podés pagar en efectivo o transferir antes y retirar ya pago.</p>
+            </article>
+        </div>
+    </section>
 
-    </div>
-
+    <section class="fm-block fm-block-flush fm-map">
+        <div class="fm-section-head">
+            <div>
+                <p class="fm-kicker">Ferumishop</p>
+                <h2>Visitanos en <em>Capiatá</em></h2>
+                <p class="fm-map-address"><%= address %></p>
+            </div>
+            <a class="btn btn-secondary" href="<%= mapsUrl %>" target="_blank" rel="noopener"><i class="fas fa-location-arrow"></i> Cómo llegar</a>
+        </div>
+        <iframe class="about-map" title="Ubicación de Ferumishop" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=<%= encodeURIComponent(address) %>&output=embed"></iframe>
+    </section>
 </main>
-
 <%- include('../partials/footer.html') %>
-
 </body>
 </html>

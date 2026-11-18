@@ -441,9 +441,9 @@
                             <label class="form-label fw-bold" style="color: #d81b60;">
                                 <i class="fas fa-motorcycle"></i> Datos para Delivery (Opcional)
                             </label>
-                            <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del Cliente (Ej: María López)">
-                            <input type="text" name="customerPhone" class="form-control mb-2" placeholder="WhatsApp (Ej: 0981234567)">
-                            <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas (Ej: -25.672376, -57.826487)">
+                            <input type="text" name="customerName" class="form-control mb-2" placeholder="Nombre del cliente">
+                            <input type="text" name="customerPhone" class="form-control mb-2" placeholder="WhatsApp">
+                            <input type="text" name="locationCoords" class="form-control" placeholder="Coordenadas">
                             <small class="text-muted">Pegar las coordenadas de Google Maps aquí para generar el QR.</small>
                         </div>
 
@@ -520,7 +520,7 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Concepto / Destino</label>
-                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Bolsitas, Cinta, Viático..." required>
+                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Descripción del gasto" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-danger">Importe Gastado Total (Gs.)</label>
@@ -548,7 +548,7 @@
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Concepto</label>
-                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Ej: Capital puesto por Nando" required>
+                        <input type="text" name="description" class="form-control form-control-lg" placeholder="Descripción del aporte" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-primary">Monto (Gs.)</label>
@@ -579,7 +579,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Monto a retirar (Gs.)</label>
-                        <input type="number" name="amount" class="form-control form-control-lg fw-bold border-danger" placeholder="Ej: 50000" max="<%= stats.deudaTotalMayu %>" required>
+                        <input type="number" name="amount" class="form-control form-control-lg fw-bold border-danger" placeholder="Monto" max="<%= stats.deudaTotalMayu %>" required>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">
@@ -606,7 +606,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Monto a retirar (Gs.)</label>
-                        <input type="number" name="amount" class="form-control form-control-lg fw-bold border-dark" placeholder="Ej: 50000" max="<%= stats.deudaTotalNando %>" required>
+                        <input type="number" name="amount" class="form-control form-control-lg fw-bold border-dark" placeholder="Monto" max="<%= stats.deudaTotalNando %>" required>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-light rounded-bottom-4">

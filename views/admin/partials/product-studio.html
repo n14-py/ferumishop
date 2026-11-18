@@ -40,7 +40,7 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-bold">Etiquetas</label>
-                <input class="form-control" name="tags" id="tagsField" value="<%= (p.tags || []).join(', ') %>" placeholder="separadas por coma">
+                <input class="form-control" name="tags" id="tagsField" value="<%= (p.tags || []).join(', ') %>" placeholder="Separadas por coma">
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-bold">Palabras clave</label>
@@ -74,12 +74,12 @@
     <div class="pf-pane" id="pf-seo">
         <div class="row g-3">
             <div class="col-md-6"><label class="form-label fw-bold">Meta title</label><input class="form-control" name="seoTitle" id="seoTitle" maxlength="70" value="<%= p.seoTitle || '' %>"></div>
-            <div class="col-md-6"><label class="form-label fw-bold">URL amigable</label><input class="form-control" name="slug" id="slug" value="<%= p.slug || '' %>" placeholder="se arma sola si la dejás vacía"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">URL amigable</label><input class="form-control" name="slug" id="slug" value="<%= p.slug || '' %>" placeholder="Se genera desde el nombre"></div>
             <div class="col-12"><label class="form-label fw-bold">Meta description</label><textarea class="form-control" name="seoDescription" id="seoDescription" maxlength="180" rows="2"><%= p.seoDescription || '' %></textarea></div>
             <div class="col-md-6"><label class="form-label fw-bold">Palabras clave SEO</label><input class="form-control" name="seoKeywords" id="seoKeywords" value="<%= p.seoKeywords || '' %>"></div>
             <div class="col-md-6"><label class="form-label fw-bold">Open Graph title</label><input class="form-control" name="ogTitle" id="ogTitle" value="<%= p.ogTitle || '' %>"></div>
             <div class="col-12"><label class="form-label fw-bold">Open Graph description</label><textarea class="form-control" name="ogDescription" id="ogDescription" rows="2"><%= p.ogDescription || '' %></textarea></div>
-            <div class="col-12"><label class="form-label fw-bold">Imagen para compartir (URL)</label><input class="form-control" name="ogImage" id="ogImage" value="<%= p.ogImage || '' %>" placeholder="si la dejás vacía se usa la foto principal"></div>
+            <div class="col-12"><label class="form-label fw-bold">Imagen para compartir (URL)</label><input class="form-control" name="ogImage" id="ogImage" value="<%= p.ogImage || '' %>" placeholder="Foto principal por defecto"></div>
         </div>
     </div>
 
@@ -117,7 +117,7 @@
         <h6 class="fw-bold">Generar contenido con IA</h6>
         <p class="small text-muted">Escribí el nombre y los datos reales del producto. La IA redacta la ficha y no publica nada: tenés que guardar el formulario vos.</p>
         <label class="form-label fw-bold">Datos que la IA puede usar</label>
-        <textarea class="form-control" id="aiNotesInput" rows="4" placeholder="Ej: pestañas postizas efecto abanico, 10 pares, curvatura C. No agregues claims que no quieras publicar."><%= p.aiNotes || '' %></textarea>
+        <textarea class="form-control" id="aiNotesInput" rows="4" placeholder="Datos reales del producto: tipo, medidas, cantidad y usos"><%= p.aiNotes || '' %></textarea>
         <input type="hidden" name="aiNotes" id="aiNotesHidden" value="<%= p.aiNotes || '' %>">
         <div class="d-flex flex-wrap gap-2 mt-3">
             <button type="button" class="btn btn-dark rounded-pill" id="aiAll">Generar toda la ficha</button>

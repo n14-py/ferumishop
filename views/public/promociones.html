@@ -9,45 +9,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="icon" type="image/png" href="/favicon.png">
 </head>
-<body>
+<body class="fm-promos-page">
 <%- include('../partials/header.html') %>
+<%
+    const promoLabel = function (promo) {
+        if (promo.discountType === 'percent' && promo.discountValue) return '-' + promo.discountValue + '%';
+        if (promo.discountType === 'amount' && promo.discountValue) return formatPrice(promo.discountValue) + ' menos';
+        if (promo.discountType === 'fixed_price') return 'Precio especial';
+        return 'Promo';
+    };
+    const promoUntil = function (promo) {
+        if (!promo.endsAt) return '';
+        return 'Hasta el ' + new Date(promo.endsAt).toLocaleDateString('es-PY', { day: 'numeric', month: 'long', timeZone: 'America/Asuncion' });
+    };
+%>
 <main class="fm-page">
-    <section class="fm-page-hero">
+    <header class="fm-page-hero">
         <p class="fm-kicker">Ahora en FERUMI</p>
-        <h1>Promociones</h1>
-        <p>Las ofertas que están vigentes. Cuando llega la fecha de cierre, salen solas de esta página.</p>
-    </section>
+        <h1>Promociones <em>vigentes</em></h1>
+    </header>
 
     <% if (promotions && promotions.length) { %>
         <div class="fm-promo-list">
             <% promotions.forEach(function (promo) { %>
-                <article class="fm-promo-feature <%= promo.featured ? 'is-featured' : '' %>">
+                <article class="fm-promo-feature <%= promo.featured ? 'is-featured' : '' %> <%= (promo.banner || promo.image) ? 'has-media' : '' %>">
                     <% if (promo.banner || promo.image) { %>
                         <div class="fm-promo-media">
-                            <img src="<%= promo.banner || promo.image %>" alt="<%= promo.title %>">
+                            <img src="<%= promo.banner || promo.image %>" alt="<%= promo.title %>" loading="lazy">
                         </div>
                     <% } %>
                     <div class="fm-promo-copy">
-                        <% if (promo.featured) { %><span class="fm-pill">Destacada</span><% } %>
+                        <div class="fm-promo-tags">
+                            <span class="fm-promo-off"><%= promoLabel(promo) %></span>
+                            <% if (promo.featured) { %><span class="fm-pill">Destacada</span><% } %>
+                            <% if (promoUntil(promo)) { %><span class="fm-promo-until"><%= promoUntil(promo) %></span><% } %>
+                        </div>
                         <h2><%= promo.title %></h2>
-                        <% if (promo.subtitle) { %><p class="fm-lead"><%= promo.subtitle %></p><% } %>
+                        <% if (promo.subtitle) { %><p class="fm-promo-sub"><%= promo.subtitle %></p><% } %>
                         <% if (promo.description) { %><p><%= promo.description %></p><% } %>
                         <% if (promo.commercialText) { %><p class="fm-commercial"><%= promo.commercialText %></p><% } %>
-                        <% if (promo.discountType === 'percent' && promo.discountValue) { %>
-                            <p class="fm-discount"><%= promo.discountValue %>% de descuento en los productos de esta promo</p>
-                        <% } else if (promo.discountType === 'amount' && promo.discountValue) { %>
-                            <p class="fm-discount"><%= formatPrice(promo.discountValue) %> menos en los productos incluidos</p>
-                        <% } %>
                     </div>
                 </article>
             <% }); %>
         </div>
 
         <% if (products && products.length) { %>
-            <section class="fm-block">
+            <section class="fm-block fm-block-flush">
                 <div class="fm-section-head">
-                    <p class="fm-kicker">Para llevar</p>
-                    <h2>Productos en promoción</h2>
+                    <div>
+                        <p class="fm-kicker">Para llevar</p>
+                        <h2>Productos en <em>promoción</em></h2>
+                    </div>
                 </div>
                 <div class="product-grid">
                     <% products.forEach(function (product) { %>
@@ -58,8 +70,8 @@
         <% } %>
     <% } else { %>
         <section class="fm-empty">
-            <h2>En este momento no hay promociones activas</h2>
-            <p>Cuando publiquemos una, va a aparecer acá y en la página de inicio.</p>
+            <h2>No hay promociones activas por ahora</h2>
+            <p>Mientras tanto, mirá todo lo que tenemos en la tienda.</p>
             <a class="btn btn-primary" href="/tienda">Ver la tienda</a>
         </section>
     <% } %>
