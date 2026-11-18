@@ -1,0 +1,24 @@
+<%
+    const people = (typeof brand !== 'undefined' && brand && brand.founders) ? brand.founders : [];
+%>
+<% if (people.length) { %>
+<section class="fm-founders" id="equipo">
+    <div class="fm-section-head">
+        <p class="fm-kicker">El equipo</p>
+        <h2>Quiénes hacen FERUMI</h2>
+        <p>Dos personas, un mismo proyecto. De un emprendimiento que fue sumando clientas a una marca con nombre propio.</p>
+    </div>
+    <div class="fm-founder-grid">
+        <% people.forEach(function (person) { %>
+            <article class="fm-founder">
+                <div class="fm-monogram" aria-hidden="true"><%= person.monogram %></div>
+                <div>
+                    <h3><%= person.name %></h3>
+                    <p class="fm-role"><%= person.role %></p>
+                    <p><%= person.bio %></p>
+                </div>
+            </article>
+        <% }); %>
+    </div>
+</section>
+<% } %>

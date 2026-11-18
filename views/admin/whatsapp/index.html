@@ -43,7 +43,7 @@
                             <div class="row g-2">
                                 <div class="col-6 col-md-3"><label>Desde<input type="date" name="from" value="<%= query.from || '' %>"></label></div>
                                 <div class="col-6 col-md-3"><label>Hasta<input type="date" name="to" value="<%= query.to || '' %>"></label></div>
-                                <div class="col-6 col-md-3"><label>Pago<select name="paymentMethod"><option value="">Todos</option><option value="pagopar">PagoPar</option><option value="transferencia">Transferencia</option><option value="efectivo_retiro">Efectivo</option></select></label></div>
+                                <div class="col-6 col-md-3"><label>Pago<select name="paymentMethod"><option value="">Todos</option><option value="online">Pago online</option><option value="transferencia">Transferencia</option><option value="efectivo_retiro">Efectivo</option></select></label></div>
                                 <div class="col-6 col-md-3"><label>Entrega<select name="shippingMethod"><option value="">Todas</option><option value="motobolt">MotoBolt</option><option value="delivery_propio">Delivery propio</option><option value="transportadora">Transportadora</option><option value="retiro">Retiro</option></select></label></div>
                             </div>
                             <button type="submit">Filtrar</button>
@@ -280,7 +280,7 @@
                         </form>
                         <div class="wa-card mb-3">
                             <h3 class="h5">Comprobantes recibidos</h3>
-                            <p class="text-muted">PagoPar es QR, crédito y débito. Una foto de transferencia no confirma el pago sola.</p>
+                            <p class="text-muted">Una foto de transferencia no confirma el pago sola. Hace falta que una persona la apruebe.</p>
                             <% if (!(data.receipts || []).length) { %><p class="text-muted">No hay comprobantes cargados.</p><% } %>
                             <% (data.receipts || []).forEach((receipt) => { %>
                                 <div class="border-bottom py-2">
@@ -305,7 +305,7 @@
                             <% }) %>
                         </div>
                         <div class="wa-card">
-                            <h3 class="h5">Intenciones de PagoPar</h3>
+                            <h3 class="h5">Intenciones de pago</h3>
                             <table class="wa-table">
                                 <thead><tr><th>Estado</th><th>Pedido</th><th>Error</th><th></th></tr></thead>
                                 <tbody>
@@ -634,7 +634,7 @@
                             <p>WhatsApp configurado: <strong><%= status.whatsapp?.configured ? 'sí' : 'no' %></strong></p>
                             <p>Token de verificación presente: <strong><%= status.whatsapp?.verifyToken ? 'sí' : 'no' %></strong></p>
                             <p>IA configurada: <strong><%= status.deepinfra?.configured ? 'sí' : 'no' %></strong> · modelo <%= status.deepinfra?.model || '—' %></p>
-                            <p>PagoPar configurado: <strong><%= status.pagopar?.configured ? 'sí' : 'no' %></strong></p>
+                            <p>Pasarela online: <strong><%= status.online?.configured ? 'sí' : 'no' %></strong></p>
                             <p>Base de datos: <strong><%= status.mongo?.connected ? 'conectada' : 'sin conexión' %></strong></p>
                             <p>Imágenes: <strong><%= status.cloudinary?.configured ? 'Cloudinary presente' : 'Cloudinary no configurado' %></strong></p>
                             <p>Visión: <%= status.vision?.available ? 'disponible' : (status.vision?.reason || 'no disponible') %></p>

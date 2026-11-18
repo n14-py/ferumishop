@@ -241,6 +241,56 @@
                 </div>
 
             </div>
+
+            <% const people = (siteConfig.founders && siteConfig.founders.length) ? siteConfig.founders : [
+                { name: 'Luis Fernando Arce Fretes', role: 'Fundador · Dirección Ejecutiva, Finanzas y Desarrollo de Producto', bio: 'Dirección general, finanzas, abastecimiento, importaciones y desarrollo de productos.' },
+                { name: 'Fadua Mahiumy Gomez Benitez', role: 'Fundadora · Coordinación Comercial y Experiencia del Cliente', bio: 'Atención, ventas, seguimiento de pedidos y contenido de las redes.' }
+            ]; %>
+            <form class="card app-card p-4 mt-4" action="/admin/configuracion/marca" method="POST">
+                <h5 class="fw-bold mb-3">Marca, equipo, portada y pago</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Historia corta</label>
+                        <textarea class="form-control" name="brandStory" rows="4"><%= siteConfig.brandStory || '' %></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Texto del lanzamiento</label>
+                        <input class="form-control mb-2" name="launchTitle" placeholder="Título" value="<%= siteConfig.launchTitle || '' %>">
+                        <textarea class="form-control" name="launchText" rows="3" placeholder="Si lo dejás vacío, se usa el texto oficial."><%= siteConfig.launchText || '' %></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Clientas</label>
+                        <input class="form-control" name="clientsLabel" value="<%= siteConfig.clientsLabel || 'Más de 1.000 clientes' %>">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">SEO de inicio</label>
+                        <input class="form-control mb-2" name="homeSeoTitle" value="<%= siteConfig.homeSeoTitle || '' %>" placeholder="Título">
+                        <input class="form-control" name="homeSeoDescription" value="<%= siteConfig.homeSeoDescription || '' %>" placeholder="Descripción">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Transferencia</label>
+                        <input class="form-control mb-2" name="bankName" placeholder="Banco" value="<%= siteConfig.bankName || '' %>">
+                        <input class="form-control mb-2" name="bankAlias" placeholder="Alias" value="<%= siteConfig.bankAlias || '' %>">
+                        <input class="form-control mb-2" name="bankHolder" placeholder="Titular" value="<%= siteConfig.bankHolder || '' %>">
+                        <input class="form-control" name="bankNote" placeholder="Nota" value="<%= siteConfig.bankNote || '' %>">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" name="showLaunch" <%= siteConfig.showLaunch !== false ? 'checked' : '' %>>
+                            <span class="form-check-label">Mostrar el lanzamiento de diciembre 2026 en la portada</span>
+                        </label>
+                    </div>
+                    <% people.forEach(function (person) { %>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Persona del equipo</label>
+                            <input class="form-control mb-2" name="founderName" value="<%= person.name || '' %>">
+                            <input class="form-control mb-2" name="founderRole" value="<%= person.role || '' %>">
+                            <textarea class="form-control" name="founderBio" rows="3"><%= person.bio || '' %></textarea>
+                        </div>
+                    <% }); %>
+                </div>
+                <button class="btn btn-primary rounded-pill mt-3" type="submit">Guardar marca</button>
+            </form>
             
             <div style="height: 60px;"></div>
 

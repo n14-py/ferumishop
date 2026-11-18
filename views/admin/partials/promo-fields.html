@@ -1,0 +1,89 @@
+<%
+    const item = promo || {};
+    const selected = new Set((item.productIds || []).map((id) => String(id)));
+    const overrides = {};
+    (item.priceOverrides || []).forEach((row) => { overrides[String(row.productId)] = row.price; });
+    function dt(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        const pad = (n) => String(n).padStart(2, '0');
+        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+    }
+%>
+<div class="row g-3">
+    <div class="col-md-8">
+        <label class="form-label fw-bold">Título</label>
+        <input class="form-control" name="title" required value="<%= item.title || '' %>">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-bold">Orden</label>
+        <input class="form-control" type="number" name="sortOrder" value="<%= item.sortOrder || 0 %>">
+    </div>
+    <div class="col-12">
+        <label class="form-label fw-bold">Subtítulo</label>
+        <input class="form-control" name="subtitle" value="<%= item.subtitle || '' %>">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-bold">Descripción</label>
+        <textarea class="form-control" name="description" rows="3"><%= item.description || '' %></textarea>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-bold">Texto comercial</label>
+        <textarea class="form-control" name="commercialText" rows="3"><%= item.commercialText || '' %></textarea>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-bold">Tipo de descuento</label>
+        <select class="form-select" name="discountType">
+            <option value="percent" <%= item.discountType === 'percent' || !item.discountType ? 'selected' : '' %>>Porcentaje</option>
+            <option value="amount" <%= item.discountType === 'amount' ? 'selected' : '' %>>Monto en Gs.</option>
+            <option value="fixed_price" <%= item.discountType === 'fixed_price' ? 'selected' : '' %>>Precio promocional</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-bold">Valor</label>
+        <input class="form-control" name="discountValue" type="number" min="0" value="<%= item.discountValue || 0 %>">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Inicio</label>
+        <input class="form-control" type="datetime-local" name="startsAt" value="<%= dt(item.startsAt) %>">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Fin</label>
+        <input class="form-control" type="datetime-local" name="endsAt" value="<%= dt(item.endsAt) %>">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-bold">Imagen</label>
+        <% if (item.image) { %><input type="hidden" name="keepImage" value="<%= item.image %>"><img src="<%= item.image %>" alt="" style="height:64px;border-radius:8px;margin-bottom:6px;"><% } %>
+        <input class="form-control" type="file" name="image" accept="image/*">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-bold">Banner</label>
+        <% if (item.banner) { %><input type="hidden" name="keepBanner" value="<%= item.banner %>"><img src="<%= item.banner %>" alt="" style="height:64px;border-radius:8px;margin-bottom:6px;"><% } %>
+        <input class="form-control" type="file" name="banner" accept="image/*">
+    </div>
+    <div class="col-12 d-flex gap-4">
+        <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="active" <%= item.active !== false ? 'checked' : '' %>>
+            <span class="form-check-label">Activa</span>
+        </label>
+        <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="featured" <%= item.featured ? 'checked' : '' %>>
+            <span class="form-check-label">Destacada</span>
+        </label>
+    </div>
+    <div class="col-12">
+        <label class="form-label fw-bold">Productos incluidos</label>
+        <div style="max-height:220px; overflow:auto; border:1px solid #eee; border-radius:12px; padding:0.6rem;">
+            <% (products || []).forEach(function (product) { %>
+                <label class="d-flex align-items-center gap-2 py-1">
+                    <input type="checkbox" name="productIds" value="<%= product._id %>" <%= selected.has(String(product._id)) ? 'checked' : '' %>>
+                    <span class="flex-grow-1"><%= product.name %> · <%= product.price %> Gs.</span>
+                    <input class="form-control form-control-sm" style="max-width:140px" type="number" min="0" name="override_<%= product._id %>" placeholder="Precio promo" value="<%= overrides[String(product._id)] || '' %>">
+                </label>
+            <% }); %>
+            <% if (!products || !products.length) { %><p class="mb-0 text-muted">Publicá productos para asociarlos.</p><% } %>
+        </div>
+        <small class="text-muted">El precio de la columna derecha pisa el descuento general solo en ese producto. Si lo dejás vacío, se usa el porcentaje, el monto o el precio general.</small>
+    </div>
+</div>

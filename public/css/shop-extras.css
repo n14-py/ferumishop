@@ -211,12 +211,12 @@
 .thanks-actions a { text-decoration: none; text-align: center; }
 
 .cart-checkout-stack { display: flex; flex-direction: column; gap: 10px; }
-.btn-checkout-pagopar, .btn-checkout-wa {
+.btn-checkout-main, .btn-checkout-wa {
     width: 100%; min-height: 52px; padding: 14px; border: none; border-radius: 50px;
     font-size: 1.05rem; font-weight: 800; cursor: pointer;
     display: flex; justify-content: center; align-items: center; gap: 8px; color: #fff;
 }
-.btn-checkout-pagopar { background: var(--primary-color, #f25aa4); }
+.btn-checkout-main { background: var(--primary-color, #f25aa4); }
 .btn-checkout-wa { background: #25D366; }
 .btn-checkout { background: var(--primary-color, #f25aa4) !important; }
 

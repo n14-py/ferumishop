@@ -1,0 +1,276 @@
+<%
+    const p = product || {};
+    const join = (list) => (list || []).join('\n');
+    const faqs = p.faqs || [];
+%>
+<div class="card app-card mb-4 p-3 p-md-4" id="ficha-completa">
+    <div class="pf-tabs" role="tablist">
+        <button type="button" class="active" data-pane="pf-general">General</button>
+        <button type="button" data-pane="pf-comercial">Comercial</button>
+        <button type="button" data-pane="pf-seo">SEO</button>
+        <button type="button" data-pane="pf-contenido">Contenido</button>
+        <button type="button" data-pane="pf-ia">Generar con IA</button>
+    </div>
+
+    <div class="pf-pane active" id="pf-general">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Título comercial</label>
+                <input class="form-control" name="commercialTitle" id="commercialTitle" value="<%= p.commercialTitle || '' %>">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Subtítulo</label>
+                <input class="form-control" name="subtitle" id="subtitle" value="<%= p.subtitle || '' %>">
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold">Descripción corta</label>
+                <textarea class="form-control" name="shortDescription" id="shortDescription" rows="2"><%= p.shortDescription || '' %></textarea>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Subcategoría</label>
+                <input class="form-control" name="subcategory" value="<%= p.subcategory || '' %>">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Marca</label>
+                <input class="form-control" name="brand" id="brandField" value="<%= p.brand || 'FERUMI' %>">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">SKU / código interno</label>
+                <input class="form-control" name="sku" value="<%= p.sku || '' %>">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Etiquetas</label>
+                <input class="form-control" name="tags" id="tagsField" value="<%= (p.tags || []).join(', ') %>" placeholder="separadas por coma">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Palabras clave</label>
+                <input class="form-control" name="keywords" id="keywordsField" value="<%= (p.keywords || []).join(', ') %>">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Estado</label>
+                <select class="form-select" name="status">
+                    <% ['activo', 'oculto', 'agotado'].forEach(function (status) { %>
+                        <option value="<%= status %>" <%= (p.status || 'activo') === status ? 'selected' : '' %>><%= status %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Orden en la tienda</label>
+                <input class="form-control" type="number" name="displayOrder" value="<%= p.displayOrder || 0 %>">
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-3 pb-2">
+                <label class="form-check"><input class="form-check-input" type="checkbox" name="isNew" <%= p.isNew ? 'checked' : '' %>> Nuevo</label>
+                <label class="form-check"><input class="form-check-input" type="checkbox" name="isOnPromo" id="isOnPromo" <%= p.isOnPromo ? 'checked' : '' %>> En promoción</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="pf-pane" id="pf-comercial">
+        <label class="form-label fw-bold">Precio promocional</label>
+        <input class="form-control" type="number" min="0" name="promoPrice" id="promoPrice" value="<%= p.promoPrice || 0 %>">
+        <small class="text-muted">Solo se muestra si marcás «En promoción» y este precio es menor al de venta. El costo interno queda arriba y no se publica.</small>
+    </div>
+
+    <div class="pf-pane" id="pf-seo">
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-bold">Meta title</label><input class="form-control" name="seoTitle" id="seoTitle" maxlength="70" value="<%= p.seoTitle || '' %>"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">URL amigable</label><input class="form-control" name="slug" id="slug" value="<%= p.slug || '' %>" placeholder="se arma sola si la dejás vacía"></div>
+            <div class="col-12"><label class="form-label fw-bold">Meta description</label><textarea class="form-control" name="seoDescription" id="seoDescription" maxlength="180" rows="2"><%= p.seoDescription || '' %></textarea></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Palabras clave SEO</label><input class="form-control" name="seoKeywords" id="seoKeywords" value="<%= p.seoKeywords || '' %>"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Open Graph title</label><input class="form-control" name="ogTitle" id="ogTitle" value="<%= p.ogTitle || '' %>"></div>
+            <div class="col-12"><label class="form-label fw-bold">Open Graph description</label><textarea class="form-control" name="ogDescription" id="ogDescription" rows="2"><%= p.ogDescription || '' %></textarea></div>
+            <div class="col-12"><label class="form-label fw-bold">Imagen para compartir (URL)</label><input class="form-control" name="ogImage" id="ogImage" value="<%= p.ogImage || '' %>" placeholder="si la dejás vacía se usa la foto principal"></div>
+        </div>
+    </div>
+
+    <div class="pf-pane" id="pf-contenido">
+        <label class="form-label fw-bold">Beneficios (uno por línea)</label>
+        <textarea class="form-control mb-3" name="benefits" id="benefits" rows="3"><%= join(p.benefits) %></textarea>
+        <label class="form-label fw-bold">Características (una por línea)</label>
+        <textarea class="form-control mb-3" name="features" id="features" rows="3"><%= join(p.features) %></textarea>
+        <label class="form-label fw-bold">Modo de uso</label>
+        <textarea class="form-control mb-3" name="howToUse" id="howToUse" rows="3"><%= p.howToUse || '' %></textarea>
+        <label class="form-label fw-bold">Contenido del producto</label>
+        <textarea class="form-control mb-3" name="contents" id="contents" rows="2"><%= p.contents || '' %></textarea>
+        <label class="form-label fw-bold">Información adicional</label>
+        <textarea class="form-control mb-3" name="extraInfo" id="extraInfo" rows="2"><%= p.extraInfo || '' %></textarea>
+        <label class="form-label fw-bold">Advertencias</label>
+        <textarea class="form-control mb-3" name="warnings" id="warnings" rows="2"><%= p.warnings || '' %></textarea>
+        <label class="form-label fw-bold">Preguntas frecuentes</label>
+        <div id="faqList">
+            <% if (faqs.length) { faqs.forEach(function (faq) { %>
+                <div class="row g-2 mb-2 faq-row">
+                    <div class="col-md-5"><input class="form-control" name="faqQuestion" placeholder="Pregunta" value="<%= faq.question || '' %>"></div>
+                    <div class="col-md-7"><input class="form-control" name="faqAnswer" placeholder="Respuesta" value="<%= faq.answer || '' %>"></div>
+                </div>
+            <% }); } else { %>
+                <div class="row g-2 mb-2 faq-row">
+                    <div class="col-md-5"><input class="form-control" name="faqQuestion" placeholder="Pregunta"></div>
+                    <div class="col-md-7"><input class="form-control" name="faqAnswer" placeholder="Respuesta"></div>
+                </div>
+            <% } %>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill" id="addFaq">Agregar pregunta</button>
+    </div>
+
+    <div class="pf-pane" id="pf-ia">
+        <h6 class="fw-bold">Generar contenido con IA</h6>
+        <p class="small text-muted">Escribí el nombre y los datos reales del producto. La IA redacta la ficha y no publica nada: tenés que guardar el formulario vos.</p>
+        <label class="form-label fw-bold">Datos que la IA puede usar</label>
+        <textarea class="form-control" id="aiNotesInput" rows="4" placeholder="Ej: pestañas postizas efecto abanico, 10 pares, curvatura C. No agregues claims que no quieras publicar."><%= p.aiNotes || '' %></textarea>
+        <input type="hidden" name="aiNotes" id="aiNotesHidden" value="<%= p.aiNotes || '' %>">
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <button type="button" class="btn btn-dark rounded-pill" id="aiAll">Generar toda la ficha</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="commercialTitle">Título</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="subtitle">Subtítulo</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="shortDescription">Descripción corta</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="description">Descripción larga</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="benefits">Beneficios</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="features">Características</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="howToUse">Modo de uso</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="faqs">Preguntas</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="tags">Etiquetas</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="keywords">Palabras clave</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="seoTitle">Meta title</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="seoDescription">Meta description</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="slug">Slug</button>
+            <button type="button" class="btn btn-outline-dark rounded-pill" data-ai="commercialText">Texto comercial</button>
+        </div>
+        <div id="aiStatus" class="small mt-3 text-muted"></div>
+        <div id="aiPreview" class="mt-3" hidden>
+            <pre id="aiPreviewText" class="small bg-light border rounded-4 p-3 mb-2" style="white-space:pre-wrap;"></pre>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-primary rounded-pill" id="aiAccept">Aceptar</button>
+                <button type="button" class="btn btn-outline-dark rounded-pill" id="aiRegen">Regenerar</button>
+                <button type="button" class="btn btn-outline-dark rounded-pill" id="aiEdit">Editar en la ficha</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    const tabs = document.querySelectorAll('.pf-tabs button');
+    tabs.forEach((button) => {
+        button.addEventListener('click', () => {
+            tabs.forEach((item) => item.classList.remove('active'));
+            document.querySelectorAll('.pf-pane').forEach((pane) => pane.classList.remove('active'));
+            button.classList.add('active');
+            document.getElementById(button.dataset.pane).classList.add('active');
+        });
+    });
+    const addFaq = document.getElementById('addFaq');
+    if (addFaq) {
+        addFaq.addEventListener('click', () => {
+            const row = document.createElement('div');
+            row.className = 'row g-2 mb-2 faq-row';
+            row.innerHTML = '<div class="col-md-5"><input class="form-control" name="faqQuestion" placeholder="Pregunta"></div><div class="col-md-7"><input class="form-control" name="faqAnswer" placeholder="Respuesta"></div>';
+            document.getElementById('faqList').appendChild(row);
+        });
+    }
+    const status = document.getElementById('aiStatus');
+    const notes = document.getElementById('aiNotesInput');
+    const notesHidden = document.getElementById('aiNotesHidden');
+    if (notes && notesHidden) notes.addEventListener('input', () => { notesHidden.value = notes.value; });
+
+    function setValue(id, value) {
+        const el = document.getElementById(id) || document.querySelector('[name="' + id + '"]');
+        if (!el || value == null) return;
+        el.value = Array.isArray(value) ? value.join(id === 'tagsField' || id === 'keywordsField' ? ', ' : '\n') : value;
+    }
+    function applyFields(fields) {
+        if (!fields) return;
+        const map = {
+            commercialTitle: 'commercialTitle',
+            subtitle: 'subtitle',
+            shortDescription: 'shortDescription',
+            description: 'description',
+            benefits: 'benefits',
+            features: 'features',
+            howToUse: 'howToUse',
+            seoTitle: 'seoTitle',
+            seoDescription: 'seoDescription',
+            slug: 'slug',
+            ogTitle: 'ogTitle',
+            ogDescription: 'ogDescription',
+            commercialText: 'commercialText'
+        };
+        Object.keys(fields).forEach((key) => {
+            if (key === 'tags') setValue('tagsField', fields.tags);
+            else if (key === 'keywords') setValue('keywordsField', fields.keywords);
+            else if (key === 'faqs' && Array.isArray(fields.faqs)) {
+                const list = document.getElementById('faqList');
+                list.innerHTML = '';
+                fields.faqs.forEach((faq) => {
+                    const row = document.createElement('div');
+                    row.className = 'row g-2 mb-2 faq-row';
+                    row.innerHTML = '<div class="col-md-5"><input class="form-control" name="faqQuestion"></div><div class="col-md-7"><input class="form-control" name="faqAnswer"></div>';
+                    row.querySelector('[name="faqQuestion"]').value = faq.question || '';
+                    row.querySelector('[name="faqAnswer"]').value = faq.answer || '';
+                    list.appendChild(row);
+                });
+            } else if (map[key]) setValue(map[key], fields[key]);
+        });
+        if (fields.seoTitle && !fields.ogTitle) setValue('ogTitle', fields.seoTitle);
+        if (fields.seoDescription && !fields.ogDescription) setValue('ogDescription', fields.seoDescription);
+        if (fields.commercialText) {
+            const box = document.getElementById('shortDescription');
+            if (box && !box.value.trim()) box.value = fields.commercialText;
+        }
+    }
+    let pending = null;
+    let pendingField = 'all';
+    const preview = document.getElementById('aiPreview');
+    const previewText = document.getElementById('aiPreviewText');
+    function showPreview(fields) {
+        pending = fields;
+        preview.hidden = false;
+        previewText.textContent = JSON.stringify(fields, null, 2);
+        status.textContent = 'Revisá el texto. Aceptar lo copia a la ficha. Guardar el producto sigue siendo manual.';
+    }
+    async function generate(field) {
+        const name = (document.querySelector('[name="name"]') || {}).value || '';
+        if (!name.trim()) { status.textContent = 'Primero escribí el nombre del producto.'; return; }
+        pendingField = field || 'all';
+        status.textContent = 'Generando… la ficha no se publica sola.';
+        try {
+            const response = await fetch('/admin/producto/ia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    notes: notes ? notes.value : '',
+                    price: (document.querySelector('[name="price"]') || {}).value || '',
+                    category: (document.querySelector('[name="category"] option:checked') || {}).textContent || '',
+                    brand: (document.getElementById('brandField') || {}).value || 'FERUMI',
+                    field: pendingField
+                })
+            });
+            const data = await response.json();
+            if (!data.success) { status.textContent = data.message || 'No se pudo generar.'; return; }
+            showPreview(data.fields || {});
+        } catch (err) {
+            status.textContent = 'No se pudo contactar a la IA.';
+        }
+    }
+    const all = document.getElementById('aiAll');
+    if (all) all.addEventListener('click', () => generate('all'));
+    document.querySelectorAll('[data-ai]').forEach((button) => {
+        button.addEventListener('click', () => generate(button.dataset.ai));
+    });
+    const accept = document.getElementById('aiAccept');
+    const regen = document.getElementById('aiRegen');
+    const edit = document.getElementById('aiEdit');
+    if (accept) accept.addEventListener('click', () => {
+        if (!pending) return;
+        applyFields(pending);
+        status.textContent = 'Texto copiado a la ficha. Podés editarlo y, cuando cierre, guardar el producto.';
+    });
+    if (regen) regen.addEventListener('click', () => generate(pendingField));
+    if (edit) edit.addEventListener('click', () => {
+        if (pending) applyFields(pending);
+        const target = document.getElementById(pendingField) || document.querySelector('[name="' + pendingField + '"]') || document.getElementById('description');
+        if (target && target.focus) target.focus();
+        status.textContent = 'El texto quedó en la ficha para editarlo. No se publicó.';
+    });
+})();
+</script>

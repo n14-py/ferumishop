@@ -1,56 +1,42 @@
 <% if (locals.product && product.category) { %>
-    
-<div class="product-card">
-
-    <a href="/producto/<%= product._id %>" class="card-image-link">
-        <%
-            // Lógica para obtener la miniatura (thumbnail)
-            let thumbnailUrl = 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png'; // Placeholder
-            if (product.photos && product.photos.length > 0) {
-                thumbnailUrl = product.photos[0];
-            }
-            
-            // Transformación de Cloudinary para optimizar la carga
-            const thumbnailTransforms = 'w_400,h_300,c_fill,g_auto,q_auto,f_auto';
-            thumbnailUrl = thumbnailUrl.replace('/upload/', `/upload/${thumbnailTransforms}/`);
-        %>
-        
-        <img
-            src="<%= thumbnailUrl %>"
-            alt="Producto: <%= product.name %>"
-            class="product-card-image"
-            loading="lazy">
-        
-        </a>
-
+<%
+    var pricing = (typeof priceOf === 'function')
+        ? priceOf(product)
+        : { price: product.price, compareAt: (product.isOnPromo && product.promoPrice > 0 && product.promoPrice < product.price) ? product.price : null, onPromo: Boolean(product.isOnPromo && product.promoPrice > 0 && product.promoPrice < product.price) };
+    var thumbnailUrl = 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png';
+    if (product.photos && product.photos.length > 0) thumbnailUrl = product.photos[0];
+    var displayThumb = thumbnailUrl;
+    if (String(thumbnailUrl).indexOf('/upload/') !== -1) {
+        displayThumb = thumbnailUrl.replace('/upload/', '/upload/w_640,h_800,c_fill,g_auto,q_auto,f_auto/');
+    }
+    var cardName = product.commercialTitle || product.name;
+    var alt = (product.photoAlts && product.photoAlts[0]) ? product.photoAlts[0] : cardName;
+    var href = product.slug ? ('/producto/' + product.slug) : ('/producto/' + product._id);
+%>
+<article class="product-card <%= pricing.onPromo ? 'is-promo' : '' %> <%= product.isNew ? 'is-new' : '' %>">
+    <a href="<%= href %>" class="card-image-link">
+        <% if (pricing.onPromo) { %><span class="fm-badge fm-badge-promo">Promo</span><% } %>
+        <% if (product.isNew) { %><span class="fm-badge fm-badge-new">Nuevo</span><% } %>
+        <img src="<%= displayThumb %>" alt="<%= alt %>" class="product-card-image" loading="lazy">
+    </a>
     <div class="card-content">
-        <div class="card-category">
-            <%= product.category.name %>
-        </div>
-
-        <h3 class="card-title">
-            <a href="/producto/<%= product._id %>"><%= product.name %></a>
-        </h3>
-
+        <div class="card-category"><%= product.category.name %><% if (product.subcategory) { %> · <%= product.subcategory %><% } %></div>
+        <h3 class="card-title"><a href="<%= href %>"><%= cardName %></a></h3>
+        <% if (product.subtitle) { %><p class="card-subtitle"><%= product.subtitle %></p><% } %>
         <div class="card-price">
-            <%= formatPrice(product.price) %>
+            <% if (pricing.compareAt) { %><span class="price-old"><%= formatPrice(pricing.compareAt) %></span><% } %>
+            <span><%= formatPrice(pricing.price) %></span>
         </div>
-
         <div class="card-actions">
-            <a href="/producto/<%= product._id %>" class="btn" style="flex: 1; text-align: center; padding: 0.6rem; font-size: 0.9rem; background: var(--border-color, #eee); color: var(--text-color, #333); text-decoration: none; border-radius: var(--border-radius, 8px); font-weight: 600; display: flex; align-items: center; justify-content: center;">
-                Ver
-            </a>
-<button data-id="<%= product._id %>" data-name="<%= product.name %>" data-price="<%= product.price %>" data-image="<%= thumbnailUrl %>" onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price, this.dataset.image)" class="btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem; font-size: 0.9rem; border: none; cursor: pointer; border-radius: var(--border-radius, 8px); font-weight: 600;">
-    <i class="fas fa-shopping-cart"></i> Añadir
-</button>
+            <a href="<%= href %>" class="btn btn-secondary">Ver</a>
+            <button type="button" data-id="<%= product._id %>" data-name="<%= cardName %>" data-price="<%= pricing.price %>" data-image="<%= displayThumb %>" onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price, this.dataset.image)" class="btn btn-primary">
+                <i class="fas fa-shopping-cart"></i> Añadir
+            </button>
         </div>
     </div>
-</div>
-
+</article>
 <% } else { %>
-    <div class="product-card">
-        <div class="card-content">
-            <h3 class="card-title">Error al cargar producto</h3>
-        </div>
-    </div>
+<article class="product-card">
+    <div class="card-content"><h3 class="card-title">No se pudo mostrar este producto</h3></div>
+</article>
 <% } %>

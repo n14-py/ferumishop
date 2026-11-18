@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Editar <%= product.name %> - Panel FERUMI</title>
+    <title><%= locals.creating ? 'Publicar producto' : ('Editar ' + product.name) %> - Panel FERUMI</title>
+    <link rel="stylesheet" href="/css/brand.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
@@ -37,21 +38,21 @@
         
         <header class="admin-header bg-white px-3 py-3 sticky-top">
             <a href="/admin/productos" class="text-dark fs-4"><i class="fas fa-arrow-left"></i></a>
-            <h1 class="header-title text-truncate" style="max-width: 200px;">Editar Producto</h1>
+            <h1 class="header-title text-truncate" style="max-width: 200px;"><%= locals.creating ? 'Nuevo' : 'Editar' %></h1>
             <div style="width: 24px;"></div>
         </header>
 
         <main class="main-content p-3 p-md-4">
             
             <div class="d-none d-md-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-dark mb-0"><i class="fas fa-pen text-primary me-2"></i> Editando: <%= product.name %></h2>
+                <h2 class="fw-bold text-dark mb-0"><i class="fas fa-pen text-primary me-2"></i> <%= locals.creating ? 'Publicar producto' : ('Editando: ' + product.name) %></h2>
                 <a href="/admin/productos" class="btn btn-outline-dark rounded-pill fw-bold"><i class="fas fa-arrow-left me-2"></i> Volver</a>
             </div>
 
             <% if (locals.success) { %><div class="alert alert-success rounded-4"><i class="fas fa-check-circle"></i> <%= success %></div><% } %>
             <% if (locals.error) { %><div class="alert alert-danger rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
 
-            <form action="/admin/producto/edit/<%= product._id %>" method="POST" enctype="multipart/form-data">
+            <form action="<%= locals.creating ? '/admin/productos/add' : ('/admin/producto/edit/' + product._id) %>" method="POST" enctype="multipart/form-data">
                 
                 <div class="card app-card mb-4 p-3 p-md-4">
                     <h6 class="fw-bold mb-3 text-muted border-bottom pb-2">Información y Galería</h6>
@@ -63,14 +64,17 @@
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Descripción</label>
-                        <textarea name="description" rows="3" class="form-control bg-light"><%= product.description %></textarea>
+                        <textarea name="description" id="description" rows="3" class="form-control bg-light"><%= product.description || '' %></textarea>
                     </div>
+
+                    <%- include('./partials/product-studio.html', { product: product }) %>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Categoría</label>
                         <select name="category" class="form-select form-select-lg bg-light" required>
+                            <option value="">Selecciona...</option>
                             <% categories.forEach(cat => { %>
-                                <option value="<%= cat._id %>" <%= product.category && product.category._id.toString() === cat._id.toString() ? 'selected' : '' %>><%= cat.name %></option>
+                                <option value="<%= cat._id %>" <%= product.category && String(product.category._id) === String(cat._id) ? 'selected' : '' %>><%= cat.name %></option>
                             <% }); %>
                         </select>
                     </div>
@@ -78,13 +82,17 @@
                     <div class="mb-3 pt-3 border-top">
                         <label class="form-label fw-bold text-dark"><i class="fas fa-images text-primary"></i> Fotos Actuales</label>
                         <p class="small text-muted mb-2">Desmarca las fotos que quieras eliminar.</p>
-                        <div class="photo-gallery">
+                        <div class="photo-gallery" id="photoGallery">
                             <% if (product.photos && product.photos.length > 0) { %>
-                                <% product.photos.forEach(photo => { %>
-                                    <div class="photo-item">
+                                <% product.photos.forEach(function (photo, photoIndex) { %>
+                                    <div class="photo-item" style="width:140px; height:auto; padding-bottom:6px;">
                                         <input type="checkbox" name="existing_photos" value="<%= photo %>" class="form-check-input photo-checkbox" checked>
                                         <div class="photo-overlay"></div>
                                         <img src="<%= photo.replace('/upload/', '/upload/w_100,h_100,c_fill/') %>" alt="Foto">
+                                        <input type="hidden" name="photoAltUrl" value="<%= photo %>">
+                                        <input class="form-control form-control-sm mt-1" name="photoAltText" placeholder="Texto alternativo" value="<%= (product.photoAlts && product.photoAlts[photoIndex]) || '' %>">
+                                        <button type="button" class="btn btn-sm btn-light" onclick="movePhoto(this, -1)">↑</button>
+                                        <button type="button" class="btn btn-sm btn-light" onclick="movePhoto(this, 1)">↓</button>
                                     </div>
                                 <% }); %>
                             <% } else { %>
@@ -94,8 +102,15 @@
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label fw-bold text-dark">Añadir MÁS fotos generales (Ilimitadas)</label>
-                        <input type="file" name="new_photos" class="form-control bg-light" multiple accept="image/*">
+                        <% if (locals.creating) { %>
+                            <label class="form-label fw-bold text-dark">Fotos del producto</label>
+                            <input type="file" name="photos" class="form-control bg-light" multiple required accept="image/*">
+                        <% } else { %>
+                            <label class="form-label fw-bold text-dark">Añadir MÁS fotos generales (Ilimitadas)</label>
+                            <input type="file" name="new_photos" class="form-control bg-light" multiple accept="image/*">
+                        <% } %>
+                        <label class="form-label fw-bold text-dark mt-2">Texto alternativo de las fotos nuevas (uno por línea, en el mismo orden)</label>
+                        <textarea class="form-control" name="newPhotoAlts" rows="2"></textarea>
                     </div>
                 </div>
 
@@ -184,6 +199,7 @@
                 </button>
             </form>
 
+                <% if (!locals.creating && product._id) { %>
                 <div class="card app-card mb-4 p-3 p-md-4">
                     <h6 class="fw-bold mb-2 text-muted border-bottom pb-2"><i class="fas fa-video text-primary"></i> Videos (Cloudflare R2)</h6>
                     <p class="small text-muted">Podés subir muchos videos para el bot de TikTok (de a 8). En la tienda se muestran solo los 2 primeros.<% if (product.videos && product.videos.length) { %> Ahora hay <%= product.videos.length %>.<% } %></p>
@@ -212,6 +228,7 @@
                         <button class="btn btn-dark rounded-pill fw-bold" type="submit" <%= locals.r2Configured ? '' : 'disabled' %>>Subir videos a R2</button>
                     </form>
                 </div>
+                <% } %>
         </main>
     </div>
 </div>
@@ -226,6 +243,14 @@
         if (menuToggle) menuToggle.addEventListener('click', toggleSidebar);
         if (overlay) overlay.addEventListener('click', toggleSidebar);
     });
+
+    function movePhoto(button, direction) {
+        const item = button.closest('.photo-item');
+        if (!item) return;
+        const gallery = item.parentElement;
+        if (direction < 0 && item.previousElementSibling) gallery.insertBefore(item, item.previousElementSibling);
+        if (direction > 0 && item.nextElementSibling) gallery.insertBefore(item.nextElementSibling, item);
+    }
 
     function toggleVariants() {
         const hasVariants = document.getElementById('hasVariants').checked;

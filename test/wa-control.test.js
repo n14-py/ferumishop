@@ -29,7 +29,7 @@ const { speakTurn } = require('../lib/wa-control/speak');
 const { createGather, mergeIncoming } = require('../lib/wa-control/gather');
 const { customerSafeText } = require('../lib/wa-control/text');
 const { controlModels } = require('../lib/wa-control/models');
-const pagopar = require('../lib/pagopar');
+const payments = require('../lib/payments');
 const agent = require('../lib/wa-agent');
 const { summarizeOperations } = require('../lib/wa-control/dashboard');
 const { competeForLastUnit } = require('../lib/orders');
@@ -105,7 +105,7 @@ test('payment link is created once under concurrency and reused later', async ()
     assert.equal(calls, 1);
 });
 
-test('uncertain Pagopar response does not create another charge', async () => {
+test('uncertain provider response does not create another charge', async () => {
     const store = createMemoryStore();
     let calls = 0;
     const run = () => runLockedCharge(store, {
@@ -237,7 +237,7 @@ test('rain reschedule does not touch delivered orders or other methods', () => {
 test('rules block unauthorized discount, partial payment and unpaid dispatch', () => {
     const evaluated = evaluateRules(DEFAULT_RULES, {
         method: 'motobolt',
-        paymentMethods: ['pagopar', 'transferencia'],
+        paymentMethods: ['transferencia'],
         stockOk: false,
         afterCutoff: true,
         needsHuman: true,
@@ -422,7 +422,7 @@ test('Capiatá ruta 2 uses that price and a general Capiatá does not override i
     assert.equal(general.amount, 15000);
 });
 
-test('PagoPar has no 5000 minimum and shipping is included in the charge', () => {
+test('a 5000 order is valid and shipping is added to the charge', () => {
     const order = agent.canCreateOrder({
         cart: [{ name: 'Pinza', price: 5000, quantity: 1 }],
         customer: { name: 'Ana', document: '123', email: 'a@b.c', phone: '0981' },
@@ -430,11 +430,8 @@ test('PagoPar has no 5000 minimum and shipping is included in the charge', () =>
     });
     assert.equal(order.ok, true);
     assert.equal(order.total, 5000);
-    const aligned = pagopar.alignCompraItems([
-        { precio_total: 5000, public_key: 'pub', url_imagen: 'https://ferumi.shop/ferumi.logo.png' }
-    ], 7000);
-    assert.equal(aligned.reduce((sum, item) => sum + item.precio_total, 0), 7000);
-    assert.equal(aligned[1].nombre, 'Envio');
+    assert.equal(payments.chargeTotal(order.total, 2000), 7000);
+    assert.equal(payments.onlineAvailable(), false);
 });
 
 test('transfer message uses the configured alias and human words are recognized', () => {
@@ -489,7 +486,7 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
     assert.equal(pay.stage, 'payment');
     assert.match(pay.replies.join('\n'), /20\.000/);
     assert.match(pay.replies.join('\n'), /Transferencia/);
-    assert.match(pay.replies.join('\n'), /PagoPar/);
+    assert.match(pay.replies.join('\n'), /efectivo/i);
     assert.doesNotMatch(pay.replies.join('\n'), /ferumi\.ueno/);
     const alias = planTurn({
         text: 'por transferencia',
@@ -510,7 +507,7 @@ test('a San Lorenzo pin keeps exact coordinates and the city price step comes be
         place: { ...place, inZone: false, interior: true, city: '' }
     });
     assert.match(interior.replies[0], /interior/);
-    assert.equal(customerSafeText('PagoPar rechazó la transacción'), 'Seguimos desde acá. Decime si seguís con el producto, el envío o el pago.');
+    assert.equal(customerSafeText('TypeError: cannot read property'), 'Seguimos desde acá. Decime si seguís con el producto, el envío o el pago.');
     assert.ok(controlModels().WaSettings.schema.path('transfer.alias'));
     const question = planTurn({
         text: 'Delivery propio sale a las 6?',

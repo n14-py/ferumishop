@@ -4,7 +4,6 @@ const wa = require('../lib/whatsapp');
 const agent = require('../lib/wa-agent');
 const { createGather, mergeIncoming } = require('../lib/wa-control/gather');
 const slug = require('../lib/wa-slug');
-const pagopar = require('../lib/pagopar');
 const shop = require('../lib/orders');
 
 function payPageLocals(order, siteConfig) {
@@ -29,17 +28,6 @@ async function renderPayPage(req, res, next, deps) {
             deletedAt: { $exists: false }
         });
         if (!order) return next();
-        if (order.pagoparHash && order.paymentStatus !== 'pagado') {
-            try {
-                const result = await pagopar.consultarPedido(order.pagoparHash);
-                const estado = pagopar.extractResultado(result);
-                if (estado && deps.applyPaidOrder) {
-                    await deps.applyPaidOrder(order, estado);
-                }
-            } catch (err) {
-                console.warn('[whatsapp] sync pago en página', err.message);
-            }
-        }
         res.set('X-Robots-Tag', 'noindex, nofollow');
         res.render('public/wa-pagar', payPageLocals(order, res.locals.siteConfig));
     } catch (err) {
@@ -68,17 +56,15 @@ async function goPay(req, res, next, deps) {
         if (order.paymentStatus === 'pagado') {
             return res.redirect(302, slug.publicTrackingUrl(order.ticketCode));
         }
-        if (!order.pagoparHash) {
-            const ensured = await require('../lib/wa-control/checkout').ensurePagoparHash(order);
-            if (ensured.ok && (ensured.hash || order.pagoparHash)) {
-                return res.redirect(302, pagopar.checkoutUrl(ensured.hash || order.pagoparHash));
-            }
+        const ensured = await require('../lib/wa-control/checkout').ensureOrderLink(order);
+        if (!ensured.ok) {
             return res.status(ensured.uncertain ? 409 : 400).render('public/error', {
                 pageTitle: 'Pago',
-                message: ensured.message || 'Pagopar no pudo iniciar el pago. Escribinos por WhatsApp.'
+                message: ensured.message || 'No pude dejar listo el enlace del pedido. Escribinos por WhatsApp.'
             });
         }
-        return res.redirect(302, pagopar.checkoutUrl(order.pagoparHash));
+        res.set('X-Robots-Tag', 'noindex, nofollow');
+        return res.render('public/wa-pagar', payPageLocals(order, res.locals.siteConfig));
     } catch (err) {
         next(err);
     }

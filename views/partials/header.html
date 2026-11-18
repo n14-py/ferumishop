@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="/css/brand.css">
 <header class="main-header">
     <div class="navbar-container">
         <div class="navbar-brand">
@@ -13,10 +14,11 @@
         <nav class="navbar-nav">
              <a href="/" class="<%= path === '/' ? 'active' : '' %>">Inicio</a>
              <a href="/tienda" class="<%= path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') || path.includes('/checkout') ? 'active' : '' %>">Tienda</a>
+             <a href="/promociones" class="<%= path.includes('/promociones') ? 'active' : '' %>">Promociones</a>
              <a href="/tracking" class="<%= path.includes('/tracking') || path.includes('/ticket') ? 'active' : '' %>">Mis pedidos</a>
              <a href="/regalos/crear" class="<%= path.includes('/regalos') ? 'active' : '' %>">Regalos Online</a>
              <a href="/sorteos" class="shop-hide <%= path.includes('/sorteos') ? 'active' : '' %>" style="display:none; color: #ff4757; font-weight: bold;"><i class="fas fa-gift"></i> Sorteo del Mes</a>
-            <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">Sobre Nosotros</a>
+            <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">La marca</a>
              <a href="/contacto" class="<%= path.includes('/contacto') ? 'active' : '' %>">Contacto</a>
              <a href="/asociate" class="shop-hide <%= path.includes('/asociate') ? 'active' : '' %>" style="display:none; color: #d81b60; font-weight: bold;"><i class="fas fa-handshake"></i> Importa con Nosotros</a>
         </nav>
@@ -64,7 +66,7 @@
             <span id="cart-total-price">0 Gs.</span>
         </div>
         <div class="cart-checkout-stack">
-            <button type="button" id="checkout-pagopar" class="btn-checkout-pagopar">
+            <button type="button" id="checkout-main" class="btn-checkout-main">
                 <i class="fas fa-lock"></i> Finalizar compra
             </button>
             <button type="button" id="checkout-whatsapp" class="btn-checkout-wa">
@@ -134,16 +136,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     searchPopup.innerHTML = ''; 
                     products.forEach(product => {
                         const item = document.createElement('a');
-                        item.href = `/producto/${product._id}`;
+                        item.href = `/producto/${product.slug || product._id}`;
                         item.className = 'search-result-item';
                         
                         const photoUrl = product.photos && product.photos.length > 0 
                             ? product.photos[0].replace('/upload/', '/upload/w_80,h_80,c_fill/') 
                             : 'https://res.cloudinary.com/dmedd6w1q/image/upload/v1759278332/donaparaguay/proofs/s6fyqpxu1njlf2eajpve.png'; 
                         
+                        const label = product.commercialTitle || product.name;
                         item.innerHTML = `
-                            <img src="${photoUrl}" alt="${product.name}">
-                            <span>${product.name}</span>
+                            <img src="${photoUrl}" alt="${label}">
+                            <span>${label}</span>
                         `;
                         searchPopup.appendChild(item);
                     });
@@ -342,9 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openFerumiCart = openCart;
 
     const FERUMI_WA = "<%= typeof siteConfig !== 'undefined' && siteConfig.whatsappNumber ? siteConfig.whatsappNumber : '595987301591' %>";
-    const checkoutPagoparBtn = document.getElementById('checkout-pagopar');
-    if (checkoutPagoparBtn) {
-        checkoutPagoparBtn.addEventListener('click', () => {
+    const checkoutMainBtn = document.getElementById('checkout-main');
+    if (checkoutMainBtn) {
+        checkoutMainBtn.addEventListener('click', () => {
             if (cart.length === 0) return alert('El carrito está vacío');
             window.location.href = '/checkout';
         });

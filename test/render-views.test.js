@@ -4,7 +4,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
 const ejs = require('ejs');
-const pagopar = require('../lib/pagopar');
 
 const views = path.join(__dirname, '..', 'views');
 const formatPrice = (v) => new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(v || 0);
@@ -38,7 +37,7 @@ test('checkout view renders', async () => {
     assert.match(html, /Permitir que Ferumishop vea tu ubicación/);
     assert.match(html, /Copiar link para abrir en Safari o Chrome/);
     assert.match(html, /Instagram, TikTok o WhatsApp/);
-    assert.match(html, /Pagopar/);
+    assert.match(html, /Transferencia/);
     assert.match(html, /Pedir por WhatsApp/);
     assert.match(html, /scrollCheckoutTop/);
     assert.match(html, /El teléfono tiene que ser el WhatsApp/);
@@ -114,7 +113,7 @@ test('compra-ok thank you has tracking and no customer QR', async () => {
             orderNumber: 'FER-TEST',
             ticketCode: 'FM-ABC',
             tracking: { title: 'Preparando', detail: 'Armando tu pedido' },
-            paymentMethod: 'pagopar',
+            paymentMethod: 'transferencia',
             shippingMethod: 'motobolt'
         }
     }));
@@ -216,7 +215,7 @@ test('despacho admin view renders', async () => {
             customerDocument: '1',
             customerPhone: '0981123456',
             customerEmail: 'a@b.c',
-            paymentMethod: 'pagopar',
+            paymentMethod: 'transferencia',
             paymentStatus: 'pagado',
             shippingMethod: 'motobolt',
             shippingDistanceKm: 8,
@@ -292,11 +291,13 @@ test('edit product shows R2 video uploader', async () => {
     assert.match(html, /Ahora hay 2/);
 });
 
-test('webhook extract + echo shape', () => {
-    const body = { resultado: [{ hash_pedido: 'abc', token: 't', pagado: true, numero_pedido: 29008559 }] };
-    const info = pagopar.extractResultado(body);
-    assert.equal(info.hash_pedido, 'abc');
-    assert.equal(info.numero_pedido, 29008559);
+test('checkout copy keeps the store location', async () => {
+    const html = await ejs.renderFile(path.join(views, 'public/checkout.html'), locals({
+        pageTitle: 'Checkout',
+        store: { lat: -25.28, lng: -57.64, mapsUrl: 'https://share.google/39F8jWwL96lFY65Th', address: 'Ferumishop', bankAlias: '' }
+    }));
+    assert.match(html, /Capiatá, Ruta 1 Ex km 21/);
+    assert.match(html, /transferencia/);
 });
 
 test('legal pages cover store, WhatsApp AI and data deletion email', async () => {
@@ -306,7 +307,7 @@ test('legal pages cover store, WhatsApp AI and data deletion email', async () =>
     }));
     assert.match(terms, /Términos y condiciones/);
     assert.match(terms, /asistente de WhatsApp/);
-    assert.match(terms, /Pagopar/);
+    assert.match(terms, /transferencia/);
     assert.match(terms, /ferumishop@gmail.com/);
     assert.match(terms, /Motobolt/);
 

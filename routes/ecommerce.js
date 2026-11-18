@@ -1,30 +1,19 @@
 'use strict';
 
-const pagopar = require('../lib/pagopar');
+const payments = require('../lib/payments');
 const shop = require('../lib/orders');
 const mongoose = require('mongoose');
-
-function jsonResultado(res, body) {
-    const resultado = Array.isArray(body?.resultado)
-        ? body.resultado
-        : (Array.isArray(body) ? body : (body ? [body] : [{ recibido: true }]));
-    res.status(200).json(resultado);
-}
 
 async function applyPaidOrder(deps, order, pagoInfo) {
     const { Product, Transaction } = deps;
     if (!order) return order;
     const alreadyPaid = order.paymentStatus === 'pagado';
 
-    if (pagoInfo) {
-        if (pagoInfo.numero_pedido) order.pagoparNumero = String(pagoInfo.numero_pedido);
-        if (pagoInfo.forma_pago) order.pagoparFormaPago = pagoInfo.forma_pago;
-        if (pagoInfo.hash_pedido) order.pagoparHash = pagoInfo.hash_pedido;
-        order.pagoparLastConsulta = pagoInfo;
-    }
+    if (pagoInfo?.reference) order.paymentRef = String(pagoInfo.reference);
+    if (pagoInfo?.externalId) order.paymentExternalId = String(pagoInfo.externalId);
 
-    const paid = pagoInfo?.pagado === true || pagoInfo?.pagado === 'true' || pagoInfo?.pagado === 1;
-    const cancelled = pagoInfo?.cancelado === true;
+    const paid = pagoInfo?.paid === true || pagoInfo?.pagado === true;
+    const cancelled = pagoInfo?.cancelled === true || pagoInfo?.cancelado === true;
 
     if (paid && order.paymentStatus !== 'pagado') {
         order.paymentStatus = 'pagado';
@@ -76,93 +65,8 @@ async function applyPaidOrder(deps, order, pagoInfo) {
     return order;
 }
 
-async function consultarYSincronizar(deps, orderOrHash) {
-    const { WebOrder } = deps;
-    let order = orderOrHash;
-    let hash = typeof orderOrHash === 'string' ? orderOrHash : orderOrHash?.pagoparHash;
-    if (!hash) return { order: typeof orderOrHash === 'object' ? orderOrHash : null, result: null };
-
-    const result = await pagopar.consultarPedido(hash);
-    const estado = pagopar.extractResultado(result);
-
-    if (!order || typeof order === 'string') {
-        order = await WebOrder.findOne({ pagoparHash: hash });
-    }
-    if (order && estado) {
-        await applyPaidOrder(deps, order, estado);
-    }
-    return { order, result, estado };
-}
-
 module.exports = function registerEcommerce(app, deps) {
     const { WebOrder, Product, Transaction, SiteConfig, Gift, requireAdmin, upload, purify } = deps;
-
-    const handleWebhook = async (req, res) => {
-        const body = req.body || {};
-        if (typeof body.resultado === 'string') {
-            try { body.resultado = JSON.parse(body.resultado); } catch (e) { /* ignore */ }
-        }
-        const pagoInfo = pagopar.extractResultado(body);
-
-        // Pagopar Paso 2: devolver YA el JSON. Si tardamos, no marca el check.
-        jsonResultado(res, body.resultado ? body : { resultado: pagoInfo ? [pagoInfo] : [{ ok: true }] });
-
-        setImmediate(async () => {
-            try {
-                if (!pagoInfo || !pagoInfo.hash_pedido) {
-                    console.log('Pagopar webhook sin hash_pedido. Body:', JSON.stringify(body).slice(0, 500));
-                    return;
-                }
-
-                const expected = pagopar.tokenWebhook(pagoInfo.hash_pedido);
-                const incoming = pagoInfo.token;
-                if (incoming && !pagopar.timingSafeEqual(expected, incoming)) {
-                    console.error('Pagopar webhook: token no coincide para', pagoInfo.hash_pedido);
-                    // Igual consultamos estado (Paso 3) — el simulador de Starting a veces manda token de prueba.
-                }
-
-                let order = await WebOrder.findOne({ pagoparHash: pagoInfo.hash_pedido });
-                if (!order && pagoInfo.id_pedido_comercio) {
-                    order = await WebOrder.findById(pagoInfo.id_pedido_comercio).catch(() => null);
-                    if (order) {
-                        order.pagoparHash = pagoInfo.hash_pedido;
-                    }
-                }
-
-                if (order) {
-                    await applyPaidOrder(deps, order, pagoInfo);
-                } else {
-                    console.warn('Pagopar webhook: pedido local no encontrado', pagoInfo.hash_pedido);
-                }
-
-                // Paso 3 obligatorio: el comercio DEBE consultar el estado en Pagopar.
-                const consulta = await pagopar.consultarPedido(pagoInfo.hash_pedido);
-                console.log('Pagopar Paso 3 consulta estado:', pagoInfo.hash_pedido, consulta?.respuesta, consulta?.resultado?.[0]?.pagado);
-                const estado = pagopar.extractResultado(consulta);
-                if (order && estado) {
-                    await applyPaidOrder(deps, order, estado);
-                }
-            } catch (err) {
-                console.error('Error procesando webhook Pagopar:', err);
-            }
-        });
-    };
-
-    const pingWebhook = (req, res) => {
-        res.status(200).json({
-            ok: true,
-            servicio: 'FERUMI URL de respuesta Pagopar',
-            metodo: req.method
-        });
-    };
-
-    app.post('/api/pagopar/webhook', handleWebhook);
-    app.post('/pagopar/webhook', handleWebhook);
-    app.post('/pagopar/respuesta', handleWebhook);
-    app.post('/tienda/pagopar/respuesta', handleWebhook);
-    app.get('/api/pagopar/webhook', pingWebhook);
-    app.get('/pagopar/webhook', pingWebhook);
-    app.get('/pagopar/respuesta', pingWebhook);
 
     app.get(['/checkout', '/tienda/checkout'], (req, res) => {
         res.render('public/checkout', {
@@ -219,7 +123,7 @@ module.exports = function registerEcommerce(app, deps) {
             const customerDocument = purify.sanitize(String(body.customerDocument || '').replace(/\D/g, ''));
             const customerPhone = purify.sanitize(String(body.customerPhone || '').trim());
             const shippingMethod = String(body.shippingMethod || '');
-            const paymentMethod = String(body.paymentMethod || 'pagopar');
+            let paymentMethod = String(body.paymentMethod || 'transferencia');
             const idempotencyKey = String(body.idempotencyKey || '').slice(0, 80);
 
             let cartItems = body.cartItems;
@@ -230,45 +134,28 @@ module.exports = function registerEcommerce(app, deps) {
                 return res.status(400).json({ success: false, message: 'El carrito está vacío.' });
             }
             if (!customerName || !customerEmail || !customerDocument || !customerPhone) {
-                return res.status(400).json({ success: false, message: 'Completá nombre, cédula, correo y teléfono (los pide Pagopar).' });
+                return res.status(400).json({ success: false, message: 'Completá nombre, cédula, correo y tu WhatsApp. Por ese número coordinamos la entrega.' });
             }
             if (!['motobolt', 'transportadora', 'retiro'].includes(shippingMethod)) {
                 return res.status(400).json({ success: false, message: 'Elegí un método de envío.' });
             }
-            if (paymentMethod === 'efectivo_retiro' && shippingMethod !== 'retiro') {
-                return res.status(400).json({ success: false, message: 'El efectivo solo está disponible si retirás en Ferumishop.' });
-            }
+            const chosenPay = payments.assertCheckoutMethod(paymentMethod, shippingMethod);
+            if (!chosenPay.ok) return res.status(400).json({ success: false, message: chosenPay.message });
+            paymentMethod = chosenPay.method;
 
             if (idempotencyKey) {
                 const existing = await WebOrder.findOne({ idempotencyKey });
+                if (existing && existing.status !== 'cancelado') {
+                    return res.json({
+                        success: true,
+                        duplicate: true,
+                        orderNumber: existing.orderNumber,
+                        ticketCode: existing.ticketCode,
+                        redirectUrl: `/compra-ok/${existing.ticketCode}`,
+                        trackingUrl: `/tracking?q=${encodeURIComponent(existing.ticketCode)}`
+                    });
+                }
                 if (existing) {
-                    if (existing.pagoparHash && existing.paymentMethod === 'pagopar' && existing.paymentStatus !== 'pagado' && existing.status !== 'cancelado') {
-                        return res.json({
-                            success: true,
-                            duplicate: true,
-                            orderNumber: existing.orderNumber,
-                            ticketCode: existing.ticketCode,
-                            redirectUrl: pagopar.checkoutUrl(existing.pagoparHash),
-                            trackingUrl: `/tracking?q=${encodeURIComponent(existing.ticketCode)}`
-                        });
-                    }
-                    if (existing.pagoparAttemptStatus === 'uncertain' && existing.paymentStatus !== 'pagado') {
-                        return res.status(409).json({
-                            success: false,
-                            uncertain: true,
-                            message: 'El intento anterior con PagoPar quedó sin confirmación. No genero otro pedido ni otro enlace.'
-                        });
-                    }
-                    if (existing.paymentMethod === 'efectivo_retiro' && existing.status !== 'cancelado') {
-                        return res.json({
-                            success: true,
-                            duplicate: true,
-                            orderNumber: existing.orderNumber,
-                            ticketCode: existing.ticketCode,
-                            redirectUrl: `/compra-ok/${existing.ticketCode}`,
-                            trackingUrl: `/tracking?q=${encodeURIComponent(existing.ticketCode)}`
-                        });
-                    }
                     existing.idempotencyKey = `${idempotencyKey}-old-${Date.now()}`;
                     await existing.save();
                 }
@@ -321,7 +208,7 @@ module.exports = function registerEcommerce(app, deps) {
             }
 
             const totalAmount = Math.max(0, subtotal - discountAmount);
-            if (totalAmount <= 0 && paymentMethod === 'pagopar') {
+            if (totalAmount <= 0) {
                 return res.status(400).json({ success: false, message: 'El total del pedido no es válido.' });
             }
 
@@ -368,155 +255,49 @@ module.exports = function registerEcommerce(app, deps) {
                 });
             }
 
-            let result;
-            try {
-                order.pagoparAttemptStatus = 'calling';
-                order.pagoparAttemptAt = new Date();
+            const provider = payments.activeProvider();
+            if (paymentMethod === 'online' && provider) {
+                order.paymentAttemptStatus = 'calling';
+                order.paymentAttemptAt = new Date();
                 await order.save();
-                const started = await pagopar.iniciarTransaccion({
-                    orderId: String(order._id),
-                    montoTotal: totalAmount,
-                    customer: {
-                        name: customerName,
-                        email: customerEmail,
-                        document: customerDocument,
-                        phone: customerPhone,
-                        address,
-                        reference,
-                        coords: (lat != null && lng != null) ? `${lat},${lng}` : ''
-                    },
-                    items: normalizedItems,
-                    descripcion: `FERUMI ${order.orderNumber}`
-                });
-                result = started.result;
-            } catch (err) {
-                if (err.uncertain || err.name === 'TimeoutError' || err.name === 'AbortError') {
-                    order.pagoparAttemptStatus = 'uncertain';
-                    order.pagoparAttemptError = String(err.message || 'sin confirmación').slice(0, 240);
-                    await order.save();
-                    return res.status(409).json({
-                        success: false,
-                        uncertain: true,
-                        message: 'PagoPar no confirmó si creó el cobro. No generé otro enlace.'
-                    });
-                }
-                throw err;
-            }
-
-            if (result.respuesta === true && result.resultado?.[0]?.data) {
-                order.pagoparHash = result.resultado[0].data;
+                const started = await provider.startCharge({ order, siteConfig: res.locals.siteConfig });
+                order.paymentRef = started.reference || '';
+                order.paymentAttemptStatus = 'ready';
                 await order.save();
                 return res.json({
                     success: true,
                     orderNumber: order.orderNumber,
                     ticketCode: order.ticketCode,
-                    redirectUrl: pagopar.checkoutUrl(order.pagoparHash),
+                    redirectUrl: started.redirectUrl,
                     trackingUrl: `/tracking?q=${encodeURIComponent(order.ticketCode)}`
                 });
             }
 
-            console.error('Pagopar rechazó iniciar-transaccion:', result.resultado);
-            order.status = 'cancelado';
-            shop.appendEvent(order, shop.FULFILLMENT.CANCELADO, 'Pagopar rechazó la transacción. Intentá de nuevo.');
+            order.paymentMethod = 'transferencia';
+            order.paymentAttemptStatus = 'ready';
+            order.paymentRef = order.ticketCode;
+            shop.appendEvent(order, shop.FULFILLMENT.PENDIENTE_PAGO, 'Pedido recibido. El pago por transferencia queda pendiente hasta que confirmemos el comprobante.');
             await order.save();
-            return res.status(400).json({ success: false, details: result.resultado, message: 'Pagopar rechazó la transacción.' });
+            return res.json({
+                success: true,
+                orderNumber: order.orderNumber,
+                ticketCode: order.ticketCode,
+                redirectUrl: `/compra-ok/${order.ticketCode}`,
+                trackingUrl: `/tracking?q=${encodeURIComponent(order.ticketCode)}`
+            });
         } catch (err) {
             console.error('Error place-order:', err);
             return res.status(500).json({ success: false, message: err.message || 'Error interno al crear el pedido.' });
         }
     });
 
-    // Compatibilidad con el botón viejo de producto-detalle
-    app.post('/tienda/checkout', async (req, res) => {
-        try {
-            const { customerName, customerEmail, customerDocument, customerPhone, cartItems } = req.body || {};
-            if (!cartItems || !cartItems.length) {
-                return res.status(400).json({ success: false, message: 'El carrito está vacío.' });
-            }
-            const items = cartItems.map((item) => ({
-                productId: item.productId || item.id || null,
-                name: item.name,
-                quantity: parseInt(item.quantity, 10) || 1,
-                price: shop.parsePrice(item.price),
-                image: item.image || ''
-            }));
-            let totalAmount = 0;
-            items.forEach((i) => { totalAmount += i.price * i.quantity; });
-
-            const order = new WebOrder({
-                orderNumber: shop.makeOrderNumber(),
-                ticketCode: shop.makeTicketCode(),
-                customerName,
-                customerEmail,
-                customerDocument,
-                customerPhone,
-                items,
-                subtotal: totalAmount,
-                totalAmount,
-                status: 'pendiente',
-                paymentMethod: 'pagopar',
-                paymentStatus: 'pendiente',
-                shippingMethod: 'retiro',
-                fulfillmentStatus: shop.FULFILLMENT.PENDIENTE_PAGO
-            });
-            shop.appendEvent(order, shop.FULFILLMENT.PENDIENTE_PAGO);
-            await order.save();
-
-            const { result } = await pagopar.iniciarTransaccion({
-                orderId: String(order._id),
-                montoTotal: totalAmount,
-                customer: { name: customerName, email: customerEmail, document: customerDocument, phone: customerPhone },
-                items,
-                descripcion: `FERUMI ${order.orderNumber}`
-            });
-
-            if (result.respuesta === true && result.resultado?.[0]?.data) {
-                order.pagoparHash = result.resultado[0].data;
-                await order.save();
-                return res.json({ success: true, redirectUrl: pagopar.checkoutUrl(order.pagoparHash) });
-            }
-            return res.status(400).json({ success: false, details: result.resultado });
-        } catch (err) {
-            console.error('Error Checkout compat:', err);
-            return res.status(500).json({ success: false, message: 'Error interno del servidor.' });
-        }
+    app.post('/tienda/checkout', (req, res) => {
+        res.status(400).json({ success: false, message: 'La compra se confirma desde el checkout, con transferencia o efectivo al retirar.' });
     });
 
-    const renderResultado = async (req, res, next) => {
-        try {
-            const hashPedido = req.params.hash || req.query.hash || req.body?.hash_pedido;
-            if (!hashPedido) {
-                return res.status(400).render('public/error', {
-                    pageTitle: 'Pago',
-                    message: 'No recibimos el hash del pedido de Pagopar.'
-                });
-            }
-
-            const { order, result, estado } = await consultarYSincronizar(deps, hashPedido);
-            if (!result?.respuesta || !estado) {
-                return res.status(400).render('public/error', {
-                    pageTitle: 'Error de Pago',
-                    message: 'No pudimos verificar el estado de la transacción en Pagopar.'
-                });
-            }
-
-            res.render('public/pago-resultado', {
-                pageTitle: 'Resultado del Pago',
-                estado,
-                orderLocal: order,
-                orderView: order ? shop.publicOrderView(order) : null,
-                store: shop.storeFromConfig(res.locals.siteConfig)
-            });
-        } catch (err) {
-            console.error('Error consultando estado en Pagopar:', err);
-            next(err);
-        }
-    };
-
-    app.get('/tienda/resultado/:hash', renderResultado);
-    app.get('/pagopar/resultado/:hash', renderResultado);
-    app.get('/tienda/resultado', renderResultado);
-    app.get('/pagopar/resultado', renderResultado);
+    app.get(['/tienda/resultado', '/tienda/resultado/:hash'], (req, res) => {
+        res.redirect(302, '/tracking');
+    });
 
     app.post('/api/tracking/search', async (req, res) => {
         try {
@@ -801,29 +582,6 @@ module.exports = function registerEcommerce(app, deps) {
         }
     });
 
-    // Al arrancar: consultar pedidos Pagopar pendientes → completa Paso 3 del circuito Starting.
-    setTimeout(async () => {
-        try {
-            const pending = await WebOrder.find({
-                pagoparHash: { $nin: [null, ''] },
-                $or: [
-                    { paymentStatus: 'pendiente' },
-                    { paymentStatus: { $exists: false } },
-                    { status: 'pendiente' }
-                ]
-            }).sort({ createdAt: -1 }).limit(15);
-            for (const order of pending) {
-                try {
-                    await consultarYSincronizar(deps, order);
-                    console.log('Pagopar sync pendiente:', order.orderNumber, order.pagoparHash);
-                } catch (e) {
-                    console.error('Pagopar sync error:', e.message);
-                }
-            }
-        } catch (err) {
-            console.error('Pagopar sync inicial:', err.message);
-        }
-    }, 7000);
 };
 
 module.exports.applyPaidOrder = applyPaidOrder;

@@ -42,7 +42,7 @@ function render(orders){
             <ul style="padding-left:18px; font-size:0.95rem;">
                 ${(o.items||[]).map(i => `<li>${i.quantity}x ${i.name}</li>`).join('')}
             </ul>
-            <p style="font-weight:800;">Total ${money(o.totalAmount)} · ${o.paymentMethod==='efectivo_retiro'?'Efectivo al retirar':'Pagopar'} · ${o.shippingMethod||''}</p>
+            <p style="font-weight:800;">Total ${money(o.totalAmount)} · ${o.paymentLabel || (o.paymentMethod==='efectivo_retiro'?'Efectivo al retirar':(o.paymentMethod==='transferencia'?'Transferencia':'Pago a coordinar'))} · ${o.shippingMethod||''}</p>
             <div class="track-timeline">
                 ${(o.events||[]).map(e => `<div class="track-event"><strong>${e.title}</strong><div style="font-size:0.85rem;color:#666;">${e.detail||''}<br>${new Date(e.at).toLocaleString('es-PY')}</div></div>`).join('')}
             </div>
