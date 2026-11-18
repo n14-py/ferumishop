@@ -181,3 +181,30 @@ test('legacy placeholder copy never reaches a public page', async () => {
     });
     assert.match(withText, /Texto real de la marca\./);
 });
+
+test('no placeholder or sample copy lives in views, lib or server', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const banned = [
+        /lorem ipsum/i,
+        /escrib[ae] aqu[ií] la descripci/i,
+        /opciones o partes/i,
+        /\btexto de (ejemplo|prueba)/i,
+        /contenido de ejemplo/i,
+        /MayuxxoVro/
+    ];
+    const skip = new Set(['brand.js']);
+    const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) return walk(full);
+        return /\.(html|js)$/.test(entry.name) && !skip.has(entry.name) ? [full] : [];
+    });
+    const root = path.join(__dirname, '..');
+    const files = [...walk(path.join(root, 'views')), ...walk(path.join(root, 'lib')), path.join(root, 'server.js')];
+    const hits = [];
+    for (const file of files) {
+        const source = fs.readFileSync(file, 'utf8');
+        for (const re of banned) if (re.test(source)) hits.push(`${path.relative(root, file)} -> ${re}`);
+    }
+    assert.deepEqual(hits, []);
+});

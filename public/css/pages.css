@@ -248,7 +248,7 @@
 @media (min-width: 800px) { .fm-social { flex-direction: row; align-items: center; justify-content: space-between; } }
 
 /* ---------- Tienda ---------- */
-.fm-shop-head { display: grid; gap: 1rem; }
+.fm-shop-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
 .fm-searchbar {
     position: relative;
     display: flex;
@@ -525,3 +525,12 @@ body .checkout-step-pill { min-width: 0; font-size: 0.74rem; }
 body .form-control { min-height: 48px; border-radius: 14px; font-size: 1rem; }
 body .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(242, 90, 164, 0.14); }
 @media (min-width: 700px) { body .checkout-panel { padding: 1.8rem; } }
+
+body:has(.checkout-wrap) .floating-cart-btn,
+body:has(.track-search) .floating-cart-btn { display: none; }
+.track-search { margin-top: 1.4rem; }
+
+.fm-error { display: flex; align-items: center; min-height: 52vh; }
+.fm-error .fm-empty { padding: 3rem 0; }
+.fm-error h1 { font-size: clamp(2.2rem, 8vw, 3.6rem); line-height: 1.1; margin: 0 0 0.8rem; }
+.fm-error-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }

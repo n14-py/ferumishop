@@ -113,7 +113,7 @@
                         <form action="/admin/configuracion/update" method="POST">
                             <div class="mb-3">
                                 <label for="whatsappNumber" class="form-label fw-bold text-dark">Número de WhatsApp</label>
-                                <input type="text" id="whatsappNumber" name="whatsappNumber" class="form-control form-control-lg bg-light" value="<%= siteConfig.whatsappNumber %>" placeholder="Ej: 595981123456" required>
+                                <input type="text" id="whatsappNumber" name="whatsappNumber" class="form-control form-control-lg bg-light" value="<%= siteConfig.whatsappNumber %>" placeholder="Número con código de país" required>
                                 <small class="text-muted"><i class="fas fa-info-circle"></i> Incluye el código de país (595) sin el signo +.</small>
                             </div>
                             <div class="mb-4">
@@ -157,8 +157,9 @@
                                 <input type="url" name="facebookUrl" class="form-control bg-light" value="<%= siteConfig.facebookUrl || '' %>">
                             </div>
                             <div class="mb-4">
-                                <label class="form-label fw-bold">Texto Sobre Nosotros</label>
-                                <textarea name="aboutUsText" rows="4" class="form-control bg-light"><%= siteConfig.aboutUsText || '' %></textarea>
+                                <label class="form-label fw-bold">Texto adicional en Sobre nosotros</label>
+                                <textarea name="aboutUsText" rows="4" class="form-control bg-light" placeholder="Opcional"><%= (typeof brand !== 'undefined' && brand) ? brand.aboutExtra : (siteConfig.aboutUsText || '') %></textarea>
+                                <div class="form-text">Se muestra debajo de la historia de la marca. Si queda vacío, la página usa el texto oficial.</div>
                             </div>
 
                             <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm">
@@ -250,16 +251,16 @@
                 <h5 class="fw-bold mb-3">Marca, equipo, portada y pago</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Historia corta</label>
+                        <label class="form-label fw-bold">Historia de la marca (opcional)</label>
                         <textarea class="form-control" name="brandStory" rows="4"><%= siteConfig.brandStory || '' %></textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Texto del lanzamiento</label>
                         <input class="form-control mb-2" name="launchTitle" placeholder="Título" value="<%= siteConfig.launchTitle || '' %>">
-                        <textarea class="form-control" name="launchText" rows="3" placeholder="Si lo dejás vacío, se usa el texto oficial."><%= siteConfig.launchText || '' %></textarea>
+                        <textarea class="form-control" name="launchText" rows="3" placeholder="Texto breve del lanzamiento"><%= siteConfig.launchText || '' %></textarea>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Clientas</label>
+                        <label class="form-label fw-bold">Clientes</label>
                         <input class="form-control" name="clientsLabel" value="<%= siteConfig.clientsLabel || 'Más de 1.000 clientes' %>">
                     </div>
                     <div class="col-md-4">

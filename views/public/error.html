@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Ferumi</title>
+    <title>Error - FERUMI</title>
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,22 +13,16 @@
 
 <%- include('../partials/header.html') %>
 
-<main class="container">
-    
-    <div class="static-page-container" style="text-align: center; max-width: 600px; margin-top: 4rem; margin-bottom: 4rem;">
-        <h1 style="font-size: 4rem; margin-bottom: 0; color: var(--primary-color-dark);">Oops!</h1>
-        
-        <h2>Ha ocurrido un error</h2>
-        
-        <% if (locals.message) { %>
-            <p class="lead" style="font-size: 1.2rem; color: var(--text-muted-color);"><%= message %></p>
-        <% } else { %>
-            <p class="lead" style="font-size: 1.2rem; color: var(--text-muted-color);">No pudimos encontrar la página que estás buscando.</p>
-        <% } %>
-        
-        <a href="/" class="btn btn-primary" style="margin-top: 2rem;">Volver al Inicio</a>
-    </div>
-
+<main class="fm-page fm-error">
+    <section class="fm-empty">
+        <p class="fm-kicker">Error</p>
+        <h1>No pudimos mostrar <em>esta página</em></h1>
+        <p><%= locals.message ? message : 'La página que buscás no existe o cambió de lugar.' %></p>
+        <div class="fm-error-actions">
+            <a href="/" class="btn btn-primary">Volver al inicio</a>
+            <a href="/tienda" class="btn btn-secondary">Ver la tienda</a>
+        </div>
+    </section>
 </main>
 
 <%- include('../partials/footer.html') %>
