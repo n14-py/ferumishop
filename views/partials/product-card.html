@@ -12,26 +12,38 @@
     var cardName = product.commercialTitle || product.name;
     var alt = (product.photoAlts && product.photoAlts[0]) ? product.photoAlts[0] : cardName;
     var href = product.slug ? ('/producto/' + product.slug) : ('/producto/' + product._id);
+    var offPct = (pricing.compareAt && pricing.compareAt > pricing.price) ? Math.round((1 - pricing.price / pricing.compareAt) * 100) : 0;
+    var unitsLeft = (product.hasVariants && product.variants && product.variants.length)
+        ? product.variants.reduce(function (sum, v) { return sum + (Number(v.stock) || 0); }, 0)
+        : Number(product.stock) || 0;
+    var soldOut = product.status === 'agotado' || (product.stock !== undefined && unitsLeft <= 0);
 %>
-<article class="product-card <%= pricing.onPromo ? 'is-promo' : '' %> <%= product.isNew ? 'is-new' : '' %>">
-    <a href="<%= href %>" class="card-image-link">
-        <% if (pricing.onPromo) { %><span class="fm-badge fm-badge-promo">Promo</span><% } %>
-        <% if (product.isNew) { %><span class="fm-badge fm-badge-new">Nuevo</span><% } %>
-        <img src="<%= displayThumb %>" alt="<%= alt %>" class="product-card-image" loading="lazy">
+<article class="product-card <%= pricing.onPromo ? 'is-promo' : '' %> <%= product.isNew ? 'is-new' : '' %> <%= soldOut ? 'is-sold' : '' %>">
+    <a href="<%= href %>" class="card-image-link" aria-label="<%= cardName %>">
+        <span class="fm-badges">
+            <% if (soldOut) { %><span class="fm-badge fm-badge-sold">Agotado</span><% } %>
+            <% if (pricing.onPromo && !soldOut) { %><span class="fm-badge fm-badge-promo"><%= offPct >= 5 ? '-' + offPct + '%' : 'Promo' %></span><% } %>
+            <% if (product.isNew && !soldOut) { %><span class="fm-badge fm-badge-new">Nuevo</span><% } %>
+        </span>
+        <img src="<%= displayThumb %>" alt="<%= alt %>" class="product-card-image" loading="lazy" width="640" height="800">
     </a>
     <div class="card-content">
-        <div class="card-category"><%= product.category.name %><% if (product.subcategory) { %> · <%= product.subcategory %><% } %></div>
+        <div class="card-category"><%= product.category.name %></div>
         <h3 class="card-title"><a href="<%= href %>"><%= cardName %></a></h3>
-        <% if (product.subtitle) { %><p class="card-subtitle"><%= product.subtitle %></p><% } %>
         <div class="card-price">
-            <% if (pricing.compareAt) { %><span class="price-old"><%= formatPrice(pricing.compareAt) %></span><% } %>
             <span><%= formatPrice(pricing.price) %></span>
+            <% if (pricing.compareAt) { %><span class="price-old"><%= formatPrice(pricing.compareAt) %></span><% } %>
         </div>
         <div class="card-actions">
-            <a href="<%= href %>" class="btn btn-secondary">Ver</a>
-            <button type="button" data-id="<%= product._id %>" data-name="<%= cardName %>" data-price="<%= pricing.price %>" data-image="<%= displayThumb %>" onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price, this.dataset.image)" class="btn btn-primary">
-                <i class="fas fa-shopping-cart"></i> Añadir
-            </button>
+            <% if (soldOut) { %>
+                <a href="<%= href %>" class="btn btn-secondary">Ver detalle</a>
+            <% } else if (product.hasVariants && product.variants && product.variants.length > 0) { %>
+                <a href="<%= href %>" class="btn btn-secondary">Elegir opción</a>
+            <% } else { %>
+                <button type="button" data-id="<%= product._id %>" data-name="<%= cardName %>" data-price="<%= pricing.price %>" data-image="<%= displayThumb %>" onclick="addToCart(this.dataset.id, this.dataset.name, this.dataset.price, this.dataset.image)" class="btn btn-secondary btn-add">
+                    <i class="fas fa-shopping-bag"></i> Añadir
+                </button>
+            <% } %>
         </div>
     </div>
 </article>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= (siteConfig.homeSeoTitle || 'FERUMI') %> — Pestañas, belleza y cosméticos</title>
-    <%- include('../partials/seo.html', { pageTitle: 'Inicio', seoDescription: siteConfig.homeSeoDescription || 'FERUMI es una marca paraguaya de pestañas, belleza y cosméticos. Nació el 11 de enero de 2026 y en diciembre de 2026 inicia su etapa como marca.' }) %>
+    <title><%= (siteConfig.homeSeoTitle || 'FERUMI') %> — Pestañas, cosméticos y belleza</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Inicio', seoDescription: siteConfig.homeSeoDescription || 'FERUMI es una marca paraguaya de pestañas, cosméticos y belleza. Descubrí productos para expresar tu estilo.' }) %>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -17,90 +17,116 @@
 <%
     const story = (typeof brand !== 'undefined' && brand) ? brand : null;
     const promos = (typeof livePromotions !== 'undefined' && livePromotions) ? livePromotions : [];
-    const heroImage = (siteConfig.bannerImages && siteConfig.bannerImages.length) ? siteConfig.bannerImages[0] : '';
-%>
+    %>
 
 <main>
-    <section class="fm-hero">
+    <%
+        const banners = (siteConfig.bannerImages || []).filter(Boolean);
+        const shots = (locals.heroShots || []);
+        const stage = banners.length ? 'banner' : (shots.length ? 'shots' : 'mark');
+        const featuredPromo = promos.find(function (p) { return p.featured; }) || promos[0] || null;
+        const promoLabel = function (promo) {
+            if (promo.discountType === 'percent' && promo.discountValue) return '-' + promo.discountValue + '%';
+            if (promo.discountType === 'amount' && promo.discountValue) return formatPrice(promo.discountValue) + ' menos';
+            if (promo.discountType === 'fixed_price') return 'Precio especial';
+            return 'Promo';
+        };
+        const promoUntil = function (promo) {
+            if (!promo.endsAt) return '';
+            return 'Hasta el ' + new Date(promo.endsAt).toLocaleDateString('es-PY', { day: 'numeric', month: 'long', timeZone: 'America/Asuncion' });
+        };
+    %>
+
+    <section class="fm-hero fm-hero-<%= stage %>">
         <div class="fm-hero-copy">
-            <p class="fm-kicker">Marca paraguaya · Desde el <%= story ? story.foundedOn : '11 de enero de 2026' %></p>
-            <h1>FERUMI</h1>
-            <p class="fm-hero-lead">Pestañas, belleza y cosméticos con identidad propia. Un proyecto que empezó emprendiendo y hoy se presenta como marca.</p>
-            <div class="fm-hero-actions">
-                <a class="btn btn-primary" href="/tienda">Ver la colección</a>
-                <a class="btn btn-secondary" href="/sobre-nosotros">Conocer la marca</a>
-            </div>
-            <ul class="fm-hero-facts">
-                <li><strong><%= story ? story.country : 'Paraguay' %></strong><span>Origen</span></li>
-                <li><strong><%= story ? story.clientsShort : '1.000+' %></strong><span>Clientas</span></li>
-                <li><strong>2026</strong><span>Nueva etapa</span></li>
-            </ul>
+            <p class="fm-kicker">Marca paraguaya</p>
+            <h1>Tu belleza,<br><em>tu esencia.</em></h1>
+            <p class="fm-hero-lead">Descubrí Ferumi: pestañas, cosméticos y todo para expresar tu estilo.</p>
+            <a class="btn btn-primary fm-hero-cta" href="/tienda">Descubrir productos</a>
         </div>
-        <div class="fm-hero-stage">
-            <% if (siteConfig.bannerImages && siteConfig.bannerImages.length > 1) { %>
-                <div id="heroCarousel" class="carousel slide fm-carousel" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        <% siteConfig.bannerImages.forEach(function (bannerUrl, index) { %>
-                            <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
-                                <img src="<%= bannerUrl %>" alt="FERUMI">
+
+        <div class="fm-hero-visual" aria-label="FERUMI">
+            <% if (stage === 'banner') { %>
+                <div class="fm-arch fm-arch-main">
+                    <% if (banners.length > 1) { %>
+                        <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
+                            <div class="carousel-inner">
+                                <% banners.forEach(function (bannerUrl, index) { %>
+                                    <div class="carousel-item <%= index === 0 ? 'active' : '' %>"><img src="<%= bannerUrl %>" alt="FERUMI" <%= index === 0 ? '' : 'loading=lazy' %>></div>
+                                <% }); %>
                             </div>
-                        <% }); %>
-                    </div>
-                    <% if (siteConfig.bannerImages.length > 1) { %>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev" aria-label="Anterior"><span class="carousel-control-prev-icon"></span></button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next" aria-label="Siguiente"><span class="carousel-control-next-icon"></span></button>
+                        </div>
+                    <% } else { %>
+                        <img src="<%= banners[0] %>" alt="FERUMI">
                     <% } %>
                 </div>
-            <% } else if (heroImage) { %>
-                <img class="fm-hero-photo" src="<%= heroImage %>" alt="FERUMI">
+            <% } else if (stage === 'shots') { %>
+                <a class="fm-arch fm-arch-main" href="<%= shots[0].href %>"><img src="<%= shots[0].src %>" alt="<%= shots[0].alt %>" fetchpriority="high"></a>
+                <% if (shots[1]) { %><a class="fm-arch fm-arch-side" href="<%= shots[1].href %>"><img src="<%= shots[1].src %>" alt="<%= shots[1].alt %>"></a><% } %>
+                <% if (shots[2]) { %><a class="fm-arch fm-arch-dot" href="<%= shots[2].href %>"><img src="<%= shots[2].src %>" alt="<%= shots[2].alt %>"></a><% } %>
             <% } else { %>
-                <div class="fm-hero-mark" aria-hidden="true">
-                    <span>Fe</span>
-                    <small>Paraguay</small>
-                </div>
+                <div class="fm-arch fm-arch-main fm-arch-logo"><img src="/img/ferumi-logo.png" alt="FERUMI"></div>
             <% } %>
+            <div class="fm-stamp"><strong><%= story ? story.clientsShort : '1.000+' %></strong><span>clientes</span></div>
         </div>
     </section>
 
-    <% if (!story || story.showLaunch) { %>
-    <section class="fm-launch">
-        <div>
-            <p class="fm-kicker">Lanzamiento</p>
-            <h2><%= story ? story.launchTitle : 'Diciembre 2026: FERUMI se presenta como marca' %></h2>
-            <p><%= story ? story.launchText : '' %></p>
-        </div>
-        <a class="btn btn-primary" href="/promociones">Ver promociones</a>
+    <section class="fm-strip" aria-label="Cómo comprar">
+        <ul>
+            <li><i class="fas fa-store"></i><span>Retiro en Capiatá</span></li>
+            <li><i class="fas fa-motorcycle"></i><span>Envíos en moto</span></li>
+            <li><i class="fas fa-truck"></i><span>Envíos al interior</span></li>
+            <li><i class="fas fa-building-columns"></i><span>Transferencia o efectivo</span></li>
+        </ul>
     </section>
-    <% } %>
 
-    <% if (promos.length) { %>
+    <% if (locals.categories && categories.length) { %>
     <section class="fm-block">
         <div class="fm-section-head">
-            <p class="fm-kicker">Promociones activas</p>
-            <h2>Lo que está en oferta ahora</h2>
+            <div>
+                <p class="fm-kicker">Explorar</p>
+                <h2>Elegí tu <em>categoría</em></h2>
+            </div>
+            <a class="fm-link" href="/tienda">Ver todo <i class="fas fa-arrow-right"></i></a>
         </div>
-        <div class="fm-promo-row">
-            <% promos.slice(0, 3).forEach(function (promo) { %>
-                <a class="fm-promo-card" href="/promociones">
-                    <% if (promo.image || promo.banner) { %>
-                        <img src="<%= promo.image || promo.banner %>" alt="">
-                    <% } %>
-                    <div>
-                        <% if (promo.featured) { %><span class="fm-pill">Destacada</span><% } %>
-                        <h3><%= promo.title %></h3>
-                        <% if (promo.subtitle) { %><p><%= promo.subtitle %></p><% } %>
-                    </div>
+        <div class="fm-cats">
+            <% categories.forEach(function (cat) { %>
+                <a class="fm-cat <%= cat.cover ? '' : 'fm-cat-plain' %>" href="/categoria/<%= encodeURIComponent(cat.name) %>">
+                    <% if (cat.cover) { %><img src="<%= cat.cover %>" alt="" loading="lazy"><% } %>
+                    <span><%= cat.name %></span>
                 </a>
             <% }); %>
         </div>
     </section>
     <% } %>
 
+    <% if (featuredPromo) { %>
+    <section class="fm-block">
+        <a class="fm-promo-hero <%= (featuredPromo.banner || featuredPromo.image) ? 'has-media' : '' %>" href="/promociones">
+            <% if (featuredPromo.banner || featuredPromo.image) { %>
+                <span class="fm-promo-hero-media"><img src="<%= featuredPromo.banner || featuredPromo.image %>" alt="" loading="lazy"></span>
+            <% } %>
+            <span class="fm-promo-hero-body">
+                <span class="fm-kicker">Promoción vigente</span>
+                <strong class="fm-promo-hero-title"><%= featuredPromo.title %></strong>
+                <% if (featuredPromo.subtitle) { %><span class="fm-promo-hero-sub"><%= featuredPromo.subtitle %></span><% } %>
+                <span class="fm-promo-hero-meta">
+                    <span class="fm-promo-off"><%= promoLabel(featuredPromo) %></span>
+                    <% if (promoUntil(featuredPromo)) { %><span class="fm-promo-until"><%= promoUntil(featuredPromo) %></span><% } %>
+                </span>
+                <span class="fm-promo-hero-cta"><%= promos.length > 1 ? 'Ver las ' + promos.length + ' promociones' : 'Ver promoción' %> <i class="fas fa-arrow-right"></i></span>
+            </span>
+        </a>
+    </section>
+    <% } %>
+
     <section class="fm-block">
         <div class="fm-section-head">
-            <p class="fm-kicker">Colección</p>
-            <h2>Productos destacados</h2>
-            <p>Lo que más se elige en FERUMI.</p>
+            <div>
+                <p class="fm-kicker">Selección</p>
+                <h2>Los más <em>elegidos</em></h2>
+            </div>
+            <a class="fm-link" href="/tienda">Ver tienda <i class="fas fa-arrow-right"></i></a>
         </div>
         <div class="product-grid">
             <% if (featuredProducts && featuredProducts.length) { %>
@@ -109,70 +135,51 @@
                 <% }); %>
             <% } else { %>
                 <div class="fm-empty">
-                    <h3>Todavía no hay destacados publicados</h3>
-                    <p>El catálogo completo está en la tienda.</p>
+                    <h3>El catálogo completo está en la tienda</h3>
                     <a class="btn btn-primary" href="/tienda">Entrar a la tienda</a>
                 </div>
             <% } %>
         </div>
     </section>
 
+    <% if (!story || story.showLaunch) { %>
+    <section class="fm-block">
+        <div class="fm-launch">
+            <div>
+                <p class="fm-kicker">Lanzamiento</p>
+                <h2><%= story ? story.launchTitle : 'Diciembre 2026: nueva etapa' %></h2>
+                <% if (story && story.launchText) { %><p><%= story.launchText %></p><% } %>
+            </div>
+            <a class="btn btn-secondary" href="/sobre-nosotros">Conocer la marca</a>
+        </div>
+    </section>
+    <% } %>
+
     <% if (locals.latestProducts && latestProducts.length) { %>
-    <section class="fm-block fm-block-soft">
+    <section class="fm-block">
         <div class="fm-section-head">
-            <p class="fm-kicker">Recién llegados</p>
-            <h2>Nuevos en la marca</h2>
+            <div>
+                <p class="fm-kicker">Recién llegados</p>
+                <h2>Lo <em>nuevo</em></h2>
+            </div>
         </div>
         <div class="product-grid">
-            <% latestProducts.forEach(function (product) { %>
+            <% latestProducts.slice(0, 4).forEach(function (product) { %>
                 <%- include('../partials/product-card.html', { product: product }) %>
             <% }); %>
         </div>
     </section>
     <% } %>
 
-    <% if (locals.categories && categories.length) { %>
-    <section class="fm-block">
-        <div class="fm-section-head">
-            <p class="fm-kicker">Explorar</p>
-            <h2>Categorías</h2>
-        </div>
-        <div class="fm-cats">
-            <% categories.forEach(function (cat) { %>
-                <a class="fm-cat" href="/categoria/<%= encodeURIComponent(cat.name) %>"><%= cat.name %></a>
-            <% }); %>
-        </div>
-    </section>
-    <% } %>
-
-    <section class="fm-trust">
-        <div>
-            <p class="fm-kicker">Confianza</p>
-            <h2><%= story ? story.clients : 'Más de 1.000 clientes' %> ya eligieron FERUMI</h2>
-            <p>Nació el <%= story ? story.foundedOn : '11 de enero de 2026' %> en <%= story ? story.country : 'Paraguay' %>. En <%= story ? story.stageOn : 'diciembre de 2026' %> deja de presentarse solo como tienda y sale como marca de pestañas, belleza y cosméticos.</p>
-            <% if (story && story.story) { %><p><%= story.story %></p><% } %>
-            <a class="btn btn-secondary" href="/sobre-nosotros">La historia y el equipo</a>
-        </div>
-        <div class="fm-trust-grid">
-            <article><i class="fas fa-store"></i><strong>Local</strong><span>Ferumishop, Capiatá</span></article>
-            <article><i class="fas fa-motorcycle"></i><strong>Moto Bolt</strong><span>Asunción y alrededores</span></article>
-            <article><i class="fas fa-truck"></i><strong>Interior</strong><span>TSI, Jaraha o la que elijas</span></article>
-            <article><i class="fas fa-university"></i><strong>Pago</strong><span>Transferencia o efectivo al retirar</span></article>
-        </div>
-    </section>
-
-    <%- include('../partials/founders.html') %>
-
-    <section class="fm-social">
+    <section class="fm-block fm-social">
         <div>
             <p class="fm-kicker">Redes</p>
-            <h2>FERUMI, todos los días</h2>
-            <p>Fotos, videos y el día a día de la marca. Ahí también se publican las promociones del lanzamiento.</p>
+            <h2>Seguinos en nuestras <em>redes</em></h2>
         </div>
         <div class="fm-social-links">
             <% if (story && story.instagram) { %><a href="<%= story.instagram %>" target="_blank" rel="noopener"><i class="fab fa-instagram"></i> Instagram</a><% } %>
             <% if (story && story.tiktok) { %><a href="<%= story.tiktok %>" target="_blank" rel="noopener"><i class="fab fa-tiktok"></i> TikTok</a><% } %>
-            <% if (story && story.facebook) { %><a href="<%= story.facebook %>" target="_blank" rel="noopener"><i class="fab fa-facebook"></i> Facebook</a><% } %>
+            <% if (story && story.facebook) { %><a href="<%= story.facebook %>" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i> Facebook</a><% } %>
             <a href="https://wa.me/<%= story ? story.whatsapp : (siteConfig.whatsappNumber || '595987301591') %>" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
         </div>
     </section>

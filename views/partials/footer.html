@@ -1,74 +1,53 @@
-<% const story = (typeof brand !== 'undefined' && brand) ? brand : null; %>
+<%
+    const story = (typeof brand !== 'undefined' && brand) ? brand : null;
+    const cfg = (typeof siteConfig !== 'undefined' && siteConfig) ? siteConfig : {};
+    const waNumber = story ? story.whatsapp : (cfg.whatsappNumber || '595987301591');
+    const footLogo = '/img/ferumi-logo.png';
+%>
 <footer class="site-footer">
     <div class="fm-footer">
-        <div>
+        <div class="fm-footer-brand">
+            <a href="/" aria-label="FERUMI, inicio"><img src="<%= footLogo %>" alt="FERUMI" width="120" height="57" loading="lazy"></a>
+            <p>Marca paraguaya de pestañas, cosméticos y belleza.</p>
+            <p class="fm-footer-address"><i class="fas fa-location-dot"></i> <%= cfg.storeAddress || 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' %></p>
+        </div>
+        <nav class="fm-footer-col" aria-label="Tienda">
+            <h3>Tienda</h3>
+            <a href="/tienda">Productos</a>
+            <a href="/promociones">Promociones</a>
+            <a href="/regalos/crear">Regalos</a>
+            <a href="/tracking">Mis pedidos</a>
+        </nav>
+        <nav class="fm-footer-col" aria-label="Marca">
             <h3>FERUMI</h3>
-            <p>Marca paraguaya de pestañas, belleza y cosméticos. Fundada el <%= story ? story.foundedOn : '11 de enero de 2026' %>. Nueva etapa en diciembre de 2026.</p>
-            <p><%= typeof siteConfig !== 'undefined' && siteConfig.storeAddress ? siteConfig.storeAddress : 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' %></p>
-        </div>
-        <div>
-            <h3 style="letter-spacing:0.08em; font-size:1rem;">Tienda</h3>
-            <p>
-                <a href="/tienda">Colección</a>
-                <a href="/promociones">Promociones</a>
-                <a href="/sobre-nosotros">La marca</a>
-                <a href="/tracking">Mis pedidos</a>
-                <a href="/contacto">Contacto</a>
-            </p>
-        </div>
-        <div>
-            <h3 style="letter-spacing:0.08em; font-size:1rem;">Redes</h3>
-            <p>
-                <a href="<%= story ? story.instagram : 'https://instagram.com/ferumishop' %>" target="_blank" rel="noopener">Instagram</a>
-                <a href="<%= story ? story.tiktok : 'https://tiktok.com/@ferumishop' %>" target="_blank" rel="noopener">TikTok</a>
-                <% if (story && story.facebook) { %><a href="<%= story.facebook %>" target="_blank" rel="noopener">Facebook</a><% } %>
-                <a href="https://wa.me/<%= story ? story.whatsapp : (typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591') %>" target="_blank" rel="noopener">WhatsApp</a>
-            </p>
-            <p>
-                <a href="/terminos">Términos</a>
-                <a href="/privacidad">Privacidad</a>
-                <a href="/eliminacion-de-datos">Eliminación de datos</a>
-            </p>
+            <a href="/sobre-nosotros">Sobre nosotros</a>
+            <a href="/contacto">Contacto</a>
+            <a href="/terminos">Términos</a>
+            <a href="/privacidad">Privacidad</a>
+        </nav>
+        <div class="fm-footer-col fm-footer-social">
+            <h3>Seguinos</h3>
+            <div class="fm-social-icons">
+                <a href="<%= story ? story.instagram : 'https://instagram.com/ferumishop' %>" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="<%= story ? story.tiktok : 'https://tiktok.com/@ferumishop' %>" target="_blank" rel="noopener" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+                <% if (story && story.facebook) { %><a href="<%= story.facebook %>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a><% } %>
+                <a href="https://wa.me/<%= waNumber %>" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            </div>
         </div>
     </div>
     <div class="fm-footer-base">
-        <span>Hecho en Paraguay · © 2026 FERUMI</span>
-        <span><%= story ? story.clients : 'Más de 1.000 clientes' %></span>
+        <span>© 2026 FERUMI · Hecho en Paraguay</span>
+        <a href="/eliminacion-de-datos">Eliminación de datos</a>
     </div>
 </footer>
 <link rel="stylesheet" href="/css/shop-extras.css">
-<style>
-    .floating-cart-btn {
-        position: fixed; bottom: 22px; right: 22px; width: 62px; height: 62px;
-        background: linear-gradient(180deg, #f472b2, var(--primary-color, #f25aa4));
-        color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-size: 1.4rem; box-shadow: 0 12px 28px rgba(221, 81, 143, 0.35);
-        cursor: pointer; z-index: 999; border: none;
-    }
-    .cart-badge {
-        position: absolute; top: -4px; right: -4px; background: #241820; color: white;
-        font-size: 0.78rem; font-weight: bold; width: 24px; height: 24px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; border: 2px solid white;
-    }
-    .cart-overlay { position: fixed; inset: 0; background: rgba(36, 24, 32, 0.45); z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s ease; }
-    .cart-overlay.active { opacity: 1; visibility: visible; }
-    .cart-sidebar { position: fixed; top: 0; right: -420px; width: 100%; max-width: 400px; height: 100vh; background: #fff; z-index: 1001; display: flex; flex-direction: column; transition: right 0.35s ease; }
-    .cart-sidebar.active { right: 0; }
-    .cart-header, .cart-footer { padding: 18px 20px; }
-    .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3e7ee; }
-    .cart-items { flex: 1; overflow-y: auto; padding: 16px 20px; }
-    .cart-item { display: flex; gap: 12px; margin-bottom: 16px; }
-    .cart-item img, .cart-item-img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; }
-    .cart-total { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 12px; }
-    .qty-controls { display: flex; align-items: center; gap: 8px; }
-    .qty-btn, .remove-item { border: 1px solid #eee; background: #fff; border-radius: 50%; width: 28px; height: 28px; }
-</style>
 <button id="floatingCartBtn" class="floating-cart-btn" type="button" aria-label="Abrir carrito">
-    <i class="fas fa-shopping-cart"></i>
+    <i class="fas fa-shopping-bag"></i>
     <span id="cartBadge" class="cart-badge">0</span>
 </button>
 <script>
     (function syncFloatingCart() {
+        const btn = document.getElementById('floatingCartBtn');
         function count() {
             try {
                 const cart = JSON.parse(localStorage.getItem('ferumi_cart') || '[]');
@@ -76,10 +55,12 @@
             } catch (e) { return 0; }
         }
         function paint() {
+            const total = count();
             const badge = document.getElementById('cartBadge');
-            if (badge) badge.innerText = count();
+            if (badge) badge.innerText = total;
+            if (btn) btn.classList.toggle('has-items', total > 0);
         }
-        document.getElementById('floatingCartBtn')?.addEventListener('click', () => {
+        btn?.addEventListener('click', () => {
             if (typeof window.openFerumiCart === 'function') window.openFerumiCart();
             else document.getElementById('cart-icon')?.click();
         });

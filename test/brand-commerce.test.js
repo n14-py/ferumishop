@@ -128,13 +128,16 @@ test('homepage, promotions and brand pages render the new stage', async () => {
         categories: [{ name: 'Pestañas' }]
     };
     const home = await ejs.renderFile(path.join(views, 'public/index.html'), locals);
-    assert.match(home, /Luis Fernando Arce Fretes/);
-    assert.match(home, /Fadua Mahiumy Gomez Benitez/);
-    assert.match(home, /diciembre de 2026/i);
+    assert.match(home, /Tu belleza,/);
+    assert.match(home, /tu esencia\./);
+    assert.match(home, /Descubrí Ferumi: pestañas, cosméticos y todo para expresar tu estilo\./);
+    assert.match(home, /Descubrir productos/);
     assert.match(home, /1\.000/);
     assert.match(home, /Lanzamiento diciembre/);
     assert.match(home, /Pestañas/);
+    assert.doesNotMatch(home, /Luis Fernando Arce Fretes/);
     assert.match(home, /href="\/css\/brand.css"/);
+    assert.match(home, /href="\/css\/pages.css"/);
 
     const promos = await ejs.renderFile(path.join(views, 'public/promociones.html'), {
         ...locals,
@@ -144,6 +147,37 @@ test('homepage, promotions and brand pages render the new stage', async () => {
     assert.match(promos, /Lanzamiento diciembre/);
 
     const about = await ejs.renderFile(path.join(views, 'public/sobre-nosotros.html'), locals);
+    assert.match(about, /Luis Fernando Arce Fretes/);
+    assert.match(about, /Fadua Mahiumy Gomez Benitez/);
     assert.match(about, /Dirección Ejecutiva/);
     assert.match(about, /Experiencia del Cliente/);
+    assert.match(about, /Belleza con identidad propia/);
+    assert.match(about, /11 de enero de 2026/);
+    assert.match(about, /Más de 1\.000 clientes/);
+    assert.match(about, /Diciembre de 2026/);
+    assert.match(about, /Una nueva forma de vivir la belleza/);
+});
+
+test('legacy placeholder copy never reaches a public page', async () => {
+    const views = path.join(__dirname, '..', 'views');
+    const legacy = 'Escribe aquí la descripción de "Sobre Nosotros".';
+    const config = {
+        logoUrl: '', whatsappNumber: '595987301591', storeAddress: 'Ferumishop, Capiatá', bannerImages: [],
+        aboutUsText: legacy, instagramUrl: '', tiktokUrl: '', facebookUrl: ''
+    };
+    const about = await ejs.renderFile(path.join(views, 'public/sobre-nosotros.html'), {
+        path: '/sobre-nosotros', query: {}, formatPrice: (v) => `${v} Gs`, baseUrl: 'https://www.ferumi.shop',
+        siteConfig: config, brand: brand.present(config)
+    });
+    assert.doesNotMatch(about, /Escribe aquí/i);
+    assert.doesNotMatch(about, /quienes ya nos conocen/i);
+    assert.equal(brand.cleanAbout(legacy), '');
+    assert.equal(brand.cleanAbout('  <p> </p> '), '');
+    assert.equal(brand.cleanAbout('<p>Texto real de la marca.</p>'), '<p>Texto real de la marca.</p>');
+    const custom = { ...config, aboutUsText: '<p>Texto real de la marca.</p>' };
+    const withText = await ejs.renderFile(path.join(views, 'public/sobre-nosotros.html'), {
+        path: '/sobre-nosotros', query: {}, formatPrice: (v) => `${v} Gs`, baseUrl: 'https://www.ferumi.shop',
+        siteConfig: custom, brand: brand.present(custom)
+    });
+    assert.match(withText, /Texto real de la marca\./);
 });

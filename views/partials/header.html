@@ -1,68 +1,68 @@
 <link rel="stylesheet" href="/css/brand.css">
+<link rel="stylesheet" href="/css/pages.css">
+<%
+    const logoSrc = siteConfig.logoUrl ? siteConfig.logoUrl.replace('/upload/', '/upload/h_96,q_auto,f_auto/') : '/img/ferumi-logo.png';
+    const isShop = path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') || path.includes('/checkout');
+%>
 <header class="main-header">
     <div class="navbar-container">
         <div class="navbar-brand">
-            <a href="/" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
-                <% if (siteConfig.logoUrl) { %>
-                    <img src="<%= siteConfig.logoUrl.replace('/upload/', '/upload/h_60/') %>" alt="Logo FERUMI" style="height: 60px; margin-right: 10px;">
-                <% } else { %>
-                    FERUMI
-                <% } %>
+            <a href="/" class="fm-logo" aria-label="FERUMI, inicio">
+                <img src="<%= logoSrc %>" alt="FERUMI" width="110" height="52">
             </a>
         </div>
 
-        <nav class="navbar-nav">
-             <a href="/" class="<%= path === '/' ? 'active' : '' %>">Inicio</a>
-             <a href="/tienda" class="<%= path.includes('/tienda') || path.includes('/producto') || path.includes('/categoria') || path.includes('/checkout') ? 'active' : '' %>">Tienda</a>
-             <a href="/promociones" class="<%= path.includes('/promociones') ? 'active' : '' %>">Promociones</a>
-             <a href="/tracking" class="<%= path.includes('/tracking') || path.includes('/ticket') ? 'active' : '' %>">Mis pedidos</a>
-             <a href="/regalos/crear" class="<%= path.includes('/regalos') ? 'active' : '' %>">Regalos Online</a>
-             <a href="/sorteos" class="shop-hide <%= path.includes('/sorteos') ? 'active' : '' %>" style="display:none; color: #ff4757; font-weight: bold;"><i class="fas fa-gift"></i> Sorteo del Mes</a>
-            <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">La marca</a>
-             <a href="/contacto" class="<%= path.includes('/contacto') ? 'active' : '' %>">Contacto</a>
-             <a href="/asociate" class="shop-hide <%= path.includes('/asociate') ? 'active' : '' %>" style="display:none; color: #d81b60; font-weight: bold;"><i class="fas fa-handshake"></i> Importa con Nosotros</a>
+        <nav class="navbar-nav" aria-label="Principal">
+            <a href="/" class="<%= path === '/' ? 'active' : '' %>">Inicio</a>
+            <a href="/tienda" class="<%= isShop ? 'active' : '' %>">Tienda</a>
+            <a href="/promociones" class="<%= path.includes('/promociones') ? 'active' : '' %>">Promociones</a>
+            <a href="/sobre-nosotros" class="<%= path.includes('/sobre-nosotros') ? 'active' : '' %>">Sobre nosotros</a>
+            <a href="/regalos/crear" class="<%= path.includes('/regalos') ? 'active' : '' %>">Regalos</a>
+            <a href="/tracking" class="<%= path.includes('/tracking') || path.includes('/ticket') ? 'active' : '' %>">Mis pedidos</a>
+            <a href="/contacto" class="<%= path.includes('/contacto') ? 'active' : '' %>">Contacto</a>
+            <a href="/sorteos" class="shop-hide <%= path.includes('/sorteos') ? 'active' : '' %>"><i class="fas fa-gift"></i> Sorteo del Mes</a>
+            <a href="/asociate" class="shop-hide <%= path.includes('/asociate') ? 'active' : '' %>"><i class="fas fa-handshake"></i> Importa con Nosotros</a>
         </nav>
 
         <div class="navbar-actions">
             <div class="header-search">
                 <i class="fas fa-search"></i>
-                <form action="/tienda" method="GET">
-                    <input type="text" name="q" id="header-search-input" class="header-search-input" placeholder="Buscar productos..." autocomplete="off">
+                <form action="/tienda" method="GET" role="search">
+                    <input type="search" name="q" id="header-search-input" class="header-search-input" placeholder="Buscar" aria-label="Buscar productos" autocomplete="off">
                 </form>
                 <div id="search-results-popup"></div>
             </div>
-            
-            <div class="cart-icon" id="cart-icon" style="position: relative; cursor: pointer; font-size: 1.3rem; color: var(--primary-color-dark); margin-left: 15px;">
-                <i class="fas fa-shopping-cart"></i>
-                <span id="cart-count" style="position: absolute; top: -8px; right: -10px; background: var(--primary-color); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold;">0</span>
-            </div>
+
+            <button type="button" class="cart-icon" id="cart-icon" aria-label="Abrir carrito">
+                <i class="fas fa-shopping-bag"></i>
+                <span id="cart-count" class="cart-count" data-count="0">0</span>
+            </button>
         </div>
 
-        <div class="mobile-menu-icon" id="mobile-menu-open">
+        <button type="button" class="mobile-menu-icon" id="mobile-menu-open" aria-label="Abrir menú">
             <i class="fas fa-bars"></i>
-        </div>
+        </button>
     </div>
 </header>
 
 <div class="cart-overlay" id="cart-overlay"></div>
-<div class="cart-sidebar" id="cart-sidebar">
+<aside class="cart-sidebar" id="cart-sidebar" aria-label="Carrito">
     <div class="cart-header">
-        <h3>Tu Carrito</h3>
-        <button id="close-cart"><i class="fas fa-times"></i></button>
+        <h3>Tu carrito</h3>
+        <button type="button" id="close-cart" class="close-cart" aria-label="Cerrar carrito"><i class="fas fa-times"></i></button>
     </div>
-    <div class="cart-items" id="cart-items">
-        </div>
+    <div class="cart-items" id="cart-items"></div>
     <div class="cart-footer">
         <div class="cart-coupon">
-            <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-muted-color);">¿Tienes una Gift Card o Cupón?</label>
-            <div style="display: flex; gap: 5px; margin-top: 5px;">
-                <input type="text" id="coupon-code-input" placeholder="Ingresa tu código" class="form-control" style="padding: 8px; font-size: 0.9rem;">
-                <button id="apply-coupon-btn" class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;">Aplicar</button>
+            <label for="coupon-code-input">Gift card o cupón</label>
+            <div class="cart-coupon-row">
+                <input type="text" id="coupon-code-input" placeholder="Código" class="form-control">
+                <button type="button" id="apply-coupon-btn" class="btn btn-secondary">Aplicar</button>
             </div>
-            <small id="coupon-message" style="display: none; margin-top: 5px; font-weight: 600;"></small>
+            <small id="coupon-message" class="cart-coupon-message" hidden></small>
         </div>
         <div class="cart-total">
-            <span>Total:</span>
+            <span>Total</span>
             <span id="cart-total-price">0 Gs.</span>
         </div>
         <div class="cart-checkout-stack">
@@ -74,10 +74,10 @@
             </button>
         </div>
     </div>
-</div>
+</aside>
 
 <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
-<nav class="mobile-nav-panel" id="mobile-nav-panel"></nav>
+<nav class="mobile-nav-panel" id="mobile-nav-panel" aria-label="Menú"></nav>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -89,25 +89,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setupMobileMenu = () => {
         mobileNavPanel.innerHTML = '';
-        
-        // 1. Clonar links de navegación
+
+        const head = document.createElement('div');
+        head.className = 'mnav-head';
+        const brand = document.querySelector('.main-header .fm-logo');
+        if (brand) head.appendChild(brand.cloneNode(true));
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'mnav-close';
+        closeBtn.setAttribute('aria-label', 'Cerrar menú');
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.addEventListener('click', () => toggleMobileMenu());
+        head.appendChild(closeBtn);
+        mobileNavPanel.appendChild(head);
+
+        const search = document.createElement('form');
+        search.className = 'mnav-search';
+        search.action = '/tienda';
+        search.method = 'GET';
+        search.setAttribute('role', 'search');
+        search.innerHTML = '<i class="fas fa-search"></i><input type="search" name="q" placeholder="Buscar productos" aria-label="Buscar productos" autocomplete="off">';
+        mobileNavPanel.appendChild(search);
+
         const desktopNav = document.querySelector('.main-header .navbar-nav');
         if (desktopNav) mobileNavPanel.appendChild(desktopNav.cloneNode(true));
-        
-        // 2. Añadir separador
-        const divider = document.createElement('div');
-        divider.className = 'dropdown-divider';
-        mobileNavPanel.appendChild(divider);
 
-        // 3. Clonar acciones (buscador y carrito)
-        const desktopActions = document.querySelector('.main-header .navbar-actions');
-        if (desktopActions) mobileNavPanel.appendChild(desktopActions.cloneNode(true));
+        const wa = document.createElement('a');
+        wa.className = 'mnav-wa';
+        wa.target = '_blank';
+        wa.rel = 'noopener';
+        wa.href = 'https://wa.me/<%= typeof siteConfig !== "undefined" && siteConfig.whatsappNumber ? siteConfig.whatsappNumber : "595987301591" %>';
+        wa.innerHTML = '<i class="fab fa-whatsapp"></i> Escribinos por WhatsApp';
+        mobileNavPanel.appendChild(wa);
     };
 
-    const toggleMobileMenu = (e) => { 
-        e.stopPropagation(); 
-        mobileNavPanel.classList.toggle('active'); 
-        mobileNavOverlay.classList.toggle('active'); 
+    const toggleMobileMenu = (e) => {
+        if (e) e.stopPropagation();
+        mobileNavPanel.classList.toggle('active');
+        mobileNavOverlay.classList.toggle('active');
+        document.body.classList.toggle('fm-lock', mobileNavPanel.classList.contains('active'));
     };
 
     if (mobileMenuOpenBtn) {
@@ -227,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let itemCount = 0;
 
         if (cart.length === 0) {
-            cartItemsContainer.innerHTML = '<p style="text-align:center; color:#999; margin-top:40px;">Tu carrito está vacío.</p>';
+            cartItemsContainer.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-bag"></i><p>Tu carrito está vacío</p><a href="/tienda" class="btn btn-secondary">Ver productos</a></div>';
         }
 
         cart.forEach((item, index) => {
@@ -242,19 +262,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4 class="cart-item-title">${item.name}</h4>
                     <p class="cart-item-price">${formatPrice(item.price)} Gs.</p>
                     <div class="cart-item-qty">
-                        <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
+                        <button type="button" class="qty-btn" onclick="changeQty(${index}, -1)" aria-label="Menos">&minus;</button>
                         <span>${item.quantity}</span>
-                        <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                        <button type="button" class="qty-btn" onclick="changeQty(${index}, 1)" aria-label="Más">+</button>
                     </div>
                 </div>
-                <button class="remove-item" onclick="removeFromCart(${index})"><i class="fas fa-trash"></i></button>
+                <button type="button" class="remove-item" onclick="removeFromCart(${index})" aria-label="Quitar del carrito"><i class="fas fa-trash-alt"></i></button>
             `;
             cartItemsContainer.appendChild(itemEl);
         });
 
         // Actualizar todos los contadores de iconos (desktop y móvil)
         const countElements = document.querySelectorAll('#cart-count');
-        countElements.forEach(el => el.innerText = itemCount);
+        countElements.forEach(el => { el.innerText = itemCount; el.dataset.count = itemCount; });
 
         // Descontar cupón
         if (appliedCoupon) {
@@ -287,21 +307,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function openCart() {
         if(cartSidebar) cartSidebar.classList.add('active');
         if(cartOverlay) cartOverlay.classList.add('active');
+        document.body.classList.add('fm-lock');
     }
 
     function closeCart() {
         if(cartSidebar) cartSidebar.classList.remove('active');
         if(cartOverlay) cartOverlay.classList.remove('active');
+        document.body.classList.remove('fm-lock');
     }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeCart();
+        if (mobileNavPanel && mobileNavPanel.classList.contains('active')) toggleMobileMenu();
+    });
 
     // Eventos para abrir el carrito (detecta clicks en ambos menus)
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('.cart-icon')) {
+            if (mobileNavPanel && mobileNavPanel.classList.contains('active')) toggleMobileMenu();
             openCart();
-            if (mobileNavPanel && mobileNavPanel.classList.contains('active')) {
-                mobileNavPanel.classList.remove('active');
-                mobileNavOverlay.classList.remove('active');
-            }
         }
     });
 
@@ -332,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     couponMessage.style.display = 'block';
                     couponMessage.style.color = '#dc3545'; // Error
-                    couponMessage.innerText = 'Código inválido o ya utilizado.';
+                    couponMessage.innerText = 'Ese código no es válido o ya se usó.';
                     appliedCoupon = null;
                     updateCartUI();
                 }
@@ -348,17 +373,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkoutMainBtn = document.getElementById('checkout-main');
     if (checkoutMainBtn) {
         checkoutMainBtn.addEventListener('click', () => {
-            if (cart.length === 0) return alert('El carrito está vacío');
+            if (cart.length === 0) return alert('Tu carrito está vacío.');
             window.location.href = '/checkout';
         });
     }
     if (checkoutWhatsappBtn) {
         checkoutWhatsappBtn.addEventListener('click', () => {
-            if (cart.length === 0) return alert('El carrito está vacío');
+            if (cart.length === 0) return alert('Tu carrito está vacío.');
             const lines = cart.map((item) => `• ${item.quantity}x ${item.name} (${formatPrice(item.price)} Gs.)`);
             let total = cart.reduce((s, item) => s + item.price * item.quantity, 0);
             if (appliedCoupon) total = Math.max(0, total - appliedCoupon.amount);
-            const msg = `Hola FERUMI 💖 Quiero comprar:\n${lines.join('\n')}\n\nTotal: ${formatPrice(total)} Gs.`;
+            const msg = `Hola FERUMI, quiero comprar:\n${lines.join('\n')}\n\nTotal: ${formatPrice(total)} Gs.`;
             window.open(`https://wa.me/${FERUMI_WA}?text=${encodeURIComponent(msg)}`, '_blank');
         });
     }
