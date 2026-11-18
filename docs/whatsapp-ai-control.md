@@ -4,9 +4,9 @@ Módulo dentro del administrador existente de Ferumi Shop (`/admin/whatsapp`). N
 
 ## Qué corrige
 
-Los enlaces de PagoPar se repetían porque cada confirmación creaba un pedido nuevo con `idempotencyKey` basado en la hora, y el texto del modelo volvía a incluir el mismo enlace que ya había armado la herramienta. Los webhooks repetidos solo se frenaban en memoria de un proceso.
+Los enlaces de pago se repetían porque cada confirmación creaba un pedido nuevo con `idempotencyKey` basado en la hora, y el texto del modelo volvía a incluir el mismo enlace que ya había armado la herramienta. Los webhooks repetidos solo se frenaban en memoria de un proceso.
 
-Ahora cada operación de pago tiene una clave estable. Si PagoPar no confirma el resultado, la operación queda incierta y no se llama de nuevo. Un mensaje de WhatsApp con el mismo `wamid` se registra una sola vez.
+Ahora cada operación de pago tiene una clave estable. Si el cobro no confirma el resultado, la operación queda incierta y no se llama de nuevo. Un mensaje de WhatsApp con el mismo `wamid` se registra una sola vez.
 
 ## Transferencia y envío
 
@@ -16,13 +16,13 @@ En Tarifas, un lugar como «Capiatá ruta 2» con un precio aplica a todo destin
 
 Una pregunta como «¿el delivery propio sale a las 6?» se responde con el horario de las 18:00. No dispara una búsqueda de productos ni manda fotos. La ubicación se guarda en la conversación y al cliente solo se le dice el costo del envío que ya eligió, o si está en zona o va por transportadora.
 
-Los pasos siguen en el mismo orden: saludo y nombre, la consulta y el producto, el envío en tres bloques (delivery propio a las 18:00, Motobolt y transportadora), el pago y recién ahí los datos. El alias y el total se pasan cuando elige transferencia. PagoPar pide solo nombre, cédula, correo y teléfono. La foto del comprobante se transcribe y, si parece una transferencia, queda parcial hasta que una persona la apruebe.
+Los pasos siguen en el mismo orden: saludo y nombre, la consulta y el producto, el envío en tres bloques (delivery propio a las 18:00, Motobolt y transportadora), el pago y recién ahí los datos. El alias y el total se pasan cuando elige transferencia. Para el pedido se piden nombre, cédula, correo y teléfono. La foto del comprobante se transcribe y, si parece una transferencia, queda parcial hasta que una persona la apruebe.
 
 Si en unos segundos llegan juntos el comprobante y la ubicación, se leen los dos antes de contestar. La espera es de 10 segundos (`WA_REPLY_DELAY_MS`). El ticket térmico imprime nombre, teléfono y ciudad. El QR del ticket, en el admin, marca preparado; si lo abre otra persona, ve la ubicación, el WhatsApp y si hay que cobrar.
 
 El botón Confirmar de Comprobantes manda la acción en un campo oculto. Al confirmar, el comprobante queda confirmado, el cliente recibe el aviso y la conversación recuerda que el pago ya está confirmado. La foto se transcribe completa y de ese texto salen emisor, destinatario, monto y banco.
 
-PagoPar no tiene monto mínimo. El enlace incluye QR, tarjeta de crédito y débito. Si el envío tiene precio, ese importe entra en el total que se manda a PagoPar.
+No hay monto mínimo de pasarela. El pago público es por transferencia, o en efectivo si el retiro está habilitado. Si el envío tiene precio, ese importe entra en el total del pedido.
 
 ## Variables nuevas
 
@@ -41,8 +41,8 @@ Se agregan colecciones `wa_*` y campos opcionales en pedidos, productos y usuari
 
 1. Volvé el deploy al commit anterior.
 2. Las colecciones nuevas pueden quedar sin uso.
-3. Si algún pedido quedó con `shippingMethod = delivery_propio` o `paymentMethod = transferencia`, cambialo a un valor anterior (`retiro` o `pagopar`) antes de volver, porque el código viejo no acepta esos valores.
+3. Si algún pedido quedó con `shippingMethod = delivery_propio`, el código anterior no acepta ese valor. Revisalo antes de volver a un deploy viejo.
 
 ## Pendiente que depende de credenciales
 
-WhatsApp, PagoPar, DeepInfra, Cloudinary y la visión no se pueden probar desde este entorno sin las claves reales. El panel muestra si cada una está configurada, sin revelar los secretos.
+WhatsApp, DeepInfra, Cloudinary y la visión no se pueden probar desde este entorno sin las claves reales. El panel muestra si cada una está configurada, sin revelar los secretos. La pasarela online queda apagada hasta que se registre un proveedor.

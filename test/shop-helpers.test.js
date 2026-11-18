@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const shop = require('../lib/orders');
-const pagopar = require('../lib/pagopar');
+const payments = require('../lib/payments');
 const r2 = require('../lib/r2');
 
 test('haversine Asunción to Luque is within Motobolt range', () => {
@@ -65,14 +65,12 @@ test('efectivo only makes sense with retiro (enforced in route, shipping still l
     assert.ok(info.options.some((o) => o.id === 'retiro'));
 });
 
-test('pagopar tokens are sha1 hex', () => {
-    process.env.PAGOPAR_PRIVATE_KEY = 'secret';
-    process.env.PAGOPAR_PUBLIC_KEY = 'pub';
-    const t = pagopar.tokenIniciar('abc', 10000);
-    assert.equal(t.length, 40);
-    assert.equal(pagopar.tokenConsulta().length, 40);
-    assert.equal(pagopar.tokenWebhook('hash1').length, 40);
-    assert.equal(pagopar.timingSafeEqual(pagopar.tokenWebhook('hash1'), pagopar.tokenWebhook('hash1')), true);
+test('online checkout stays closed and transfer totals include shipping', () => {
+    assert.equal(payments.onlineAvailable(), false);
+    assert.equal(payments.chargeTotal(5000, 2000), 7000);
+    assert.equal(payments.assertCheckoutMethod('online', 'retiro').ok, false);
+    assert.equal(payments.assertCheckoutMethod('efectivo', 'retiro').method, 'efectivo_retiro');
+    assert.equal(payments.assertCheckoutMethod('efectivo_retiro', 'motobolt').ok, false);
 });
 
 test('parsePrice strips thousand dots', () => {

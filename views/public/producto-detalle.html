@@ -149,14 +149,21 @@
         <!-- COLUMNA DERECHA: INFORMACIÓN Y BOTONES -->
         <section class="product-info-section">
             
-            <h1 class="product-title"><%= product.name %></h1>
-            <% if (product.category) { %><div class="card-category" style="margin-bottom:8px;"><%= product.category.name %></div><% } %>
-            <div class="product-price"><%= formatPrice(product.price) %></div>
+            <% var salePrice = (locals.pricing && pricing.price != null) ? pricing.price : product.price; %>
+            <% var compareAt = (locals.pricing && pricing.compareAt) ? pricing.compareAt : null; %>
+            <h1 class="product-title"><%= product.commercialTitle || product.name %></h1>
+            <% if (product.subtitle) { %><p class="product-subtitle"><%= product.subtitle %></p><% } %>
+            <% if (product.category) { %><div class="card-category" style="margin-bottom:8px;"><%= product.category.name %><% if (product.subcategory) { %> · <%= product.subcategory %><% } %></div><% } %>
+            <div class="product-price">
+                <% if (compareAt) { %><span class="price-old"><%= formatPrice(compareAt) %></span><% } %>
+                <%= formatPrice(salePrice) %>
+                <% if (locals.pricing && pricing.onPromo) { %><span class="fm-badge fm-badge-promo">Promo</span><% } %>
+            </div>
             <div class="product-meta-box">
                 <div><i class="fas fa-motorcycle"></i> Moto Bolt Envíos: te contactamos en menos de 1 h</div>
                 <div><i class="fas fa-truck"></i> Interior: TSI, Jaraha o tu preferencia</div>
                 <div><i class="fas fa-store"></i> Retiro en Capiatá, Ruta 1 Ex km 21</div>
-                <div><i class="fas fa-lock"></i> Pago seguro con Pagopar</div>
+                <div><i class="fas fa-lock"></i> Pago por transferencia. En el local, también en efectivo.</div>
             </div>
             
             <!-- 1. BLOQUE DE VARIANTES (Primero) -->
@@ -198,7 +205,7 @@
             <div class="action-buttons">
                 <button data-id="<%= product._id %>" 
                         data-name="<%= product.name %>" 
-                        data-price="<%= product.price %>" 
+                        data-price="<%= salePrice %>" 
                         data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>" 
                         onclick="handleAddToCart(this)" 
                         class="btn-cart btnAddToCart">
@@ -206,7 +213,7 @@
                 </button>
                 <button data-id="<%= product._id %>"
                         data-name="<%= product.name %>"
-                        data-price="<%= product.price %>"
+                        data-price="<%= salePrice %>"
                         data-image="<%= product.photos && product.photos.length > 0 ? product.photos[0].replace('/upload/', '/upload/w_150,h_150,c_fill/') : '' %>"
                         onclick="handleBuyNow(this)"
                         class="btn-whatsapp btnAddToCart" style="background: var(--primary-color-dark, #dd518f);">
@@ -220,9 +227,28 @@
             <hr class="divider">
 
             <!-- 3. DESCRIPCIÓN SEO (Al medio) -->
+            <% if (product.shortDescription) { %><p class="product-lead"><%= product.shortDescription %></p><% } %>
             <div class="product-description">
                 <%- product.description %>
             </div>
+            <% if (product.benefits && product.benefits.length) { %>
+                <h2>Beneficios</h2>
+                <ul><% product.benefits.forEach(function (item) { %><li><%= item %></li><% }); %></ul>
+            <% } %>
+            <% if (product.features && product.features.length) { %>
+                <h2>Características</h2>
+                <ul><% product.features.forEach(function (item) { %><li><%= item %></li><% }); %></ul>
+            <% } %>
+            <% if (product.howToUse) { %><h2>Modo de uso</h2><p><%= product.howToUse %></p><% } %>
+            <% if (product.contents) { %><h2>Contenido</h2><p><%= product.contents %></p><% } %>
+            <% if (product.warnings) { %><h2>Advertencias</h2><p><%= product.warnings %></p><% } %>
+            <% if (product.extraInfo) { %><h2>Información adicional</h2><p><%= product.extraInfo %></p><% } %>
+            <% if (product.faqs && product.faqs.length) { %>
+                <h2>Preguntas frecuentes</h2>
+                <% product.faqs.forEach(function (item) { %>
+                    <details><summary><%= item.question %></summary><p><%= item.answer %></p></details>
+                <% }); %>
+            <% } %>
 
         </section>
 
@@ -237,123 +263,6 @@
             </div>
         </section>
         <% } %>
-
-        <!-- MODAL DE PAGOPAR -->
-        <div id="modalPagopar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-            <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; position: relative;">
-                <button onclick="cerrarModalPagopar()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-                <h4 style="color: #d81b60; margin-bottom: 20px;"><i class="fas fa-lock"></i> Compra Segura</h4>
-                
-                <input type="hidden" id="pago_id">
-                <input type="hidden" id="pago_nombre">
-                <input type="hidden" id="pago_precio">
-
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; font-size: 0.9rem;">Nombre Completo *</label>
-                    <input type="text" id="chk_nombre" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; font-size: 0.9rem;">Cédula de Identidad *</label>
-                    <input type="text" id="chk_ci" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; font-size: 0.9rem;">Correo Electrónico *</label>
-                    <input type="email" id="chk_email" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
-                </div>
-                <div style="margin-bottom: 20px;">
-                    <label style="font-weight: bold; font-size: 0.9rem;">Teléfono / WhatsApp *</label>
-                    <input type="text" id="chk_telefono" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;" required>
-                </div>
-
-                <button id="btn-procesar-pago" onclick="procesarPagoDirecto()" style="width: 100%; padding: 15px; background: #d81b60; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
-                    Ir a Pagar
-                </button>
-                <p id="pago-status" style="display:none; color: #d81b60; font-weight: bold; text-align: center; margin-top: 15px;">Procesando...</p>
-            </div>
-        </div>
-
-        <script>
-            // Funciones del Modal de Pago
-            function abrirModalPagopar(btn) {
-                // Verificar stock
-                const stock = parseInt(document.getElementById('currentStock').value);
-                if (stock <= 0) {
-                    alert("Lo sentimos, el modelo seleccionado está agotado actualmente.");
-                    return;
-                }
-
-                const baseId = btn.getAttribute('data-id');
-                const baseName = btn.getAttribute('data-name');
-                const price = btn.getAttribute('data-price');
-                const selectedVariant = document.getElementById('selectedVariantName').value;
-
-                // Guardar datos temporalmente en el modal
-                document.getElementById('pago_id').value = baseId;
-                document.getElementById('pago_nombre').value = selectedVariant ? `${baseName} - ${selectedVariant}` : baseName;
-                document.getElementById('pago_precio').value = price;
-
-                document.getElementById('modalPagopar').style.display = 'flex';
-            }
-
-            function cerrarModalPagopar() {
-                document.getElementById('modalPagopar').style.display = 'none';
-            }
-
-            async function procesarPagoDirecto() {
-                const nombre = document.getElementById('chk_nombre').value.trim();
-                const ci = document.getElementById('chk_ci').value.trim();
-                const email = document.getElementById('chk_email').value.trim();
-                const telefono = document.getElementById('chk_telefono').value.trim();
-                const id = document.getElementById('pago_id').value;
-                const prodNombre = document.getElementById('pago_nombre').value;
-                const precio = document.getElementById('pago_precio').value;
-
-                if (!nombre || !ci || !email || !telefono) {
-                    alert("Por favor, completa todos los campos.");
-                    return;
-                }
-
-                document.getElementById('btn-procesar-pago').style.display = 'none';
-                document.getElementById('pago-status').style.display = 'block';
-
-                try {
-                    // Simular formato de carrito para que el backend lo entienda
-                    const cartItems = [{ id: id, name: prodNombre, quantity: 1, price: precio }];
-
-                    const response = await fetch('/tienda/checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            customerName: nombre,
-                            customerDocument: ci,
-                            customerEmail: email,
-                            customerPhone: telefono,
-                            cartItems: cartItems
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success && data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        // Extraemos el error real que nos manda Pagopar
-                        let errorPagopar = data.details || data.message || "Error desconocido";
-                        if (typeof data.details === 'object') {
-                            errorPagopar = JSON.stringify(data.details);
-                        }
-                        alert("Pagopar rechazó la transacción. Detalle: " + errorPagopar);
-                        
-                        document.getElementById('btn-procesar-pago').style.display = 'block';
-                        document.getElementById('pago-status').style.display = 'none';
-                    }
-                } catch (error) {
-                    alert("Hubo un error de conexión.");
-                    document.getElementById('btn-procesar-pago').style.display = 'block';
-                    document.getElementById('pago-status').style.display = 'none';
-                }
-            }
-        </script>
 
     </main>
 

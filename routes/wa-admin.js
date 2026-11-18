@@ -269,7 +269,7 @@ module.exports = function registerWaAdmin(app, deps) {
             intent.status = 'retry_authorized';
             await intent.save();
             if (intent.orderId) {
-                await mongoose.model('WebOrder').updateOne({ _id: intent.orderId }, { $set: { pagoparAttemptStatus: 'retry_authorized' } });
+                await mongoose.model('WebOrder').updateOne({ _id: intent.orderId }, { $set: { paymentAttemptStatus: 'retry_authorized' } });
             }
             req.session.success = 'Reintento autorizado. El próximo cobro usará la misma operación y no uno paralelo automático.';
             return back(res, 'pagos');

@@ -46,9 +46,9 @@
                 <h2 class="fw-bold text-dark mb-0">Gestión de Inventario</h2>
             </div>
 
-            <button class="btn btn-primary w-100 py-3 mb-4 rounded-4 shadow-sm fw-bold fs-5" data-bs-toggle="modal" data-bs-target="#addProductModal" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;">
-                <i class="fas fa-plus-circle me-2"></i> Añadir Nuevo Producto
-            </button>
+            <a class="btn btn-primary w-100 py-3 mb-4 rounded-4 shadow-sm fw-bold fs-5" href="/admin/producto/nuevo" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark)); border: none;">
+                <i class="fas fa-plus-circle me-2"></i> Publicar producto
+            </a>
 
             <% if (locals.success) { %><div class="alert alert-success alert-dismissible fade show rounded-4"><i class="fas fa-check-circle"></i> <%= success %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>
             <% if (locals.error) { %><div class="alert alert-danger alert-dismissible fade show rounded-4"><i class="fas fa-exclamation-circle"></i> <%= error %> <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><% } %>

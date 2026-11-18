@@ -1,197 +1,72 @@
-<footer class="site-footer" style="background-color: #111; color: #fff; padding: 50px 20px 20px; text-align: center; margin-top: 60px;">
-    <div style="max-width: 1200px; margin: 0 auto;">
-        <h3 style="font-weight: 800; letter-spacing: 2px; margin-bottom: 15px;">FERUMI</h3>
-        <p style="color: #aaa; margin-bottom: 25px;">Belleza, Maquillaje y Regalos Inolvidables ✨</p>
-        
-        <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 30px;">
-            <a href="https://instagram.com/ferumishop" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-instagram"></i></a>
-            <a href="https://tiktok.com/@ferumishop" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-tiktok"></i></a>
-            <a href="https://wa.me/<%= typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591' %>" target="_blank" style="color: #fff; font-size: 1.5rem; transition: 0.3s;"><i class="fab fa-whatsapp"></i></a>
+<% const story = (typeof brand !== 'undefined' && brand) ? brand : null; %>
+<footer class="site-footer">
+    <div class="fm-footer">
+        <div>
+            <h3>FERUMI</h3>
+            <p>Marca paraguaya de pestañas, belleza y cosméticos. Fundada el <%= story ? story.foundedOn : '11 de enero de 2026' %>. Nueva etapa en diciembre de 2026.</p>
+            <p><%= typeof siteConfig !== 'undefined' && siteConfig.storeAddress ? siteConfig.storeAddress : 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' %></p>
         </div>
-        
-        <p style="margin-bottom: 16px;" class="footer-nav">
-            <a href="/tienda" style="color:#ddd; margin: 0 8px;">Tienda</a>
-            <a href="/tracking" style="color:#ddd; margin: 0 8px;">Tracking</a>
-            <a href="/sobre-nosotros" style="color:#ddd; margin: 0 8px;">Sobre nosotros</a>
-            <a href="/contacto" style="color:#ddd; margin: 0 8px;">Contacto</a>
-            <a href="/terminos" style="color:#ddd; margin: 0 8px;">Términos</a>
-            <a href="/privacidad" style="color:#ddd; margin: 0 8px;">Privacidad</a>
-            <a href="/eliminacion-de-datos" style="color:#ddd; margin: 0 8px;">Eliminación de datos</a>
-        </p>
-        <p style="color:#aaa; font-size:0.9rem; margin-bottom: 18px;">Ferumishop · Capiatá, Ruta 1 Ex km 21 · Moto Bolt Envíos en Asunción y alrededores (te contactamos en menos de 1 hora) · Interior por TSI, Jaraha o tu preferencia · Retiro en local</p>
-        <div style="border-top: 1px solid #333; padding-top: 20px; color: #777; font-size: 0.9rem;">
-            <p>Hecho con <i class="fas fa-heart" style="color: #ff4757;"></i> en Paraguay | © 2026 FERUMI</p>
+        <div>
+            <h3 style="letter-spacing:0.08em; font-size:1rem;">Tienda</h3>
+            <p>
+                <a href="/tienda">Colección</a>
+                <a href="/promociones">Promociones</a>
+                <a href="/sobre-nosotros">La marca</a>
+                <a href="/tracking">Mis pedidos</a>
+                <a href="/contacto">Contacto</a>
+            </p>
+        </div>
+        <div>
+            <h3 style="letter-spacing:0.08em; font-size:1rem;">Redes</h3>
+            <p>
+                <a href="<%= story ? story.instagram : 'https://instagram.com/ferumishop' %>" target="_blank" rel="noopener">Instagram</a>
+                <a href="<%= story ? story.tiktok : 'https://tiktok.com/@ferumishop' %>" target="_blank" rel="noopener">TikTok</a>
+                <% if (story && story.facebook) { %><a href="<%= story.facebook %>" target="_blank" rel="noopener">Facebook</a><% } %>
+                <a href="https://wa.me/<%= story ? story.whatsapp : (typeof siteConfig !== 'undefined' ? siteConfig.whatsappNumber : '595987301591') %>" target="_blank" rel="noopener">WhatsApp</a>
+            </p>
+            <p>
+                <a href="/terminos">Términos</a>
+                <a href="/privacidad">Privacidad</a>
+                <a href="/eliminacion-de-datos">Eliminación de datos</a>
+            </p>
         </div>
     </div>
+    <div class="fm-footer-base">
+        <span>Hecho en Paraguay · © 2026 FERUMI</span>
+        <span><%= story ? story.clients : 'Más de 1.000 clientes' %></span>
+    </div>
 </footer>
-
+<link rel="stylesheet" href="/css/shop-extras.css">
 <style>
-    /* Botón Flotante */
     .floating-cart-btn {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 65px;
-        height: 65px;
-        background: var(--primary-color, #ff4757);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-        box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
-        cursor: pointer;
-        z-index: 999;
-        border: none;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: fixed; bottom: 22px; right: 22px; width: 62px; height: 62px;
+        background: linear-gradient(180deg, #f472b2, var(--primary-color, #f25aa4));
+        color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; box-shadow: 0 12px 28px rgba(221, 81, 143, 0.35);
+        cursor: pointer; z-index: 999; border: none;
     }
-    .floating-cart-btn:hover { transform: scale(1.1); }
     .cart-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: #111;
-        color: white;
-        font-size: 0.9rem;
-        font-weight: bold;
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid white;
+        position: absolute; top: -4px; right: -4px; background: #241820; color: white;
+        font-size: 0.78rem; font-weight: bold; width: 24px; height: 24px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; border: 2px solid white;
     }
-
-    /* Fondo Oscuro al abrir el carrito */
-    .cart-overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.6);
-        z-index: 1000;
-        opacity: 0;
-        visibility: hidden;
-        transition: 0.3s ease;
-        backdrop-filter: blur(3px);
-    }
+    .cart-overlay { position: fixed; inset: 0; background: rgba(36, 24, 32, 0.45); z-index: 1000; opacity: 0; visibility: hidden; transition: 0.3s ease; }
     .cart-overlay.active { opacity: 1; visibility: visible; }
-
-    /* Panel Lateral del Carrito */
-    .cart-sidebar {
-        position: fixed;
-        top: 0; right: -400px;
-        width: 100%;
-        max-width: 380px;
-        height: 100vh;
-        background: #fff;
-        z-index: 1001;
-        box-shadow: -5px 0 30px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
+    .cart-sidebar { position: fixed; top: 0; right: -420px; width: 100%; max-width: 400px; height: 100vh; background: #fff; z-index: 1001; display: flex; flex-direction: column; transition: right 0.35s ease; }
     .cart-sidebar.active { right: 0; }
-
-    /* Cabecera del Panel */
-    .cart-header {
-        padding: 20px;
-        background: #fdfdfd;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .cart-header h3 { margin: 0; font-size: 1.3rem; font-weight: 800; color: #111; }
-    .close-cart { background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer; transition: 0.2s; }
-    .close-cart:hover { color: #ff4757; transform: rotate(90deg); }
-
-    /* Lista de Items */
-    .cart-items {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-    }
-    .cart-empty-msg { text-align: center; color: #aaa; margin-top: 50px; }
-    .cart-empty-msg i { font-size: 4rem; margin-bottom: 15px; color: #eee; }
-    
-    .cart-item {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 1px dashed #eee;
-        position: relative;
-    }
-    .cart-item-img {
-        width: 70px; height: 70px;
-        border-radius: 12px;
-        object-fit: cover;
-        border: 1px solid #eee;
-    }
-    .cart-item-info { flex: 1; }
-    .cart-item-title { font-weight: 700; font-size: 1rem; color: #333; margin-bottom: 5px; line-height: 1.2; }
-    .cart-item-price { color: var(--primary-color, #ff4757); font-weight: bold; }
-    
-    /* Controles de cantidad */
-    .qty-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-    .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ddd; background: #fff; color: #555; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .qty-btn:active { background: #eee; }
-    
-    .remove-item {
-        position: absolute;
-        top: 0; right: 0;
-        background: none; border: none;
-        color: #ccc; cursor: pointer; font-size: 1.1rem;
-    }
-    .remove-item:hover { color: #ff4757; }
-
-    /* Footer del Carrito (Total y Botón WhatsApp) */
-    .cart-footer {
-        padding: 25px 20px;
-        background: #fff;
-        border-top: 1px solid #eee;
-        box-shadow: 0 -10px 20px rgba(0,0,0,0.02);
-    }
-    .cart-total {
-        display: flex;
-        justify-content: space-between;
-        font-size: 1.4rem;
-        font-weight: 900;
-        margin-bottom: 20px;
-        color: #111;
-    }
-    .btn-checkout {
-        width: 100%;
-        padding: 18px;
-        background: #25D366;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        transition: 0.3s;
-        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
-    }
-    .btn-checkout:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(37, 211, 102, 0.4); }
-    .btn-clear { width: 100%; background: none; border: none; color: #aaa; margin-top: 15px; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
-    
-    /* Pequeña animación para cuando se añade un producto */
-    @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
-    .pop-anim { animation: pop 0.4s ease; }
+    .cart-header, .cart-footer { padding: 18px 20px; }
+    .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3e7ee; }
+    .cart-items { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .cart-item { display: flex; gap: 12px; margin-bottom: 16px; }
+    .cart-item img, .cart-item-img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; }
+    .cart-total { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 12px; }
+    .qty-controls { display: flex; align-items: center; gap: 8px; }
+    .qty-btn, .remove-item { border: 1px solid #eee; background: #fff; border-radius: 50%; width: 28px; height: 28px; }
 </style>
-
 <button id="floatingCartBtn" class="floating-cart-btn" type="button" aria-label="Abrir carrito">
     <i class="fas fa-shopping-cart"></i>
     <span id="cartBadge" class="cart-badge">0</span>
 </button>
-<link rel="stylesheet" href="/css/shop-extras.css">
 <script>
     (function syncFloatingCart() {
         function count() {

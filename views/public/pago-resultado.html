@@ -20,7 +20,7 @@
                     <p>Estado: <strong><%= orderView.tracking.title %></strong></p>
                     <p><%= orderView.tracking.detail %></p>
                     <% if (orderView.shippingMethod === 'motobolt' && locals.store) { %>
-                        <div class="thanks-note">Pagopar ya confirmó tu pago. Procesamos tu pedido, lo preparamos y te escribimos en menos de 1 hora al WhatsApp que cargaste para coordinar la entrega con Moto Bolt Envíos. De 9:00 a 20:00; fuera de horario, al día siguiente. <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps (Capiatá)</a>.</div>
+                        <div class="thanks-note">El pago quedó confirmado. Procesamos tu pedido, lo preparamos y te escribimos en menos de 1 hora al WhatsApp que cargaste para coordinar la entrega con Moto Bolt Envíos. De 9:00 a 20:00; fuera de horario, al día siguiente. <a href="<%= store.mapsUrl %>" target="_blank">Ferumishop en Maps (Capiatá)</a>.</div>
                     <% } else if (orderView.shippingMethod === 'retiro' && locals.store) { %>
                         <div class="thanks-note">Retiro en Ferumishop. Te avisamos cuando esté listo. <a href="<%= store.mapsUrl %>" target="_blank">Cómo llegar</a></div>
                     <% } else { %>
@@ -37,7 +37,7 @@
             <% } else { %>
                 <div class="thanks-emoji">⏳</div>
                 <h1>Pago pendiente</h1>
-                <p>Elegiste pagar con <strong><%= estado.forma_pago || 'Pagopar' %></strong>.</p>
+                <p>El pago sigue pendiente. Si transferiste, el comprobante queda en revisión.</p>
                 <% if (estado.mensaje_resultado_pago) { %>
                     <div class="thanks-note">
                         <strong><%= estado.mensaje_resultado_pago.titulo %></strong>

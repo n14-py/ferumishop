@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar compra - FERUMI</title>
-    <%- include('../partials/seo.html', { pageTitle: 'Finalizar compra', seoDescription: 'Completá tus datos, elegí Moto Bolt Envíos, encomienda o retiro en Ferumishop y pagá con Pagopar.' }) %>
+    <%- include('../partials/seo.html', { pageTitle: 'Finalizar compra', seoDescription: 'Completá tus datos, elegí Moto Bolt Envíos, encomienda o retiro en Ferumishop y pagá por transferencia.' }) %>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <%- include('../partials/header.html') %>
 <main class="container checkout-wrap">
     <h1 style="text-align:center; margin-bottom: 0.4rem;">Tu compra, paso a paso</h1>
-    <p class="checkout-help" style="text-align:center;">Completá tus datos, decinos dónde estás y elegí cómo te llega. Al final pagás con Pagopar — es seguro — o, si retirás, también en efectivo.</p>
+    <p class="checkout-help" style="text-align:center;">Completá tus datos, decinos dónde estás y elegí cómo te llega. El pago es por transferencia o, si retirás, también en efectivo.</p>
 
     <div class="checkout-steps">
         <div class="checkout-step-pill active" data-step-pill="1">1. Datos</div>
@@ -24,7 +24,7 @@
 
     <div class="checkout-panel" id="step1">
         <h2>Tus datos</h2>
-        <p class="checkout-help">Los mismos que pide Pagopar: nombre, cédula, correo y tu WhatsApp. El teléfono tiene que ser el WhatsApp donde te vamos a escribir para coordinar la entrega.</p>
+        <p class="checkout-help">Nombre, cédula, correo y tu WhatsApp. El teléfono tiene que ser el WhatsApp donde te vamos a escribir para coordinar la entrega.</p>
         <div class="chk-row">
             <div>
                 <label class="chk-label">Nombre completo *</label>
@@ -43,7 +43,7 @@
             <div>
                 <label class="chk-label">WhatsApp *</label>
                 <input class="chk-input" id="customerPhone" inputmode="tel" placeholder="0981..." autocomplete="tel">
-                <p class="checkout-field-hint">Usá tu número de WhatsApp: Pagopar lo pide y por ahí te contactamos para concretar el envío.</p>
+                <p class="checkout-field-hint">Usá tu número de WhatsApp: por ahí te contactamos para concretar el envío.</p>
             </div>
         </div>
         <button type="button" class="btn-shop" onclick="goStep(2)">Continuar a ubicación</button>
@@ -86,12 +86,13 @@
         <div id="shipOptions"></div>
         <div id="payBox" style="display:none; margin-top: 1rem;">
             <h3 style="font-size:1.1rem;">Pago</h3>
-            <div class="ship-card selected" id="payPagopar" onclick="selectPay('pagopar')">
-                <input type="radio" name="pay" value="pagopar" checked>
-                <span class="ship-card-icon"><i class="fas fa-lock"></i></span>
+            <div class="ship-card selected" id="payTransfer" onclick="selectPay('transferencia')">
+                <input type="radio" name="pay" value="transferencia" checked>
+                <span class="ship-card-icon"><i class="fas fa-university"></i></span>
                 <span class="ship-card-body">
-                    <h4>Pagopar</h4>
-                    <p>Pago seguro: tarjetas, Tigo Money, Aquí Pago y bancos. El teléfono que cargaste debe ser tu WhatsApp.</p>
+                    <h4>Transferencia</h4>
+                    <p>Te mostramos el alias al confirmar. El pedido se prepara cuando revisamos el comprobante. El teléfono que cargaste debe ser tu WhatsApp.</p>
+                    <% if (store.bankAlias) { %><p><strong><%= store.bankName || 'Banco' %></strong> · <%= store.bankAlias %> · <%= store.bankHolder || '' %></p><% } %>
                 </span>
             </div>
             <div class="ship-card" id="payCash" style="display:none;" onclick="selectPay('efectivo_retiro')">
@@ -115,7 +116,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const STORE = { lat: <%= store.lat %>, lng: <%= store.lng %> };
-let map, marker, coords = { lat: null, lng: null }, shipping = null, payMethod = 'pagopar';
+let map, marker, coords = { lat: null, lng: null }, shipping = null, payMethod = 'transferencia';
 let idempotencyKey = sessionStorage.getItem('ferumi_checkout_id') || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
 sessionStorage.setItem('ferumi_checkout_id', idempotencyKey);
 
@@ -125,7 +126,7 @@ function money(n) { return new Intl.NumberFormat('es-PY').format(n) + ' Gs.'; }
 function goStep(n) {
     if (n === 2) {
         const ok = ['customerName','customerEmail','customerDocument','customerPhone'].every(id => document.getElementById(id).value.trim());
-        if (!ok) { document.getElementById('err1').textContent = 'Completá los 4 datos. Pagopar los exige. El teléfono debe ser tu WhatsApp.'; return; }
+        if (!ok) { document.getElementById('err1').textContent = 'Completá los 4 datos. El teléfono debe ser tu WhatsApp.'; return; }
         document.getElementById('err1').textContent = '';
         initMap();
         showLocationHints();
@@ -308,16 +309,16 @@ function selectedShip() {
 }
 function selectPay(v) {
     payMethod = v;
-    document.getElementById('payPagopar').classList.toggle('selected', v==='pagopar');
+    document.getElementById('payTransfer').classList.toggle('selected', v==='transferencia');
     document.getElementById('payCash').classList.toggle('selected', v==='efectivo_retiro');
     document.querySelectorAll('input[name="pay"]').forEach(i => i.checked = i.value === v);
     const btn = document.getElementById('btnPay');
-    btn.innerHTML = v === 'efectivo_retiro' ? 'Confirmar retiro en efectivo' : '<i class="fas fa-lock"></i> Ir a Pagopar';
+    btn.innerHTML = v === 'efectivo_retiro' ? 'Confirmar retiro en efectivo' : '<i class="fas fa-university"></i> Confirmar y transferir';
 }
 function toggleCash() {
     const cash = document.getElementById('payCash');
     if (selectedShip() === 'retiro') { cash.style.display = 'flex'; }
-    else { cash.style.display = 'none'; selectPay('pagopar'); }
+    else { cash.style.display = 'none'; selectPay('transferencia'); }
 }
 
 function renderCartPreview() {

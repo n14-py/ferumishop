@@ -23,7 +23,7 @@
         <p style="text-align:left;"><strong>Cliente:</strong> <%= order.customerName %><br>
         <strong>CI:</strong> <%= order.customerDocument || '—' %><br>
         <strong>Tel:</strong> <%= order.customerPhone %><br>
-        <strong>Pago:</strong> <%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : 'Pagopar' %> (<%= order.paymentStatus %>)<br>
+        <strong>Pago:</strong> <%= order.paymentLabel || (order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : (order.paymentMethod === 'transferencia' ? 'Transferencia' : 'Pago a coordinar')) %> (<%= order.paymentStatus %>)<br>
         <strong>Envío:</strong> <%= order.shippingMethod %><br>
         <% if (order.shippingAddress) { %><strong>Dir:</strong> <%= order.shippingAddress %>, <%= order.shippingCity %><br><% } %>
         <% if (order.shippingDistanceKm != null) { %><strong>Distancia:</strong> <%= order.shippingDistanceKm %> km<br><% } %>

@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const slug = require('../lib/wa-slug');
 const wa = require('../lib/whatsapp');
 const agent = require('../lib/wa-agent');
-const pagopar = require('../lib/pagopar');
 
 test('checkout slug matches ferumi.shop/099987382mariapedido', () => {
     assert.equal(slug.makeCheckoutSlug({ phone: '59599987382', name: 'María Pedroza' }), '099987382mariapedido');
@@ -29,7 +28,7 @@ test('pay and tracking URLs stay on ferumi.shop', () => {
     process.env.BASE_URL = prev;
 });
 
-test('canCreateOrder requires pagopar data, cart and shipping', () => {
+test('canCreateOrder requires customer data, cart and shipping', () => {
     const empty = agent.canCreateOrder({ cart: [], customer: {}, shipping: {} });
     assert.equal(empty.ok, false);
     const almost = agent.canCreateOrder({
@@ -146,14 +145,14 @@ test('text chunks stay under WhatsApp limit', () => {
     assert.ok(parts.every((p) => p.length <= 3900));
 });
 
-test('missing Pagopar fields are listed', () => {
+test('missing customer fields are listed', () => {
     assert.deepEqual(agent.missingCustomer({}), ['nombre', 'cédula', 'correo', 'teléfono']);
     assert.equal(agent.missingCustomer({
         name: 'Ana', document: '1', email: 'a@b.c', phone: '0981'
     }).length, 0);
 });
 
-test('private pay page is a Pagopar button only', async () => {
+test('private pay page shows the transfer link', async () => {
     const html = await ejs.renderFile(path.join(__dirname, '../views/public/wa-pagar.html'), {
         paid: false,
         cancelled: false,
@@ -169,7 +168,7 @@ test('private pay page is a Pagopar button only', async () => {
         }
     });
     assert.match(html, /noindex/);
-    assert.match(html, /Pagar con Pagopar/);
+    assert.match(html, /transferencia/);
     assert.match(html, /099987382mariapedido/);
     assert.doesNotMatch(html, /Pedir por WhatsApp/);
     assert.doesNotMatch(html, /carrito/i);
@@ -196,7 +195,7 @@ test('despacho shows WhatsApp badge for bot orders', async () => {
             customerDocument: '1',
             customerPhone: '099987382',
             customerEmail: 'a@b.c',
-            paymentMethod: 'pagopar',
+            paymentMethod: 'transferencia',
             paymentStatus: 'pagado',
             shippingMethod: 'motobolt',
             shippingDistanceKm: 8,
@@ -212,8 +211,8 @@ test('despacho shows WhatsApp badge for bot orders', async () => {
     assert.match(html, /WhatsApp/);
 });
 
-test('pagopar webhook extract still works after ecommerce hook', () => {
-    const info = pagopar.extractResultado({ resultado: [{ hash_pedido: 'abc', pagado: true }] });
-    assert.equal(info.hash_pedido, 'abc');
-    assert.equal(info.pagado, true);
+test('order link helper does not require an online provider', () => {
+    const payments = require('../lib/payments');
+    assert.equal(payments.onlineAvailable(), false);
+    assert.equal(payments.label('transferencia'), 'Transferencia bancaria');
 });

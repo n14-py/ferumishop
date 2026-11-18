@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promociones - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'Promociones', seoDescription: typeof seoDescription !== 'undefined' ? seoDescription : 'Promociones vigentes de FERUMI.' }) %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<body>
+<%- include('../partials/header.html') %>
+<main class="fm-page">
+    <section class="fm-page-hero">
+        <p class="fm-kicker">Ahora en FERUMI</p>
+        <h1>Promociones</h1>
+        <p>Las ofertas que están vigentes. Cuando llega la fecha de cierre, salen solas de esta página.</p>
+    </section>
+
+    <% if (promotions && promotions.length) { %>
+        <div class="fm-promo-list">
+            <% promotions.forEach(function (promo) { %>
+                <article class="fm-promo-feature <%= promo.featured ? 'is-featured' : '' %>">
+                    <% if (promo.banner || promo.image) { %>
+                        <div class="fm-promo-media">
+                            <img src="<%= promo.banner || promo.image %>" alt="<%= promo.title %>">
+                        </div>
+                    <% } %>
+                    <div class="fm-promo-copy">
+                        <% if (promo.featured) { %><span class="fm-pill">Destacada</span><% } %>
+                        <h2><%= promo.title %></h2>
+                        <% if (promo.subtitle) { %><p class="fm-lead"><%= promo.subtitle %></p><% } %>
+                        <% if (promo.description) { %><p><%= promo.description %></p><% } %>
+                        <% if (promo.commercialText) { %><p class="fm-commercial"><%= promo.commercialText %></p><% } %>
+                        <% if (promo.discountType === 'percent' && promo.discountValue) { %>
+                            <p class="fm-discount"><%= promo.discountValue %>% de descuento en los productos de esta promo</p>
+                        <% } else if (promo.discountType === 'amount' && promo.discountValue) { %>
+                            <p class="fm-discount"><%= formatPrice(promo.discountValue) %> menos en los productos incluidos</p>
+                        <% } %>
+                    </div>
+                </article>
+            <% }); %>
+        </div>
+
+        <% if (products && products.length) { %>
+            <section class="fm-block">
+                <div class="fm-section-head">
+                    <p class="fm-kicker">Para llevar</p>
+                    <h2>Productos en promoción</h2>
+                </div>
+                <div class="product-grid">
+                    <% products.forEach(function (product) { %>
+                        <%- include('../partials/product-card.html', { product: product }) %>
+                    <% }); %>
+                </div>
+            </section>
+        <% } %>
+    <% } else { %>
+        <section class="fm-empty">
+            <h2>En este momento no hay promociones activas</h2>
+            <p>Cuando publiquemos una, va a aparecer acá y en la página de inicio.</p>
+            <a class="btn btn-primary" href="/tienda">Ver la tienda</a>
+        </section>
+    <% } %>
+</main>
+<%- include('../partials/footer.html') %>
+</body>
+</html>

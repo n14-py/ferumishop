@@ -3,129 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sobre Nosotros - FERUMI</title>
-    <%- include('../partials/seo.html', { pageTitle: 'Sobre Nosotros', seoDescription: 'Ferumishop en Capiatá, Ruta 1 Ex km 21. Moto Bolt Envíos en Asunción y alrededores, encomienda al interior y retiro en local.' }) %>
-    
+    <title>La marca - FERUMI</title>
+    <%- include('../partials/seo.html', { pageTitle: 'La marca', seoDescription: 'FERUMI es una marca paraguaya de pestañas, belleza y cosméticos. Fundada el 11 de enero de 2026 por Luis Fernando Arce Fretes y Fadua Mahiumy Gomez Benitez.' }) %>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-        <link rel="icon" type="image/png" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
-    
-    <style>
-        .values-list {
-            list-style: none;
-            padding-left: 0;
-            margin-top: 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        @media (min-width: 576px) {
-            .values-list {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        .values-list li {
-            background-color: var(--primary-color-light);
-            padding: 1rem;
-            border-radius: var(--border-radius);
-            border-left: 4px solid var(--primary-color);
-        }
-        .values-list li strong {
-            color: var(--primary-color-dark);
-            display: block;
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-    </style>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
 </head>
-
 <body>
-
 <%- include('../partials/header.html') %>
+<main class="fm-page">
+    <% const story = (typeof brand !== 'undefined' && brand) ? brand : null; %>
+    <section class="fm-page-hero">
+        <p class="fm-kicker">Paraguay · <%= story ? story.foundedOn : '11 de enero de 2026' %></p>
+        <h1>FERUMI es una marca</h1>
+        <p class="fm-lead">Empezó como un proyecto emprendedor. Más de 1.000 clientas después, en diciembre de 2026 se presenta con nombre, equipo e identidad propios: pestañas, belleza y cosméticos.</p>
+    </section>
 
-<main class="container">
-    
-    <div class="static-page-container">
-        
-        <h1>Sobre FERUMI</h1>
-        
-        <div class="description" style="font-size: 1.1rem; line-height: 1.8;">
-            <p style="font-weight: 600; color: var(--primary-color-dark); text-align: center; margin-bottom: 2rem;">
-                "Resalta tu belleza, expresa tu estilo."
-            </p>
-            
-            <p>
-                <% if (siteConfig.aboutUsText && siteConfig.aboutUsText !== 'Escribe aquí la descripción de "Sobre Nosotros".') { %>
-                    <%- siteConfig.aboutUsText %>
-                <% } else { %>
-                En <strong>FERUMI</strong>, nos apasiona el mundo de la belleza y el cuidado personal. Nacimos con la misión de ofrecer a cada mujer las herramientas necesarias para sentirse única y radiante, poniendo a tu alcance las últimas tendencias en <strong>uñas, maquillaje y accesorios</strong>.
-                <% } %>
-            </p>
-            <p>
-                Sabemos que cada detalle cuenta. Por eso, seleccionamos cuidadosamente cada producto de nuestro catálogo, asegurándonos de brindarte calidad, variedad y estilo. Ya seas una profesional del rubro o una amante del maquillaje buscando renovar su neceser, aquí encontrarás justo lo que necesitas.
-            </p>
+    <section class="fm-story">
+        <article>
+            <h2>De la tienda a la marca</h2>
+            <p>FERUMI se fundó el <%= story ? story.foundedOn : '11 de enero de 2026' %> en Paraguay. Durante ese primer tramo el trabajo fue construir confianza: producto, atención y entrega. Esa base es la que hoy permite dar el paso.</p>
+            <p>La nueva etapa es oficial en <%= story ? story.stageOn : 'diciembre de 2026' %>. El primer gran lanzamiento de marca llega ese mes, con promociones exclusivas para quienes ya nos conocen y para quien llega ahora.</p>
+            <% if (story && story.story) { %><p><%= story.story %></p><% } %>
+            <% if (siteConfig.aboutUsText) { %><div class="fm-about-extra"><%- siteConfig.aboutUsText %></div><% } %>
+        </article>
+        <aside class="fm-facts">
+            <div><span>Marca</span><strong>FERUMI</strong></div>
+            <div><span>Origen</span><strong><%= story ? story.country : 'Paraguay' %></strong></div>
+            <div><span>Fundación</span><strong><%= story ? story.foundedOn : '11 de enero de 2026' %></strong></div>
+            <div><span>Trayectoria</span><strong><%= story ? story.clients : 'Más de 1.000 clientes' %></strong></div>
+            <div><span>Nueva etapa</span><strong>Diciembre 2026</strong></div>
+        </aside>
+    </section>
 
-            <h3 style="font-family: var(--font-family-headings); margin-top: 2.5rem; margin-bottom: 1rem;">¿Cómo llega tu pedido?</h3>
-            <ul class="values-list">
-                <li>
-                    <strong>Moto Bolt Envíos (Asunción y alrededores):</strong>
-                    <p style="margin:0; font-size: 0.95rem;">El local está en Capiatá, Ruta 1 Ex km 21. Cubrimos Asunción y alrededores (hasta 30 km). Pagás con Pagopar — es seguro — y, una vez recibido el pedido, lo procesamos, lo preparamos y te escribimos en menos de 1 hora al WhatsApp que cargaste para coordinar la entrega. Horario de 9:00 a 20:00; fuera de ese horario, pasa al día siguiente. El costo del moto lo abonás al conductor.</p>
-                </li>
-                <li>
-                    <strong>Encomienda al interior:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Si estás más lejos, enviamos con Transportadora TSI, Transportadora Jaraha o la de tu preferencia. Después del pago te contactamos para confirmar agencia y datos de retiro.</p>
-                </li>
-                <li>
-                    <strong>Retiro en Ferumishop:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Pasás a buscar. Es el único modo con pago en efectivo. También podés pagar online con Pagopar.</p>
-                </li>
-                <li>
-                    <strong>Tracking:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Con tu teléfono, correo o cédula ves Pagado → Preparando → Motobolt / Envío / Retiro → Entregado. El QR es tu ticket.</p>
-                </li>
-            </ul>
+    <%- include('../partials/founders.html') %>
 
-            <h3 style="font-family: var(--font-family-headings); margin-top: 2.5rem; margin-bottom: 1rem;">¿Qué nos define?</h3>
-            <ul class="values-list">
-                <li>
-                    <strong>Variedad y Tendencia:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Siempre actualizados con lo último en nail art y cosmética.</p>
-                </li>
-                <li>
-                    <strong>Calidad Garantizada:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Productos seleccionados para cuidar y embellecer.</p>
-                </li>
-                <li>
-                    <strong>Atención Personalizada:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Te asesoramos para que encuentres tu estilo ideal.</p>
-                </li>
-                <li>
-                    <strong>Pasión por la Belleza:</strong>
-                    <p style="margin:0; font-size: 0.95rem;">Creemos en el poder del maquillaje para empoderar.</p>
-                </li>
-            </ul>
-
-            <p style="text-align: center; margin-top: 2.5rem; font-style: italic; font-size: 1.1rem; color: var(--text-muted-color);">
-                Gracias por elegir FERUMI para acompañarte en tu rutina de belleza.
-            </p>
-            <div style="margin-top:2rem;">
-                <h3 style="text-align:center;">Visitanos</h3>
-                <p style="text-align:center;"><%= siteConfig.storeAddress || 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' %></p>
-                <iframe class="about-map" loading="lazy"
-                    src="https://www.google.com/maps?q=<%= encodeURIComponent(siteConfig.storeAddress || 'Ferumishop Capiatá Ruta 1 Ex km 21 Paraguay') %>&output=embed"></iframe>
-                <p style="text-align:center;margin-top:12px;">
-                    <a class="btn btn-primary" href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank">Google Maps</a>
-                    <a class="btn btn-secondary" href="/tracking">Tracking de pedidos</a>
-                </p>
-            </div>
+    <section class="fm-block">
+        <div class="fm-section-head">
+            <p class="fm-kicker">Cómo llega tu pedido</p>
+            <h2>El local sigue siendo Ferumishop</h2>
         </div>
-        
-    </div>
-
+        <div class="fm-trust-grid">
+            <article>
+                <i class="fas fa-motorcycle"></i>
+                <strong>Moto Bolt Envíos</strong>
+                <span>Asunción y alrededores, hasta 30 km. El local está en Capiatá, Ruta 1 Ex km 21. Coordinamos la entrega por WhatsApp, de 9:00 a 20:00.</span>
+            </article>
+            <article>
+                <i class="fas fa-truck"></i>
+                <strong>Encomienda</strong>
+                <span>Al interior enviamos con Transportadora TSI, Transportadora Jaraha o la que prefieras. Te escribimos para confirmar agencia y retiro.</span>
+            </article>
+            <article>
+                <i class="fas fa-store"></i>
+                <strong>Retiro</strong>
+                <span>Pasás a buscar. Es la opción con pago en efectivo. También podés transferir antes y retirar ya pago.</span>
+            </article>
+        </div>
+        <p class="fm-note">Dirección: <%= siteConfig.storeAddress || 'Ferumishop, Capiatá, Ruta 1 Ex km 21 - Paraguay' %>. <a href="<%= siteConfig.storeMapsUrl || 'https://share.google/39F8jWwL96lFY65Th' %>" target="_blank" rel="noopener">Ver en el mapa</a>.</p>
+    </section>
 </main>
-
 <%- include('../partials/footer.html') %>
-
 </body>
 </html>

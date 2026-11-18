@@ -52,7 +52,15 @@ app.engine('html', ejs.renderFile);
 // CONEXIÓN A MONGODB
 // =============================================
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Conectado a MongoDB para FERUMI'))
+  .then(async () => {
+      console.log('✅ Conectado a MongoDB para FERUMI');
+      try {
+          const moved = await require('./lib/migrate-payments').run(mongoose);
+          if (moved && !moved.skipped) console.log('Medios de pago actualizados', moved.paid || 0, moved.pending || 0);
+      } catch (err) {
+          console.error('No se pudo actualizar pedidos históricos:', err.message);
+      }
+  })
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
 // =============================================
@@ -205,10 +213,63 @@ const productSchema = new mongoose.Schema({
     aiVisible: { type: Boolean, default: true },
     aiNotes: { type: String, default: '' },
     aiUsage: { type: String, default: '' },
+    commercialTitle: { type: String, default: '' },
+    subtitle: { type: String, default: '' },
+    shortDescription: { type: String, default: '' },
+    subcategory: { type: String, default: '' },
+    brand: { type: String, default: 'FERUMI' },
+    tags: [{ type: String }],
+    keywords: [{ type: String }],
+    sku: { type: String, default: '' },
+    promoPrice: { type: Number, default: 0 },
+    status: { type: String, enum: ['activo', 'oculto', 'agotado'], default: 'activo' },
+    isNew: { type: Boolean, default: false },
+    isOnPromo: { type: Boolean, default: false },
+    displayOrder: { type: Number, default: 0 },
+    photoAlts: [{ type: String }],
+    slug: { type: String, default: '', index: true },
+    seoTitle: { type: String, default: '' },
+    seoDescription: { type: String, default: '' },
+    seoKeywords: { type: String, default: '' },
+    ogTitle: { type: String, default: '' },
+    ogDescription: { type: String, default: '' },
+    ogImage: { type: String, default: '' },
+    benefits: [{ type: String }],
+    features: [{ type: String }],
+    howToUse: { type: String, default: '' },
+    contents: { type: String, default: '' },
+    faqs: [{ question: String, answer: String }],
+    extraInfo: { type: String, default: '' },
+    warnings: { type: String, default: '' },
     views: { type: Number, default: 0 } 
 }, { timestamps: true });
 
 const Product = mongoose.model('Product', productSchema);
+
+const promotionSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    subtitle: { type: String, default: '' },
+    description: { type: String, default: '' },
+    commercialText: { type: String, default: '' },
+    image: { type: String, default: '' },
+    banner: { type: String, default: '' },
+    active: { type: Boolean, default: true },
+    featured: { type: Boolean, default: false },
+    startsAt: { type: Date, default: null },
+    endsAt: { type: Date, default: null },
+    discountType: { type: String, enum: ['percent', 'amount', 'fixed_price'], default: 'percent' },
+    discountValue: { type: Number, default: 0 },
+    productIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    priceOverrides: [{
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        price: Number
+    }],
+    sortOrder: { type: Number, default: 0 }
+}, { timestamps: true });
+const Promotion = mongoose.model('Promotion', promotionSchema);
+const promotionsLib = require('./lib/promotions');
+const productFormLib = require('./lib/product-form');
+const brandLib = require('./lib/brand');
 
 // --- Modelo de Configuración del Sitio ---
 const siteConfigSchema = new mongoose.Schema({
@@ -225,7 +286,26 @@ const siteConfigSchema = new mongoose.Schema({
     motoboltMaxKm: { type: Number, default: 30 },
     instagramUrl: { type: String, default: 'https://instagram.com/ferumishop' },
     facebookUrl: { type: String, default: '' },
-    tiktokUrl: { type: String, default: 'https://tiktok.com/@ferumishop' }
+    tiktokUrl: { type: String, default: 'https://tiktok.com/@ferumishop' },
+    brandStory: { type: String, default: '' },
+    clientsLabel: { type: String, default: 'Más de 1.000 clientes' },
+    clientsShort: { type: String, default: '1.000+' },
+    foundedOn: { type: String, default: '11 de enero de 2026' },
+    stageOn: { type: String, default: 'diciembre de 2026' },
+    launchTitle: { type: String, default: '' },
+    launchText: { type: String, default: '' },
+    showLaunch: { type: Boolean, default: true },
+    founders: [{
+        name: String,
+        role: String,
+        bio: String
+    }],
+    bankName: { type: String, default: '' },
+    bankAlias: { type: String, default: '' },
+    bankHolder: { type: String, default: '' },
+    bankNote: { type: String, default: '' },
+    homeSeoTitle: { type: String, default: '' },
+    homeSeoDescription: { type: String, default: '' }
 });
 
 const SiteConfig = mongoose.model('SiteConfig', siteConfigSchema);
@@ -288,14 +368,14 @@ const Transaction = mongoose.model('Transaction', transactionSchema);
 
 
 
-// --- NUEVO: Modelo de Pedido Web (Tienda Online / Pagopar) ---
+// --- Pedido web. El cobro online queda preparado para una pasarela futura. ---
 const webOrderSchema = new mongoose.Schema({
     orderNumber: { type: String, unique: true, sparse: true },
     ticketCode: { type: String, unique: true, sparse: true },
     idempotencyKey: { type: String, unique: true, sparse: true },
     customerName: { type: String, required: true },
     customerEmail: { type: String, required: true },
-    customerDocument: { type: String, required: true }, // Obligatorio para Pagopar (CI o RUC)
+    customerDocument: { type: String, required: true },
     customerPhone: { type: String, required: true },
     items: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
@@ -310,12 +390,10 @@ const webOrderSchema = new mongoose.Schema({
     discountAmount: { type: Number, default: 0 },
     couponCode: { type: String, default: '' },
     totalAmount: { type: Number, required: true },
-    pagoparHash: { type: String, default: null },
-    pagoparNumero: { type: String, default: '' },
-    pagoparFormaPago: { type: String, default: '' },
-    pagoparLastConsulta: { type: mongoose.Schema.Types.Mixed },
+    paymentRef: { type: String, default: '' },
+    paymentExternalId: { type: String, default: '' },
     status: { type: String, enum: ['pendiente', 'pagado', 'cancelado'], default: 'pendiente' },
-    paymentMethod: { type: String, enum: ['pagopar', 'efectivo_retiro', 'efectivo', 'transferencia', 'mixto'], default: 'pagopar' },
+    paymentMethod: { type: String, enum: ['transferencia', 'efectivo_retiro', 'efectivo', 'mixto', 'online'], default: 'transferencia' },
     paymentStatus: { type: String, enum: ['pendiente', 'pagado', 'cancelado', 'reembolsado'], default: 'pendiente' },
     shippingMethod: { type: String, enum: ['motobolt', 'transportadora', 'retiro', 'delivery_propio'], default: 'retiro' },
     shippingAddress: { type: String, default: '' },
@@ -350,9 +428,9 @@ const webOrderSchema = new mongoose.Schema({
     shippingZone: { type: String, default: '' },
     shippingQuote: { type: mongoose.Schema.Types.Mixed },
     paymentIntentKey: { type: String, default: '' },
-    pagoparAttemptStatus: { type: String, default: '' },
-    pagoparAttemptAt: Date,
-    pagoparAttemptError: { type: String, default: '' },
+    paymentAttemptStatus: { type: String, default: '' },
+    paymentAttemptAt: Date,
+    paymentAttemptError: { type: String, default: '' },
     amountPaid: { type: Number, default: 0 },
     payments: [{
         amount: Number,
@@ -579,6 +657,10 @@ app.use(async (req, res, next) => {
             await config.save();
         }
         res.locals.siteConfig = config;
+        res.locals.brand = brandLib.present(config);
+        const promoDocs = await Promotion.find({ active: true }).sort({ sortOrder: 1 }).lean();
+        res.locals.livePromotions = promotionsLib.liveList(promoDocs);
+        res.locals.priceOf = (product) => promotionsLib.effectivePrice(product, res.locals.livePromotions);
         
         // Pasa el admin actual (si está logueado)
         res.locals.currentAdmin = req.user;
@@ -605,13 +687,18 @@ app.use(async (req, res, next) => {
 // Muestra banner, categorías y productos destacados
 app.get('/', async (req, res, next) => {
     try {
-        const featuredProducts = await Product.find({ isFeatured: true, isForSale: true })
+        const visible = productFormLib.publicFilter();
+        const featuredProducts = await Product.find({ ...visible, isFeatured: true })
+            .populate('category')
+            .limit(8)
+            .sort({ displayOrder: 1, createdAt: -1 });
+
+        const featuredIds = featuredProducts.map((p) => p._id);
+        const newestMarked = await Product.find({ ...visible, isNew: true, _id: { $nin: featuredIds } })
             .populate('category')
             .limit(8)
             .sort({ createdAt: -1 });
-
-        const featuredIds = featuredProducts.map((p) => p._id);
-        const latestProducts = await Product.find({ isForSale: true, _id: { $nin: featuredIds } })
+        const latestProducts = newestMarked.length ? newestMarked : await Product.find({ ...visible, _id: { $nin: featuredIds } })
             .populate('category')
             .limit(8)
             .sort({ createdAt: -1 });
@@ -623,7 +710,7 @@ app.get('/', async (req, res, next) => {
             featuredProducts,
             latestProducts,
             categories,
-            seoDescription: 'FERUMI Shop Paraguay: maquillaje, uñas y accesorios. Pago con Pagopar, Motobolt en Central, transportadora al interior o retiro en Ferumishop.'
+            seoDescription: (res.locals.siteConfig && res.locals.siteConfig.homeSeoDescription) || 'FERUMI, marca paraguaya de pestañas, belleza y cosméticos. Fundación 11 de enero de 2026. Nueva etapa en diciembre de 2026.'
         });
     } catch (err) {
         next(err);
@@ -841,8 +928,15 @@ app.get('/tienda', async (req, res, next) => {
 
         // Búsqueda por texto
         if (q) {
-            query.name = { $regex: q, $options: 'i' };
+            const safe = String(q).slice(0, 80);
+            query.$or = [
+                { name: { $regex: safe, $options: 'i' } },
+                { commercialTitle: { $regex: safe, $options: 'i' } },
+                { sku: { $regex: safe, $options: 'i' } },
+                { tags: { $regex: safe, $options: 'i' } }
+            ];
         }
+        query.status = { $ne: 'oculto' };
 
         // Filtro por categoría
         if (categoria) {
@@ -864,7 +958,7 @@ app.get('/tienda', async (req, res, next) => {
         
         const products = await Product.find(query)
             .populate('category')
-            .sort({ createdAt: -1 })
+            .sort({ displayOrder: 1, createdAt: -1 })
             .skip((page - 1) * itemsPerPage)
             .limit(itemsPerPage);
             
@@ -887,10 +981,14 @@ app.get('/tienda', async (req, res, next) => {
 // Muestra el detalle de un solo producto
 app.get('/producto/:id', async (req, res, next) => {
     try {
-        const product = await Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true })
+        const key = String(req.params.id || '');
+        const productQuery = mongoose.Types.ObjectId.isValid(key) && String(new mongoose.Types.ObjectId(key)) === key
+            ? { _id: key }
+            : { slug: key };
+        const product = await Product.findOneAndUpdate(productQuery, { $inc: { views: 1 } }, { new: true })
             .populate('category');
 
-        if (!product) {
+        if (!product || product.status === 'oculto') {
             return res.status(404).render('public/error', { message: 'Producto no encontrado.' });
         }
         
@@ -903,9 +1001,13 @@ app.get('/producto/:id', async (req, res, next) => {
             _id: { $ne: product._id } // Excluir el producto actual
         }).limit(4);
 
+        const pricing = promotionsLib.effectivePrice(product, res.locals.livePromotions || []);
         res.render('public/producto-detalle', {
-            pageTitle: product.name,
+            pageTitle: product.seoTitle || product.commercialTitle || product.name,
+            seoDescription: product.seoDescription || product.shortDescription || '',
+            seoImage: product.ogImage || (product.photos && product.photos[0]) || '',
             product,
+            pricing,
             recommendedProducts
         });
     } catch (err) {
@@ -987,7 +1089,7 @@ app.get('/links', (req, res) => {
 
 
 // =============================================
-// RUTAS DE CHECKOUT, PAGOPAR, TRACKING Y DESPACHO
+// RUTAS DE CHECKOUT, TRACKING Y DESPACHO
 // =============================================
 const registerEcommerce = require('./routes/ecommerce');
 registerEcommerce(app, {
@@ -1549,11 +1651,17 @@ app.get('/api/search', async (req, res) => {
             return res.json([]);
         }
         
+        const safe = String(q).slice(0, 80);
         const products = await Product.find({
-            name: { $regex: q, $options: 'i' }
+            status: { $ne: 'oculto' },
+            $or: [
+                { name: { $regex: safe, $options: 'i' } },
+                { commercialTitle: { $regex: safe, $options: 'i' } },
+                { sku: { $regex: safe, $options: 'i' } }
+            ]
         })
-        .select('name photos _id') // Solo trae los datos necesarios
-        .limit(5); // Límite de 5 resultados
+        .select('name commercialTitle photos _id slug')
+        .limit(5);
         
         res.json(products);
     } catch (err) {
@@ -1773,18 +1881,22 @@ app.post('/admin/productos/add', requireAdmin, upload.any(), async (req, res, ne
 
         const newProduct = new Product({
             name: purify.sanitize(name),
-            description: purify.sanitize(description, { USE_PROFILES: { html: true } }),
-            costPrice: parseInt(costPrice.toString().replace(/\./g, '')) || 0,
-            price: parseInt(price.toString().replace(/\./g, '')) || 0,
+            description: purify.sanitize(description || '', { USE_PROFILES: { html: true } }),
+            costPrice: productFormLib.money(costPrice),
+            price: productFormLib.money(price),
             stock: finalStock,
             hasVariants: hasVariants === 'on',
             variants: variantsArray,
             category,
             photos: mainPhotos,
             isForRent: isForRent === 'on',
-            isForSale: isForSale === 'on',
+            isForSale: isForSale !== 'off',
             isFeatured: isFeatured === 'on'
         });
+        productFormLib.applyContent(newProduct, req.body, purify);
+        newProduct.slug = await productFormLib.uniqueSlug(Product, newProduct.slug || newProduct.name);
+        newProduct.photoAlts = productFormLib.altsFor(newProduct.photos, req.body);
+        if (!newProduct.isForSale && isForSale === 'on') newProduct.isForSale = true;
         
         await newProduct.save();
         req.session.success = '¡Producto añadido con éxito!';
@@ -1810,6 +1922,7 @@ app.get('/admin/producto/edit/:id', requireAdmin, async (req, res, next) => {
             pageTitle: `Editar: ${product.name}`,
             product,
             categories,
+            creating: false,
             r2Configured: r2.r2Config().ok,
             success: req.session.success,
             error: req.session.error
@@ -1886,8 +1999,11 @@ app.post('/admin/producto/edit/:id', requireAdmin, upload.any(), async (req, res
         product.category = category;
         product.photos = [...photosToKeep, ...newMainPhotos]; // Guarda todas las fotos ilimitadas
         product.isForRent = isForRent === 'on';
-        product.isForSale = isForSale === 'on';
+        product.isForSale = isForSale === 'on' || isForSale === undefined;
         product.isFeatured = isFeatured === 'on';
+        productFormLib.applyContent(product, req.body, purify);
+        product.slug = await productFormLib.uniqueSlug(Product, product.slug || product.name, product._id);
+        product.photoAlts = productFormLib.altsFor(product.photos, req.body);
         
         await product.save();
         req.session.success = '¡Producto actualizado con éxito!';
@@ -2176,6 +2292,46 @@ app.post('/admin/configuracion/update', requireAdmin, async (req, res, next) => 
         req.session.error = `Error: ${err.message}`;
         res.redirect('/admin/configuracion');
     }
+});
+
+app.post('/admin/configuracion/marca', requireAdmin, async (req, res) => {
+    try {
+        const names = Array.isArray(req.body.founderName) ? req.body.founderName : [req.body.founderName].filter(Boolean);
+        const roles = Array.isArray(req.body.founderRole) ? req.body.founderRole : [req.body.founderRole];
+        const bios = Array.isArray(req.body.founderBio) ? req.body.founderBio : [req.body.founderBio];
+        const founders = [];
+        names.forEach((name, index) => {
+            const cleanName = purify.sanitize(String(name || '')).trim();
+            if (!cleanName) return;
+            founders.push({
+                name: cleanName,
+                role: purify.sanitize(String(roles[index] || '')).trim(),
+                bio: purify.sanitize(String(bios[index] || '')).trim()
+            });
+        });
+        await SiteConfig.findOneAndUpdate(
+            { configKey: 'main_config' },
+            {
+                brandStory: purify.sanitize(req.body.brandStory || ''),
+                clientsLabel: purify.sanitize(req.body.clientsLabel || 'Más de 1.000 clientes'),
+                launchTitle: purify.sanitize(req.body.launchTitle || ''),
+                launchText: purify.sanitize(req.body.launchText || ''),
+                showLaunch: req.body.showLaunch === 'on',
+                homeSeoTitle: purify.sanitize(req.body.homeSeoTitle || ''),
+                homeSeoDescription: purify.sanitize(req.body.homeSeoDescription || ''),
+                bankName: purify.sanitize(req.body.bankName || ''),
+                bankAlias: purify.sanitize(req.body.bankAlias || ''),
+                bankHolder: purify.sanitize(req.body.bankHolder || ''),
+                bankNote: purify.sanitize(req.body.bankNote || ''),
+                founders
+            },
+            { upsert: true }
+        );
+        req.session.success = 'Identidad de marca guardada.';
+    } catch (err) {
+        req.session.error = err.message;
+    }
+    res.redirect('/admin/configuracion');
 });
 
 // Actualizar el Logo
@@ -2857,6 +3013,7 @@ app.get('/sitemap.xml', async (req, res, next) => {
         const staticPages = [
             { url: '', priority: '1.0' },
             { url: '/tienda', priority: '0.9' },
+            { url: '/promociones', priority: '0.8' },
             { url: '/checkout', priority: '0.5' },
             { url: '/tracking', priority: '0.7' },
             { url: '/regalos/crear', priority: '0.8' },
@@ -2904,6 +3061,13 @@ app.get('/sitemap.xml', async (req, res, next) => {
 // =============================================
 // MANEJADORES DE ERROR Y ARRANQUE
 // =============================================
+
+require('./routes/catalog')(app, {
+    Promotion,
+    Product,
+    requireAdmin,
+    upload
+});
 
 require('./routes/wa-admin')(app, {
     AdminUser,

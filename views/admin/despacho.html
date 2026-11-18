@@ -116,7 +116,7 @@
                 <div class="order-meta mt-2">
                     <strong><%= order.customerName %></strong><br>
                     <%= order.customerPhone %> · CI <%= order.customerDocument %><br>
-                    Pago: <strong><%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : (order.paymentMethod === 'transferencia' ? 'Transferencia' : 'Pagopar') %></strong>
+                    Pago: <strong><%= order.paymentMethod === 'efectivo_retiro' ? 'Efectivo al retirar' : (order.paymentMethod === 'transferencia' ? 'Transferencia' : (order.paymentMethod === 'online' ? 'Pago online' : 'Pago a coordinar')) %></strong>
                     (<%= order.paymentStatus || order.status %>)<br>
                     <% if (order.source === 'whatsapp' && order.checkoutSlug) { %>Canal: WhatsApp · /<%= order.checkoutSlug %><br><% } %>
                     Envío: <strong><%= shipMap[order.shippingMethod] || order.shippingMethod || '—' %></strong>
